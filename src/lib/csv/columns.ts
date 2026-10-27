@@ -20,6 +20,16 @@ const FIELD_WORDS = new Set([
 ]);
 
 /** True for columns that look like they identify a person. These are never uploaded. */
+/**
+ * Why a parsed CSV's header row can't be used, or null. One column is fine: a file that holds only
+ * the review text has no comma to detect, so the parser's delimiter warning is not a problem.
+ */
+export function csvColumnsProblem(headers: string[]): string | null {
+  return headers.length
+    ? null
+    : "ReviewLens couldn't find any columns. Make sure the first line names the columns and the file is saved as CSV (comma-separated).";
+}
+
 export function isPersonalColumn(header: string): boolean {
   const words = normalizeHeader(header).split(" ").filter(Boolean);
   if (words.some((w) => FIELD_WORDS.has(w))) return false;

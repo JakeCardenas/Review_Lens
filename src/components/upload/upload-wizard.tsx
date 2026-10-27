@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, FileSpreadsheet, Lock, UploadCloud } from "lucide-react";
 import { Button, Notice } from "@/components/ui";
 import { api, ApiRequestError, withRetry } from "@/lib/client-api";
-import { guessColumnMapping, isPersonalColumn } from "@/lib/csv/columns";
+import { csvColumnsProblem, guessColumnMapping, isPersonalColumn } from "@/lib/csv/columns";
 import { cleanText, looksMisencoded, maskPersonalData } from "@/lib/csv/clean";
 import { detectDateFormat, detectRatingScale, type DateFormatGuess } from "@/lib/csv/parse-values";
 import { prepareRow } from "@/lib/csv/prepare";
@@ -85,13 +85,9 @@ function parseCsv(file: File): Promise<ParsedFile> {
       transformHeader: (header, index) => header.replace(/^﻿/, "").trim() || `Column ${index + 1}`,
       complete(results) {
         const headers = results.meta.fields ?? [];
-        const delimiterError = results.errors.some((e) => e.type === "Delimiter");
-        if (!headers.length || (delimiterError && headers.length < 2)) {
-          reject(
-            new Error(
-              "ReviewLens couldn't find separate columns. Make sure the first line names the columns and the file is saved as CSV (comma-separated).",
-            ),
-          );
+        const columnsProblem = csvColumnsProblem(headers);
+        if (columnsProblem) {
+          reject(new Error(columnsProblem));
           return;
         }
         const rows = results.data.filter((row) => row && typeof row === "object");

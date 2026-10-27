@@ -1,5 +1,22 @@
+import Papa from "papaparse";
 import { describe, expect, it } from "vitest";
-import { guessColumnMapping, isPersonalColumn } from "@/lib/csv/columns";
+import { csvColumnsProblem, guessColumnMapping, isPersonalColumn } from "@/lib/csv/columns";
+
+describe("csvColumnsProblem", () => {
+  const parse = (text: string) => Papa.parse<Record<string, string>>(text, { header: true, skipEmptyLines: "greedy" });
+
+  it("accepts a file with only a review text column", () => {
+    const result = parse("review_text\nSobrang ganda ng tela\nHindi maganda ang tela, walang box\n");
+    // With one column there is no comma to detect, so Papa reports a delimiter warning; the file is still fine.
+    expect(result.errors.some((e) => e.type === "Delimiter")).toBe(true);
+    expect(result.meta.fields).toEqual(["review_text"]);
+    expect(csvColumnsProblem(result.meta.fields ?? [])).toBeNull();
+  });
+
+  it("rejects a file without a header row of column names", () => {
+    expect(csvColumnsProblem([])).toMatch(/first line names the columns/);
+  });
+});
 
 describe("isPersonalColumn", () => {
   it.each(["Customer Name", "email", "E-mail", "user_id", "Reviewer", "Phone Number", "author", "IP Address", "order id"])(
