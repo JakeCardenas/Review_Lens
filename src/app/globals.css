@@ -1,0 +1,247 @@
+@import "tailwindcss";
+
+/*
+  ReviewLens design tokens. Green-tinted neutrals, one brand green, and a sentiment trio
+  (positive / neutral / negative) checked for color-blind separation. Sentiment is always
+  shown with an icon and a word as well as color.
+*/
+:root {
+  --page: #eef3ef;
+  --surface: #ffffff;
+  --surface-2: #f5f8f6;
+  --ink: #13241b;
+  --ink-2: #4b5a52;
+  --ink-3: #5f6e66;
+  --line: #dbe5de;
+  --line-strong: #c3d1c8;
+  --brand: #1c7a4a;
+  --brand-hover: #16663d;
+  --brand-ink: #17663e;
+  --brand-soft: #e1f1e6;
+  --on-brand: #ffffff;
+  --pos: #34a46b;
+  --neu: #c9c9c1;
+  --neg: #b8432f;
+  --pos-ink: #1f7a4c;
+  --neu-ink: #545b56;
+  --neg-ink: #a63a28;
+  --pos-soft: #e3f3ea;
+  --neu-soft: #eeefec;
+  --neg-soft: #f8e7e3;
+  --warn-ink: #6b4500;
+  --warn-soft: #fbf1dc;
+  --glass: rgba(244, 249, 245, 0.74);
+  --glass-line: rgba(19, 36, 27, 0.08);
+  --shadow-float: 0 10px 30px rgba(19, 36, 27, 0.1), 0 1px 2px rgba(19, 36, 27, 0.06);
+  --stack-text: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --stack-display: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #0b100d;
+    --surface: #151b18;
+    --surface-2: #1b2320;
+    --ink: #eaf2ec;
+    --ink-2: #a9b6ae;
+    --ink-3: #93a099;
+    --line: #26302a;
+    --line-strong: #36423b;
+    --brand: #2f9a63;
+    --brand-hover: #38ad71;
+    --brand-ink: #5cc98d;
+    --brand-soft: #15301f;
+    --on-brand: #06140c;
+    --pos: #34a46b;
+    --neu: #4a4a45;
+    --neg: #b8432f;
+    --pos-ink: #5cc98d;
+    --neu-ink: #b4bdb7;
+    --neg-ink: #ef8a73;
+    --pos-soft: #153222;
+    --neu-soft: #222825;
+    --neg-soft: #3a1d17;
+    --warn-ink: #f0c87a;
+    --warn-soft: #2b2313;
+    --glass: rgba(16, 22, 19, 0.72);
+    --glass-line: rgba(255, 255, 255, 0.08);
+    --shadow-float: 0 10px 30px rgba(0, 0, 0, 0.45), 0 1px 2px rgba(0, 0, 0, 0.4);
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-on-brand: var(--on-brand);
+  --color-pos: var(--pos);
+  --color-neu: var(--neu);
+  --color-neg: var(--neg);
+  --color-pos-ink: var(--pos-ink);
+  --color-neu-ink: var(--neu-ink);
+  --color-neg-ink: var(--neg-ink);
+  --color-pos-soft: var(--pos-soft);
+  --color-neu-soft: var(--neu-soft);
+  --color-neg-soft: var(--neg-soft);
+  --color-warn-ink: var(--warn-ink);
+  --color-warn-soft: var(--warn-soft);
+  --font-sans: var(--stack-text);
+  --font-display: var(--stack-display);
+  --radius-control: 12px;
+  --radius-card: 22px;
+  --radius-sheet: 28px;
+  --shadow-float: var(--shadow-float);
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--stack-text);
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
+button,
+a,
+[role="button"],
+summary {
+  touch-action: manipulation;
+}
+
+button,
+[role="button"],
+summary,
+.control-label {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-ink);
+  outline-offset: 2px;
+}
+
+/* Side gutter that also clears a phone's rounded corners and side system bars. */
+.gutter {
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+}
+
+/* Translucent material, used only for floating navigation and controls. */
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(20px) saturate(170%);
+  backdrop-filter: blur(20px) saturate(170%);
+  border-color: var(--glass-line);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: var(--surface);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .glass {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .glass {
+    background: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-color: var(--ink-2);
+  }
+}
+
+/* Press feedback on touch-down, not on release. */
+.press {
+  transition:
+    transform 120ms cubic-bezier(0.2, 0, 0, 1),
+    background-color 120ms ease-out,
+    border-color 120ms ease-out;
+}
+
+.press:active {
+  transform: scale(0.97);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 50;
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  padding: 0.5rem 1rem;
+}
+
+.skip-link:focus {
+  top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+}
+
+dialog::backdrop {
+  background: rgba(10, 18, 13, 0.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff;
+    color: #000000;
+  }
+
+  main {
+    padding: 0 !important;
+    max-width: none !important;
+  }
+}
