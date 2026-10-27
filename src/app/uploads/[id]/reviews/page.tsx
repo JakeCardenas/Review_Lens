@@ -11,7 +11,7 @@ import { ReviewDialog } from "@/components/review-dialog";
 import { ConfidenceMeter } from "@/components/sentiment";
 import { ButtonLink, EmptyState } from "@/components/ui";
 import { REASON_TEXT } from "@/lib/analysis/confidence";
-import { languageName } from "@/lib/analysis/language";
+import { describeLanguage } from "@/lib/analysis/language";
 import { TOPICS } from "@/lib/analysis/topics";
 import { formatDate, plural } from "@/lib/format";
 import { getDb } from "@/lib/server/db";
@@ -60,16 +60,7 @@ function ReviewDetail({ review }: { review: ReviewRow }) {
     ["Date", formatDate(review.reviewDate)],
     ["Rating", review.rating === null ? "None" : String(review.rating)],
     ["Product", review.product ?? "None"],
-    [
-      "Language",
-      review.languageStatus === "supported"
-        ? "English"
-        : review.languageStatus === "mixed"
-          ? `Mixed (English and ${languageName(review.language)})`
-          : review.languageStatus === "unsupported"
-            ? `${languageName(review.language)} (not supported yet)`
-            : "Too short to tell",
-    ],
+    ["Language", describeLanguage(review.languageStatus, review.language)],
   ];
   const note = modelNote(review);
   return (

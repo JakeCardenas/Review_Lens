@@ -14,6 +14,8 @@ export const CreateUploadBody = z
     dateFormat: z.enum(["ymd", "mdy", "dmy"]).nullable(),
     ratingScale: z.union([z.literal(5), z.literal(10), z.literal(100)]).nullable(),
     totalRows: z.number().int().min(1).max(LIMITS.maxRows),
+    /** Required in AI mode: the person accepted that masked review text goes to Google's free tier. */
+    dataNotice: z.literal("accepted").optional(),
   })
   .strict();
 

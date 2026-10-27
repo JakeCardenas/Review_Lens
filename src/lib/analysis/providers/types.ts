@@ -1,7 +1,8 @@
 import type { Sentiment } from "@/lib/types";
 import type { Certainty } from "../confidence";
+import type { TopicId } from "../topics";
 
-export type ProviderId = "basic" | "anthropic" | "mock";
+export type ProviderId = "basic" | "gemini" | "mock";
 
 export type ProviderItem = { id: number; text: string };
 
@@ -11,6 +12,8 @@ export type ProviderResult = {
   certainty: Certainty;
   mixedOpinion: boolean;
   mixedLanguage: boolean;
+  /** Topics the provider found itself. When absent, topics come from ReviewLens's word lists. */
+  topics?: TopicId[];
   /** The provider's raw answer, stored for debugging and evaluation. */
   output: Record<string, unknown>;
 };
@@ -31,13 +34,23 @@ export interface SentimentProvider {
   analyze(items: ProviderItem[]): Promise<ProviderResult[]>;
 }
 
-/** A provider failure. `retryable` is false for problems that retrying cannot fix, such as a bad key. */
+/**
+ * A provider failure. `retryable` is false for problems that retrying cannot fix, such as a bad key
+ * or a used-up daily quota. `retryAfterMs` asks the caller to wait that long and try the same reviews
+ * again without counting it as a failed attempt (a per-minute limit).
+ */
 export class ProviderError extends Error {
+  readonly code: string | undefined;
+  readonly retryAfterMs: number | undefined;
+
   constructor(
     message: string,
     readonly retryable: boolean,
+    options: { code?: string; retryAfterMs?: number } = {},
   ) {
     super(message);
     this.name = "ProviderError";
+    this.code = options.code;
+    this.retryAfterMs = options.retryAfterMs;
   }
 }

@@ -68,7 +68,9 @@ export default async function HomePage() {
       {!provider.problem && (
         <p className="text-sm text-ink-2">
           Analysis method: {provider.label}.{" "}
-          {provider.external ? "Review text is sent to the AI provider for labeling." : "Nothing is sent to an AI service."}
+          {provider.external
+            ? "Masked review text is sent to Google's Gemini free tier, where Google may use it to improve its products. Use only public, non-sensitive reviews."
+            : "Nothing is sent to an AI service."}
         </p>
       )}
 

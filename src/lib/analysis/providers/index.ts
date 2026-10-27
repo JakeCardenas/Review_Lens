@@ -1,7 +1,7 @@
 import "server-only";
-import { AnthropicProvider } from "./anthropic";
 import { BasicProvider } from "./basic";
 import { resolveProviderConfig } from "./config";
+import { GeminiProvider } from "./gemini";
 import { ProviderError, type ProviderId, type SentimentProvider } from "./types";
 
 export type ProviderInfo = {
@@ -18,12 +18,12 @@ let cached: { key: string; provider: SentimentProvider | ProviderError } | null 
 function build(): SentimentProvider | ProviderError {
   const config = resolveProviderConfig(process.env);
   if (config.kind === "basic") return new BasicProvider();
-  if (config.kind === "anthropic") return new AnthropicProvider({ apiKey: config.apiKey, model: config.model });
+  if (config.kind === "gemini") return new GeminiProvider({ apiKey: config.apiKey, model: config.model });
   return new ProviderError(config.message, false);
 }
 
 function current(): SentimentProvider | ProviderError {
-  const key = [process.env.SENTIMENT_PROVIDER, process.env.ANTHROPIC_MODEL, Boolean(process.env.ANTHROPIC_API_KEY)].join("|");
+  const key = [process.env.SENTIMENT_PROVIDER, process.env.GEMINI_MODEL, Boolean(process.env.GEMINI_API_KEY)].join("|");
   if (!cached || cached.key !== key) cached = { key, provider: build() };
   return cached.provider;
 }

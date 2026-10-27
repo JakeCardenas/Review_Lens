@@ -8,7 +8,10 @@ import { api, ApiRequestError, sleep } from "@/lib/client-api";
 import { formatNumber, plural } from "@/lib/format";
 import type { Progress } from "@/lib/server/uploads";
 
-type BatchResponse = { processed: number; batchError: string | null; progress: Progress };
+type BatchResponse = { processed: number; batchError: string | null; retryAfterMs: number | null; progress: Progress };
+
+/** Consecutive per-minute waits before analysis pauses instead of waiting again (about five minutes). */
+const MAX_WAITS = 10;
 
 /** Drives analysis from the browser: one request per batch until every review is processed. */
 export function AnalyzeProgress({
@@ -24,7 +27,9 @@ export function AnalyzeProgress({
   const [progress, setProgress] = useState(initial);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorTitle, setErrorTitle] = useState("Analysis stopped");
   const [note, setNote] = useState<string | null>(null);
+  const [waitingForLimit, setWaitingForLimit] = useState(false);
   const stopRef = useRef(false);
   const runIdRef = useRef(0);
 
@@ -34,11 +39,26 @@ export function AnalyzeProgress({
     setRunning(true);
     setError(null);
     let failures = 0;
+    let waits = 0;
     while (!stopRef.current && runIdRef.current === runId) {
       try {
         const result = await api<BatchResponse>(`/api/uploads/${uploadId}/analyze`, { method: "POST" });
         failures = 0;
         setProgress(result.progress);
+        if (result.retryAfterMs) {
+          waits += 1;
+          if (waits > MAX_WAITS) {
+            setErrorTitle("Analysis paused");
+            setError("Gemini's free tier kept asking ReviewLens to wait. Try Resume in a few minutes.");
+            break;
+          }
+          setWaitingForLimit(true);
+          setNote(result.batchError);
+          await sleep(result.retryAfterMs);
+          continue;
+        }
+        waits = 0;
+        setWaitingForLimit(false);
         setNote(result.batchError);
         if (result.progress.done) {
           toast.success("Analysis complete");
@@ -54,6 +74,12 @@ export function AnalyzeProgress({
           await sleep(Math.min(30_000, 2000 * 2 ** failures));
           continue;
         }
+        setWaitingForLimit(false);
+        setErrorTitle(
+          err instanceof ApiRequestError && err.code === "FREE_TIER_DAILY_LIMIT"
+            ? "Paused until the free daily limit resets"
+            : "Analysis stopped",
+        );
         setError(err instanceof ApiRequestError ? err.message : "Analysis stopped unexpectedly.");
         break;
       }
@@ -131,14 +157,14 @@ export function AnalyzeProgress({
       </section>
 
       {note && !error && !progress.done && (
-        <Notice tone="warning" title="A batch needs another try" live>
+        <Notice tone="warning" title={waitingForLimit ? "Waiting for Gemini's per-minute limit" : "A batch needs another try"} live>
           {note}
         </Notice>
       )}
       {error && (
         <Notice
           tone="error"
-          title="Analysis stopped"
+          title={errorTitle}
           action={
             <Button size="sm" onClick={() => void run()}>
               Resume

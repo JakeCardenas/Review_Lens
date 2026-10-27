@@ -140,6 +140,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
   const [ratingScale, setRatingScale] = useState<RatingScale>(5);
   const [name, setName] = useState("");
   const [importState, setImportState] = useState<ImportState>({ phase: "idle" });
+  const [noticeAccepted, setNoticeAccepted] = useState(false);
 
   const headers = parsed?.headers ?? [];
   const personal = headers.filter(isPersonalColumn);
@@ -258,6 +259,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
               dateFormat: mapping.date ? dateFormat : null,
               ratingScale: mapping.rating ? ratingScale : null,
               totalRows: rawRows.length,
+              ...(provider.external && noticeAccepted ? { dataNotice: "accepted" } : {}),
             }),
           }),
         );
@@ -575,18 +577,51 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
             </div>
           </div>
 
-          <Notice title={provider.external ? "AI mode" : "Basic mode"}>
-            {provider.external
-              ? "Review text, with emails, phone numbers and links masked, is sent to Anthropic's Claude to label sentiment. Nothing else from the file is sent."
-              : "Reviews are labeled on this server with the VADER word list. Nothing is sent to an AI service. Labels are less accurate than AI mode and never marked High confidence."}
-          </Notice>
+          {provider.external ? (
+            <Notice tone="warning" title="Google will receive this file's review text">
+              <div className="grid gap-2">
+                <p>
+                  AI mode sends the review text to Google&apos;s Gemini API on its free tier, with emails, phone numbers and links
+                  masked first. Nothing else from the file is sent. English, Tagalog and Taglish reviews are labeled.
+                </p>
+                <p>
+                  On the free tier, Google may use what you send to improve its products, and people at Google may read it. Only
+                  upload public reviews with nothing sensitive or personal in them.
+                </p>
+                <p>
+                  Free use has per-minute and daily limits. This file needs about{" "}
+                  {plural(Math.ceil(preview.ready / LIMITS.batchSize), "request")} to Gemini. If a limit is reached, analysis
+                  pauses and says when to continue.
+                </p>
+                <label htmlFor="data-notice" className="flex items-start gap-3 font-medium text-ink">
+                  <input
+                    id="data-notice"
+                    type="checkbox"
+                    checked={noticeAccepted}
+                    disabled={step !== "preview"}
+                    onChange={(event) => setNoticeAccepted(event.target.checked)}
+                    className="mt-0.5 size-5 shrink-0 accent-[var(--brand)]"
+                  />
+                  I understand, and this file has only public reviews with nothing sensitive or personal in them.
+                </label>
+              </div>
+            </Notice>
+          ) : (
+            <Notice title="Basic mode">
+              Reviews are labeled on this server with the VADER word list. Nothing is sent to an AI service. Labels are less
+              accurate than AI mode and never marked High confidence.
+            </Notice>
+          )}
 
           {step === "preview" && (
             <div className="flex flex-wrap justify-between gap-3">
               <Button variant="secondary" onClick={() => setStep("map")}>
                 Back to columns
               </Button>
-              <Button onClick={() => void runImport()} disabled={!preview.ready || Boolean(provider.problem)}>
+              <Button
+                onClick={() => void runImport()}
+                disabled={!preview.ready || Boolean(provider.problem) || (provider.external && !noticeAccepted)}
+              >
                 Import and analyze {plural(preview.ready, "review")}
               </Button>
             </div>

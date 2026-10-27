@@ -70,6 +70,27 @@ describe("ingestRows", () => {
     ]);
   });
 
+  it("keeps Tagalog and Taglish reviews for a provider that reads them", async () => {
+    const upload = await newUpload(2);
+    await ingestRows(db, upload, [
+      { rowNumber: 2, text: "Sobrang ganda ng tela at mabilis dumating. Salamat po!" },
+      { rowNumber: 3, text: "Maganda naman yung quality and walang sira, thank you seller" },
+    ]);
+    const rows = await db.query("select row_number, status, language, language_status from reviews order by row_number");
+    expect(rows).toEqual([
+      { row_number: 2, status: "pending", language: "tgl", language_status: "supported" },
+      { row_number: 3, status: "pending", language: "tgl", language_status: "mixed" },
+    ]);
+  });
+
+  it("still leaves Tagalog reviews unlabeled in Basic mode", async () => {
+    const upload = await newUpload(1, new BasicProvider());
+    await ingestRows(db, upload, [{ rowNumber: 2, text: "Sobrang ganda ng tela at mabilis dumating. Salamat po!" }]);
+    const [row] = await db.query<{ status: string; status_note: string }>("select status, status_note from reviews");
+    expect(row.status).toBe("not_labeled");
+    expect(row.status_note).toMatch(/not supported yet/);
+  });
+
   it("ignores a chunk that is sent twice", async () => {
     const upload = await newUpload(2);
     const rows = [
@@ -153,7 +174,7 @@ describe("analyzeNextBatch", () => {
   it("does not use up attempts when the provider is misconfigured", async () => {
     const broken = new (class extends MockProvider {
       async analyze(): Promise<never> {
-        throw new ProviderError("Check ANTHROPIC_API_KEY.", false);
+        throw new ProviderError("Check GEMINI_API_KEY.", false);
       }
     })();
     const upload = await newUpload(1, broken);
@@ -173,6 +194,91 @@ describe("analyzeNextBatch", () => {
     expect(row.status).toBe("not_labeled");
     expect(row.status_note).toMatch(/mixes languages/i);
     expect(await count("upload_issues where code = 'LANGUAGE_MIXED'")).toBe(1);
+  });
+
+  it("waits out a per-minute limit without using up attempts", async () => {
+    const limited = new (class extends MockProvider {
+      async analyze(): Promise<never> {
+        throw new ProviderError("Gemini's free tier allows only a few requests per minute. Waiting about 30 seconds.", true, {
+          code: "FREE_TIER_RATE_LIMIT",
+          retryAfterMs: 30_000,
+        });
+      }
+    })();
+    const upload = await newUpload(1, limited);
+    await ingestRows(db, upload, [{ rowNumber: 2, text: "Great kettle" }]);
+    await startAnalysis(db, upload.id);
+    const result = await analyzeNextBatch(db, limited, upload.id);
+    expect(result).toMatchObject({ processed: 0, retryAfterMs: 30_000 });
+    expect(result.batchError).toMatch(/per minute/);
+    expect(await db.query("select status, attempts from reviews")).toEqual([{ status: "pending", attempts: 0 }]);
+  });
+
+  it("stops when the free daily limit is used up and keeps every review for later", async () => {
+    const exhausted = new (class extends MockProvider {
+      async analyze(): Promise<never> {
+        throw new ProviderError("The Gemini free tier's daily limit for this project is used up.", false, {
+          code: "FREE_TIER_DAILY_LIMIT",
+        });
+      }
+    })();
+    const upload = await newUpload(1, exhausted);
+    await ingestRows(db, upload, [{ rowNumber: 2, text: "Great kettle" }]);
+    await startAnalysis(db, upload.id);
+    await expect(analyzeNextBatch(db, exhausted, upload.id)).rejects.toMatchObject({
+      code: "FREE_TIER_DAILY_LIMIT",
+      retryable: false,
+    });
+    expect(await db.query("select status, attempts from reviews")).toEqual([{ status: "pending", attempts: 0 }]);
+    expect(await getProgress(db, upload.id)).toMatchObject({ status: "analyzing", failed: 0 });
+  });
+
+  it("does not lower confidence for Taglish when the provider reads Tagalog", async () => {
+    const upload = await newUpload(1);
+    await ingestRows(db, upload, [
+      { rowNumber: 2, text: "Great quality, I love it. Sobrang ganda at mabilis dumating, salamat po!" },
+    ]);
+    await startAnalysis(db, upload.id);
+    await analyzeNextBatch(db, mock, upload.id);
+    const [row] = await db.query<{ status: string; confidence: string; confidence_reasons: string[] }>(
+      "select status, confidence, confidence_reasons from reviews",
+    );
+    expect(row).toMatchObject({ status: "labeled", confidence: "high" });
+    expect(row.confidence_reasons).not.toContain("mixed_language");
+  });
+
+  it("still lowers confidence when a review mixes English with a language the provider doesn't read", async () => {
+    const upload = await newUpload(1);
+    await ingestRows(db, upload, [
+      { rowNumber: 2, text: "Great product, I love it, pero el envío llegó tarde y la caja estaba rota." },
+    ]);
+    await startAnalysis(db, upload.id);
+    await analyzeNextBatch(db, mock, upload.id);
+    const [row] = await db.query<{ language_status: string; confidence: string; confidence_reasons: string[] }>(
+      "select language_status, confidence, confidence_reasons from reviews",
+    );
+    expect(row).toMatchObject({ language_status: "mixed", confidence: "low" });
+    expect(row.confidence_reasons).toContain("mixed_language");
+  });
+
+  it("uses the topics the provider found when it returns them", async () => {
+    const withTopics = new (class extends MockProvider {
+      async analyze(items: Parameters<MockProvider["analyze"]>[0]) {
+        return (await super.analyze(items)).map((r) => ({ ...r, topics: ["service" as const] }));
+      }
+    })();
+    const upload = await newUpload(1, withTopics);
+    await ingestRows(db, upload, [{ rowNumber: 2, text: "Terrible, it broke and delivery was late" }]);
+    await startAnalysis(db, upload.id);
+    await analyzeNextBatch(db, withTopics, upload.id);
+    const [row] = await db.query<{ topics: string[] }>("select topics from reviews");
+    expect(row.topics).toEqual(["service"]);
+  });
+
+  it("records that AI mode picks topics itself", async () => {
+    const ai = await newUpload(1, { id: "gemini", model: "gemini-3.5-flash-lite" } as SentimentProvider);
+    expect(ai.topicVersion).toBe("topics-ai-v1");
+    expect((await newUpload(1)).topicVersion).toBe("topics-v1");
   });
 
   it("refuses to mix results from a different provider", async () => {

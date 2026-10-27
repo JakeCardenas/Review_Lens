@@ -1,7 +1,8 @@
-import { TOPIC_VERSION } from "@/lib/analysis/topics";
+import { AI_TOPIC_VERSION, TOPIC_VERSION } from "@/lib/analysis/topics";
 import { LIMITS } from "@/lib/limits";
 import type { ColumnMap, DateFormat, RatingScale, Sentiment, UploadStatus } from "@/lib/types";
 import type { Db } from "./db-types";
+import { AppError } from "./errors";
 
 export type CreateUploadInput = {
   name: string;
@@ -103,6 +104,21 @@ function toUpload(row: UploadRow): UploadRecord {
   };
 }
 
+/**
+ * Review text only leaves the server for a provider like Gemini's free tier after the person
+ * uploading accepted the data notice. An upload's provider is fixed when it is created, so
+ * checking here covers every review it will ever send.
+ */
+export function checkDataNotice(provider: { external: boolean }, dataNotice: string | undefined): void {
+  if (provider.external && dataNotice !== "accepted") {
+    throw new AppError(
+      "DATA_NOTICE_REQUIRED",
+      "Before review text is sent to Google's Gemini free tier, accept the data notice on the upload page.",
+      400,
+    );
+  }
+}
+
 export async function createUpload(
   db: Db,
   input: CreateUploadInput,
@@ -124,7 +140,7 @@ export async function createUpload(
       input.columnMap.rating ? input.ratingScale : null,
       provider.id,
       provider.model,
-      TOPIC_VERSION,
+      provider.id === "gemini" ? AI_TOPIC_VERSION : TOPIC_VERSION,
       input.totalRows,
     ],
   );

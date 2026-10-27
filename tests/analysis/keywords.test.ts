@@ -18,6 +18,23 @@ describe("extractKeywords", () => {
     expect(extractKeywords("Contact [email] or [phone] about refund")).toEqual(["contact", "refund"]);
   });
 
+  it("skips Tagalog filler words", () => {
+    const keywords = extractKeywords("Sobrang ganda po ng tela at ang bilis naman dumating");
+    expect(keywords).toEqual(expect.arrayContaining(["ganda", "tela", "bilis", "dumating"]));
+    for (const filler of ["sobrang", "po", "ng", "ang", "naman"]) expect(keywords).not.toContain(filler);
+  });
+
+  it("keeps a Tagalog negation with the word it changes", () => {
+    const keywords = extractKeywords("Hindi maganda ang tela, walang box pagdating");
+    expect(keywords).toEqual(expect.arrayContaining(["hindi maganda", "walang box"]));
+    expect(keywords).not.toContain("hindi");
+    expect(keywords).not.toContain("walang");
+  });
+
+  it("groups texting spellings of Tagalog negations", () => {
+    expect(extractKeywords("hndi maganda, wlang reply")).toEqual(expect.arrayContaining(["hindi maganda", "walang reply"]));
+  });
+
   it("keeps at most 30 unique keywords", () => {
     const text = Array.from({ length: 60 }, (_, i) => `word${String.fromCharCode(97 + (i % 26))}${i}`).join(" ");
     expect(extractKeywords(text).length).toBeLessThanOrEqual(30);

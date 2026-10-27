@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectLanguage } from "@/lib/analysis/language";
+import { describeLanguage, detectLanguage } from "@/lib/analysis/language";
 
 describe("detectLanguage", () => {
   it("accepts English reviews", () => {
@@ -24,5 +24,66 @@ describe("detectLanguage", () => {
   it("cannot tell the language of very short text", () => {
     expect(detectLanguage("Love it!").status).toBe("undetermined");
     expect(detectLanguage("").status).toBe("undetermined");
+  });
+});
+
+describe("detectLanguage for a provider that reads Tagalog", () => {
+  const tagalog = { tagalog: true };
+
+  it("accepts Tagalog reviews", () => {
+    expect(detectLanguage("Sobrang ganda ng tela at mabilis dumating. Salamat po!", tagalog)).toEqual({
+      status: "supported",
+      code: "tgl",
+      name: "Tagalog",
+    });
+  });
+
+  it("reads texting spellings as Tagalog", () => {
+    expect(detectLanguage("hndi xa gumana, ung isa nman sira na pagdating", tagalog)).toMatchObject({
+      status: "supported",
+      code: "tgl",
+    });
+  });
+
+  it("marks Taglish as Tagalog mixed with English", () => {
+    expect(detectLanguage("Maganda naman yung quality and walang sira, thank you seller", tagalog)).toEqual({
+      status: "mixed",
+      code: "tgl",
+      name: "Tagalog",
+    });
+  });
+
+  it("keeps an English review with one Tagalog courtesy word as English", () => {
+    expect(detectLanguage("Fast delivery and great quality, thank you po", tagalog)).toMatchObject({
+      status: "supported",
+      code: "eng",
+    });
+  });
+
+  it("does not mistake Spanish for Tagalog", () => {
+    expect(
+      detectLanguage("El producto llegó tarde y la caja estaba rota, pero el vendedor fue muy amable.", tagalog),
+    ).toMatchObject({ status: "unsupported", code: "spa" });
+  });
+
+  it("leaves Basic mode's reading of Tagalog unchanged", () => {
+    expect(detectLanguage("Sobrang ganda ng tela at mabilis dumating. Salamat po!").status).toBe("unsupported");
+  });
+});
+
+describe("describeLanguage", () => {
+  it("names the language of a supported review", () => {
+    expect(describeLanguage("supported", "eng")).toBe("English");
+    expect(describeLanguage("supported", "tgl")).toBe("Tagalog");
+  });
+
+  it("calls Tagalog mixed with English Taglish", () => {
+    expect(describeLanguage("mixed", "tgl")).toBe("Taglish (Tagalog and English)");
+    expect(describeLanguage("mixed", "spa")).toBe("Mixed (English and Spanish)");
+  });
+
+  it("marks unsupported and undetermined languages", () => {
+    expect(describeLanguage("unsupported", "spa")).toBe("Spanish (not supported yet)");
+    expect(describeLanguage("undetermined", "und")).toBe("Too short to tell");
   });
 });

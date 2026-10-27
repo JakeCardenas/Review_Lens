@@ -1,4 +1,5 @@
 import { detectLanguage } from "@/lib/analysis/language";
+import { providerLanguages } from "@/lib/analysis/providers/languages";
 import { prepareRow } from "@/lib/csv/prepare";
 import type { RawRow, ReviewStatus, RowIssue } from "@/lib/types";
 import type { Db } from "./db-types";
@@ -44,12 +45,13 @@ export async function ingestRows(db: Db, upload: UploadRecord, rows: RawRow[]): 
 
   const issues: RowIssue[] = [];
   const reviews: NewReview[] = [];
+  const readsTagalog = providerLanguages(upload.provider).includes("tgl");
   for (const raw of rows) {
     const prepared = prepareRow(raw, { dateFormat: upload.dateFormat, ratingScale: upload.ratingScale });
     issues.push(...prepared.issues);
     if (!prepared.text) continue;
 
-    const language = detectLanguage(prepared.text);
+    const language = detectLanguage(prepared.text, { tagalog: readsTagalog });
     const unsupported = language.status === "unsupported";
     if (unsupported) {
       issues.push({

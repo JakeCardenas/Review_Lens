@@ -1,5 +1,6 @@
 import { computeConfidence, ratingPosition } from "@/lib/analysis/confidence";
 import { extractKeywords } from "@/lib/analysis/keywords";
+import { providerLanguages } from "@/lib/analysis/providers/languages";
 import { ProviderError, type SentimentProvider } from "@/lib/analysis/providers/types";
 import { detectTopics } from "@/lib/analysis/topics";
 import { LIMITS } from "@/lib/limits";
@@ -12,6 +13,8 @@ export type BatchResult = {
   processed: number;
   /** Set when this batch failed and its reviews were put back for another try (or marked failed). */
   batchError: string | null;
+  /** Set when the provider asked to wait (a per-minute limit); the reviews were put back unchanged. */
+  retryAfterMs: number | null;
   progress: Progress;
 };
 
@@ -20,6 +23,7 @@ type ClaimedRow = {
   row_number: number;
   text: string;
   rating: number | null;
+  language: string;
   language_status: LanguageStatus;
   attempts: number;
 };
@@ -105,7 +109,9 @@ export async function analyzeNextBatch(
   if (upload.status === "importing") {
     throw new AppError("STILL_IMPORTING", "Finish importing the file before analysis starts.", 409);
   }
-  if (upload.status !== "analyzing") return { processed: 0, batchError: null, progress: await progressOf(db, uploadId) };
+  if (upload.status !== "analyzing") {
+    return { processed: 0, batchError: null, retryAfterMs: null, progress: await progressOf(db, uploadId) };
+  }
   if (upload.provider !== provider.id || upload.model !== provider.model) {
     throw new AppError(
       "PROVIDER_CHANGED",
@@ -127,11 +133,13 @@ export async function analyzeNextBatch(
      update reviews r
      set status = 'processing', claimed_at = now(), attempts = r.attempts + 1
      from picked where r.id = picked.id
-     returning r.id, r.row_number, r.text, r.rating::float8 as rating, r.language_status, r.attempts`,
+     returning r.id, r.row_number, r.text, r.rating::float8 as rating, r.language, r.language_status, r.attempts`,
     [uploadId, batchSize, LIMITS.staleClaimMinutes],
   );
 
   let batchError: string | null = null;
+  let retryAfterMs: number | null = null;
+  let putBack = 0;
   const unsupportedMixed = claimed.filter((r) => r.language_status === "mixed" && !provider.supportsMixedLanguage);
   const toAnalyze = claimed.filter((r) => !unsupportedMixed.includes(r));
 
@@ -156,10 +164,13 @@ export async function analyzeNextBatch(
     try {
       const results = await provider.analyze(toAnalyze.map((r) => ({ id: r.id, text: r.text })));
       const byId = new Map(results.map((r) => [r.id, r]));
-      const mode = provider.id === "basic" ? "basic" : provider.id === "anthropic" ? "ai" : "mock";
+      const mode = provider.id === "basic" ? "basic" : provider.id === "gemini" ? "ai" : "mock";
+      const languages = providerLanguages(provider.id);
       const labeled = toAnalyze.flatMap((row) => {
         const result = byId.get(row.id);
         if (!result) return [];
+        // A mix of languages the provider reads (Taglish in AI mode) is not a reason for doubt.
+        const readsMix = row.language_status === "mixed" && languages.includes(row.language);
         const confidence = computeConfidence({
           mode,
           sentiment: result.sentiment,
@@ -167,7 +178,7 @@ export async function analyzeNextBatch(
           mixedOpinion: result.mixedOpinion,
           mixedLanguage: result.mixedLanguage,
           wordCount: row.text.split(/\s+/).filter(Boolean).length,
-          languageStatus: row.language_status,
+          languageStatus: readsMix ? "supported" : row.language_status,
           ratingPosition: ratingPosition(row.rating, upload.ratingScale),
         });
         return [
@@ -176,7 +187,7 @@ export async function analyzeNextBatch(
             sentiment: result.sentiment,
             confidence: confidence.level,
             confidence_reasons: confidence.reasons,
-            topics: detectTopics(row.text),
+            topics: result.topics ?? detectTopics(row.text),
             keywords: extractKeywords(row.text),
             model_output: result.output,
           },
@@ -200,26 +211,32 @@ export async function analyzeNextBatch(
         await releaseOrFail(db, uploadId, missing, batchError);
       }
     } catch (error) {
-      if (error instanceof ProviderError && !error.retryable) {
+      // Stopping (a bad key, a used-up daily quota) or waiting (a per-minute limit) puts the reviews
+      // back unchanged, so it doesn't count against their attempts.
+      if (error instanceof ProviderError && (!error.retryable || error.retryAfterMs !== undefined)) {
         await db.query(
           `update reviews set status = 'pending', claimed_at = null, attempts = greatest(attempts - 1, 0)
            where upload_id = $1::uuid and id in ${ID_LIST}`,
           [uploadId, ids(toAnalyze)],
         );
-        throw error;
+        if (!error.retryable) throw error;
+        batchError = error.message;
+        retryAfterMs = error.retryAfterMs ?? null;
+        putBack = toAnalyze.length;
+      } else {
+        if (!(error instanceof ProviderError)) {
+          // Log the cause without any review text.
+          console.error("[analyze] unexpected batch error", { uploadId, message: (error as Error)?.message });
+        }
+        batchError = error instanceof ProviderError ? error.message : "This batch couldn't be analyzed. It will be retried.";
+        await releaseOrFail(db, uploadId, toAnalyze, batchError);
       }
-      if (!(error instanceof ProviderError)) {
-        // Log the cause without any review text.
-        console.error("[analyze] unexpected batch error", { uploadId, message: (error as Error)?.message });
-      }
-      batchError = error instanceof ProviderError ? error.message : "This batch couldn't be analyzed. It will be retried.";
-      await releaseOrFail(db, uploadId, toAnalyze, batchError);
     }
   }
 
   await db.query(`update uploads set last_activity_at = now() where id = $1::uuid`, [uploadId]);
   await finishIfComplete(db, uploadId);
-  return { processed: claimed.length, batchError, progress: await progressOf(db, uploadId) };
+  return { processed: claimed.length - putBack, batchError, retryAfterMs, progress: await progressOf(db, uploadId) };
 }
 
 /** Puts failed reviews back in the queue so they can be analyzed again. */

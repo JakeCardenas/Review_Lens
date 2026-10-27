@@ -4,7 +4,7 @@ import { isPersonalColumn } from "@/lib/csv/columns";
 import { getDb } from "@/lib/server/db";
 import { AppError } from "@/lib/server/errors";
 import { errorResponse, json, readJson } from "@/lib/server/http";
-import { createUpload } from "@/lib/server/uploads";
+import { checkDataNotice, createUpload } from "@/lib/server/uploads";
 
 /** Creates an upload record from the column mapping. Rows are sent separately in chunks. */
 export async function POST(request: Request) {
@@ -20,6 +20,7 @@ export async function POST(request: Request) {
       );
     }
     const provider = getProvider();
+    checkDataNotice(provider, body.dataNotice);
     const upload = await createUpload(getDb(), body, provider);
     return json({ upload: { id: upload.id, status: upload.status } }, 201);
   } catch (error) {

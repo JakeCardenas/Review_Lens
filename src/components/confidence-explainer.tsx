@@ -7,7 +7,7 @@ export function ConfidenceExplainer({ basicMode }: { basicMode: boolean }) {
         <p>
           Confidence shows how sure ReviewLens is about a label, on a three-step scale: High, Medium or Low. It combines how clearly
           the model read the wording with simple checks: whether the review mixes praise and complaints, whether it is very short,
-          whether it mixes languages, and whether its star rating agrees with the wording.
+          whether it mixes in a language ReviewLens doesn&apos;t read, and whether its star rating agrees with the wording.
         </p>
         <p>
           It is not a percentage chance of being right, and it has not been measured against reviews labeled by people. Read Low

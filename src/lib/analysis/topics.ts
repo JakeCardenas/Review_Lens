@@ -1,9 +1,14 @@
-export type TopicId = "delivery" | "price" | "quality" | "service" | "packaging" | "fit" | "usability" | "returns";
+export const TOPIC_IDS = ["delivery", "price", "quality", "service", "packaging", "fit", "usability", "returns"] as const;
+
+export type TopicId = (typeof TOPIC_IDS)[number];
 
 export type Topic = { id: TopicId; label: string; pattern: RegExp };
 
 /** Version stored with each upload so results can be traced to the word lists that produced them. */
 export const TOPIC_VERSION = "topics-v1";
+
+/** Stored instead of TOPIC_VERSION when the AI model picks each review's topics. */
+export const AI_TOPIC_VERSION = "topics-ai-v1";
 
 export const TOPICS: Topic[] = [
   {

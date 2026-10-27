@@ -13,10 +13,9 @@ export function json(data: unknown, status = 200): Response {
 export function errorResponse(error: unknown): Response {
   if (error instanceof AppError) return json({ error: { code: error.code, message: error.message } }, error.status);
   if (error instanceof ProviderError) {
-    return json(
-      { error: { code: error.retryable ? "PROVIDER_UNAVAILABLE" : "PROVIDER_REJECTED", message: error.message } },
-      error.retryable ? 503 : 502,
-    );
+    const code = error.code ?? (error.retryable ? "PROVIDER_UNAVAILABLE" : "PROVIDER_REJECTED");
+    const status = error.code === "FREE_TIER_DAILY_LIMIT" ? 429 : error.retryable ? 503 : 502;
+    return json({ error: { code, message: error.message } }, status);
   }
   console.error("[api] unexpected error:", (error as Error)?.message ?? error);
   return json({ error: { code: "SERVER_ERROR", message: "Something went wrong on the server. Please try again." } }, 500);

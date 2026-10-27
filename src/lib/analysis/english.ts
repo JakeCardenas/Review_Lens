@@ -1,4 +1,4 @@
-function words(list: string): Set<string> {
+export function words(list: string): Set<string> {
   return new Set(list.split(/\s+/).filter(Boolean));
 }
 
