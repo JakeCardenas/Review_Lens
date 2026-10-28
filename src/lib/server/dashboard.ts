@@ -22,6 +22,8 @@ export type Dashboard = {
     pending: number;
     unsupportedLanguage: number;
     mixedLanguage: number;
+    /** Labeled reviews that contain both praise and complaints. */
+    mixedOpinion: number;
   };
   sentiment: Record<Sentiment, number>;
   confidence: Record<Confidence, number>;
@@ -46,6 +48,7 @@ export async function getDashboard(db: Db, upload: UploadRecord, filters: Review
     pending: number;
     unsupported_language: number;
     mixed_language: number;
+    mixed_opinion: number;
     positive: number;
     neutral: number;
     negative: number;
@@ -61,6 +64,7 @@ export async function getDashboard(db: Db, upload: UploadRecord, filters: Review
        count(*) filter (where r.status in ('pending', 'processing'))::int as pending,
        count(*) filter (where r.status = 'not_labeled' and r.language_status = 'unsupported')::int as unsupported_language,
        count(*) filter (where r.language_status = 'mixed')::int as mixed_language,
+       count(*) filter (where r.status = 'labeled' and 'mixed_opinion' = any(r.confidence_reasons))::int as mixed_opinion,
        count(*) filter (where r.status = 'labeled' and r.sentiment = 'positive')::int as positive,
        count(*) filter (where r.status = 'labeled' and r.sentiment = 'neutral')::int as neutral,
        count(*) filter (where r.status = 'labeled' and r.sentiment = 'negative')::int as negative,
@@ -119,6 +123,7 @@ export async function getDashboard(db: Db, upload: UploadRecord, filters: Review
       pending: summary.pending,
       unsupportedLanguage: summary.unsupported_language,
       mixedLanguage: summary.mixed_language,
+      mixedOpinion: summary.mixed_opinion,
     },
     sentiment,
     confidence: { high: summary.high, medium: summary.medium, low: summary.low },

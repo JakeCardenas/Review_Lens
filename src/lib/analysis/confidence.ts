@@ -47,6 +47,11 @@ export type ConfidenceInput = {
 
 const LEVELS: Confidence[] = ["low", "medium", "high"];
 
+/** True when a labeled review contains both praise and complaints, as recorded in its confidence reasons. */
+export function hasMixedOpinion(reasons: readonly string[]): boolean {
+  return reasons.includes("mixed_opinion");
+}
+
 export function ratingPosition(rating: number | null, scale: RatingScale | null): number | null {
   if (rating === null || !scale) return null;
   const min = scale === 100 ? 0 : 1;

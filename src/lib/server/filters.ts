@@ -4,6 +4,10 @@ import { CONFIDENCE_LEVELS, SENTIMENTS, type Confidence, type Sentiment } from "
 export const LIST_STATUSES = ["labeled", "not_labeled", "failed", "pending"] as const;
 export type ListStatus = (typeof LIST_STATUSES)[number];
 
+/** "mixed" keeps reviews that contain both praise and complaints. */
+const OPINIONS = ["mixed"] as const;
+export type OpinionFilter = (typeof OPINIONS)[number];
+
 export type ReviewFilters = {
   from: string | null;
   to: string | null;
@@ -14,6 +18,7 @@ export type ReviewFilters = {
   topic: TopicId | null;
   confidence: Confidence | null;
   status: ListStatus | null;
+  opinion: OpinionFilter | null;
   q: string | null;
 };
 
@@ -27,6 +32,7 @@ export const EMPTY_FILTERS: ReviewFilters = {
   topic: null,
   confidence: null,
   status: null,
+  opinion: null,
   q: null,
 };
 
@@ -71,6 +77,7 @@ export function parseFilters(source: ParamSource): ReviewFilters {
     topic: topic && isTopicId(topic) ? topic : null,
     confidence: oneOf(first(source, "confidence"), CONFIDENCE_LEVELS),
     status: oneOf(first(source, "status"), LIST_STATUSES),
+    opinion: oneOf(first(source, "opinion"), OPINIONS),
     q: text(first(source, "q")),
   };
 }
@@ -97,6 +104,7 @@ const QUERY_KEYS: Record<keyof ReviewFilters, string> = {
   topic: "topic",
   confidence: "confidence",
   status: "status",
+  opinion: "opinion",
   q: "q",
 };
 
@@ -130,6 +138,7 @@ export function buildWhere(uploadId: string, filters: ReviewFilters): { sql: str
   if (filters.topic) conditions.push(`${add(filters.topic)} = any(r.topics)`);
   if (filters.confidence) conditions.push(`r.confidence = ${add(filters.confidence)}`);
   if (filters.status) conditions.push(`r.status = ${add(filters.status)}`);
+  if (filters.opinion === "mixed") conditions.push(`'mixed_opinion' = any(r.confidence_reasons)`);
   if (filters.q) {
     const query = add(filters.q);
     const pattern = add(`%${filters.q.replace(/[\\%_]/g, "\\$&")}%`);

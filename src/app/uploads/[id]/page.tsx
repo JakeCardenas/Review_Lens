@@ -150,6 +150,14 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
               className="lg:col-span-2"
             >
               <SentimentBars sentiment={sentiment} labeled={totals.labeled} />
+              {totals.mixedOpinion > 0 && (
+                <p className="mt-3 text-sm text-ink-2">
+                  {formatNumber(totals.mixedOpinion)} of {formatNumber(totals.labeled)} labeled reviews mix praise and complaints.{" "}
+                  <a href={linkTo({ opinion: "mixed" })} className="font-semibold text-brand-ink underline-offset-2 hover:underline">
+                    Read them
+                  </a>
+                </p>
+              )}
             </Card>
             <Card
               title="Sentiment over time"

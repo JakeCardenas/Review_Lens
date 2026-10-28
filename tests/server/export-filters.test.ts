@@ -4,7 +4,7 @@ import { analyzeNextBatch, startAnalysis } from "@/lib/server/analyze";
 import { getDashboard } from "@/lib/server/dashboard";
 import type { Db } from "@/lib/server/db-types";
 import { csvCell, reviewCsvLines, summaryCsv } from "@/lib/server/export";
-import { buildWhere, EMPTY_FILTERS, parseFilters } from "@/lib/server/filters";
+import { buildWhere, EMPTY_FILTERS, filtersToQuery, parseFilters } from "@/lib/server/filters";
 import { ingestRows } from "@/lib/server/ingest";
 import { createUpload, type UploadRecord } from "@/lib/server/uploads";
 import { createTestDb } from "../helpers/pglite";
@@ -42,6 +42,12 @@ describe("parseFilters", () => {
       q: "late",
       product: "Kettle",
     });
+  });
+
+  it("reads the mixed-opinion filter and keeps it in links", () => {
+    expect(parseFilters(new URLSearchParams("opinion=mixed")).opinion).toBe("mixed");
+    expect(parseFilters(new URLSearchParams("opinion=happy")).opinion).toBeNull();
+    expect(filtersToQuery({ opinion: "mixed" })).toBe("opinion=mixed");
   });
 
   it("reads plain objects from Next.js search params", () => {

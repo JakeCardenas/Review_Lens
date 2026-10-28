@@ -6,7 +6,7 @@ import { SearchX } from "lucide-react";
 import { ConfidenceExplainer } from "@/components/confidence-explainer";
 import { FiltersBar } from "@/components/filters-bar";
 import { Pagination } from "@/components/pagination";
-import { ReviewCard, StatusBadge, TopicChips } from "@/components/review-card";
+import { MixedOpinionTag, ReviewCard, StatusBadge, TopicChips } from "@/components/review-card";
 import { ReviewDialog } from "@/components/review-dialog";
 import { ConfidenceMeter } from "@/components/sentiment";
 import { ButtonLink, EmptyState } from "@/components/ui";
@@ -68,6 +68,7 @@ function ReviewDetail({ review }: { review: ReviewRow }) {
       <div className="flex flex-wrap items-center gap-2">
         <StatusBadge review={review} />
         {review.status === "labeled" && review.confidence && <ConfidenceMeter level={review.confidence} />}
+        <MixedOpinionTag review={review} />
       </div>
       <blockquote className="whitespace-pre-wrap rounded-card bg-surface-2 p-4 text-[16px] leading-relaxed">
         {highlightTopics(review.text, review.topics)}

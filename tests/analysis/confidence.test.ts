@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { computeConfidence, ratingPosition } from "@/lib/analysis/confidence";
+import { computeConfidence, hasMixedOpinion, ratingPosition } from "@/lib/analysis/confidence";
+
+describe("hasMixedOpinion", () => {
+  it("is true when the confidence reasons say the review mixes praise and complaints", () => {
+    expect(hasMixedOpinion(["model_leaning", "mixed_opinion"])).toBe(true);
+    expect(hasMixedOpinion(["model_clear", "rating_agrees"])).toBe(false);
+    expect(hasMixedOpinion([])).toBe(false);
+  });
+});
 
 const base = {
   mode: "ai" as const,

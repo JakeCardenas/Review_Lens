@@ -18,7 +18,7 @@ export type FilterOptionsProps = {
 };
 
 const DASHBOARD_KEYS = ["from", "to", "product", "rating_min", "rating_max"];
-const REVIEW_KEYS = [...DASHBOARD_KEYS, "sentiment", "topic", "confidence", "status", "q"];
+const REVIEW_KEYS = [...DASHBOARD_KEYS, "sentiment", "topic", "confidence", "opinion", "status", "q"];
 
 function ratingSteps(scale: RatingScale | null): number[] {
   if (scale === 100) return Array.from({ length: 11 }, (_, i) => i * 10);
@@ -199,6 +199,13 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
                 <option value="high">High</option>
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
+              </select>
+            </label>
+            <label className={field}>
+              Opinion
+              <select value={value("opinion")} onChange={(e) => update({ opinion: e.target.value || null })} className={selectClass}>
+                <option value="">All opinions</option>
+                <option value="mixed">Mixed praise and complaints</option>
               </select>
             </label>
             <label className={field}>

@@ -85,6 +85,7 @@ export function describeFilters(filters: ReviewFilters): string {
   if (filters.topic) parts.push(`Topic: ${topicLabel(filters.topic)}`);
   if (filters.confidence) parts.push(`Confidence: ${filters.confidence}`);
   if (filters.status) parts.push(`Status: ${filters.status}`);
+  if (filters.opinion === "mixed") parts.push("Opinion: mixed praise and complaints");
   if (filters.q) parts.push(`Search: ${filters.q}`);
   return parts.length ? parts.join("; ") : "None";
 }

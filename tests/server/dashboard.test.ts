@@ -147,6 +147,50 @@ describe("searchReviews", () => {
   });
 });
 
+describe("mixed opinions", () => {
+  // Like the mock, but flags reviews that turn on "but" as mixing praise and complaints.
+  const mixedAware = new (class extends MockProvider {
+    async analyze(items: Parameters<MockProvider["analyze"]>[0]) {
+      return (await super.analyze(items)).map((r, i) => ({ ...r, mixedOpinion: /\bbut\b/i.test(items[i].text) }));
+    }
+  })();
+  let mixedUpload: UploadRecord;
+
+  beforeAll(async () => {
+    mixedUpload = await createUpload(
+      db,
+      {
+        name: "Mixed",
+        fileName: "mixed.csv",
+        columnMap: { text: "Review", date: null, rating: null, product: null },
+        dateFormat: null,
+        ratingScale: null,
+        totalRows: 4,
+      },
+      mixedAware,
+    );
+    await ingestRows(db, mixedUpload, [
+      { rowNumber: 2, text: "I love the design but the lid is terrible and leaks" },
+      { rowNumber: 3, text: "Great value, but the delivery was late" },
+      { rowNumber: 4, text: TEXT.positive },
+      { rowNumber: 5, text: TEXT.negative },
+    ]);
+    await startAnalysis(db, mixedUpload.id);
+    await analyzeNextBatch(db, mixedAware, mixedUpload.id);
+  });
+
+  it("counts labeled reviews that mix praise and complaints", async () => {
+    const dashboard = await getDashboard(db, mixedUpload, EMPTY_FILTERS);
+    expect(dashboard.totals).toMatchObject({ labeled: 4, mixedOpinion: 2 });
+  });
+
+  it("filters the review list to mixed opinions", async () => {
+    const page = await searchReviews(db, mixedUpload.id, { ...EMPTY_FILTERS, opinion: "mixed" }, 1);
+    expect(page.total).toBe(2);
+    expect(page.rows.map((r) => r.rowNumber)).toEqual([2, 3]);
+  });
+});
+
 describe("getFilterOptions and listIssues", () => {
   it("returns products, date range and rating range", async () => {
     expect(await getFilterOptions(db, upload.id)).toEqual({

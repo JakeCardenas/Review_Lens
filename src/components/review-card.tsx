@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Ban, Clock3, XCircle } from "lucide-react";
+import { Ban, Clock3, Scale, XCircle } from "lucide-react";
 import { ConfidenceMeter, SentimentBadge } from "@/components/sentiment";
+import { hasMixedOpinion } from "@/lib/analysis/confidence";
 import { topicLabel } from "@/lib/analysis/topics";
 import { formatDate } from "@/lib/format";
 import type { ReviewRow } from "@/lib/server/reviews";
@@ -17,6 +18,20 @@ export function StatusBadge({ review }: { review: ReviewRow }) {
     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[13px] font-semibold ${meta.tone}`}>
       <meta.icon aria-hidden className="size-3.5" />
       {meta.label}
+    </span>
+  );
+}
+
+/** Marks a labeled review that contains both praise and complaints. */
+export function MixedOpinionTag({ review }: { review: ReviewRow }) {
+  if (review.status !== "labeled" || !hasMixedOpinion(review.confidenceReasons)) return null;
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full border border-line-strong px-2.5 py-0.5 text-[13px] font-semibold text-ink-2"
+      title="This review has both praise and complaints."
+    >
+      <Scale aria-hidden className="size-3.5" />
+      Mixed opinion
     </span>
   );
 }
@@ -52,6 +67,7 @@ export function ReviewCard({ review, href }: { review: ReviewRow; href: string }
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge review={review} />
           {review.status === "labeled" && review.confidence && <ConfidenceMeter level={review.confidence} />}
+          <MixedOpinionTag review={review} />
         </div>
         <p className="mt-2.5 line-clamp-3 text-[15px] leading-relaxed text-ink">{review.text}</p>
         {review.status !== "labeled" && review.statusNote && <p className="mt-1.5 text-sm text-ink-2">{review.statusNote}</p>}
