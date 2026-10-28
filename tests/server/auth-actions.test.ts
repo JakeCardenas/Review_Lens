@@ -71,10 +71,15 @@ describe("signUp", () => {
     expect(auth.signUp).not.toHaveBeenCalled();
   });
 
-  it("refuses a session that skipped email confirmation", async () => {
+  it("signs the person straight in when email confirmation is turned off in Supabase", async () => {
     auth.signUp.mockResolvedValue(ok({ user: { id: ID, email_confirmed_at: "2026-10-28T00:00:00Z" }, session: { access_token: "x" } }));
-    expect(await actions.signUp({}, form(valid))).toMatchObject({ error: expect.stringMatching(/email confirmation/i) });
-    expect(auth.signOut).toHaveBeenCalled();
+    expect(await redirectedTo(actions.signUp({}, form(valid)))).toBe("/");
+    expect(auth.signOut).not.toHaveBeenCalled();
+  });
+
+  it("points people with an existing account to sign in", async () => {
+    auth.signUp.mockResolvedValue(fail("user_already_exists", 422));
+    expect(await actions.signUp({}, form(valid))).toMatchObject({ error: expect.stringMatching(/sign in/i) });
   });
 
   it("explains when the app's email sender can't reach the address", async () => {
@@ -98,12 +103,15 @@ describe("signIn", () => {
     expect(await actions.signIn({}, form(valid))).toEqual({ error: "Email or password is incorrect." });
   });
 
-  it("asks unconfirmed accounts to confirm their email first, and keeps no session", async () => {
+  it("asks unconfirmed accounts to confirm their email first when Supabase requires it", async () => {
     auth.signInWithPassword.mockResolvedValue(fail("email_not_confirmed"));
     expect(await actions.signIn({}, form(valid))).toMatchObject({ error: expect.stringMatching(/Confirm your email/) });
+  });
+
+  it("follows Supabase's confirmation setting: a session it gives is kept", async () => {
     auth.signInWithPassword.mockResolvedValue(ok({ user: { id: ID, email_confirmed_at: null } }));
-    expect(await actions.signIn({}, form(valid))).toMatchObject({ error: expect.stringMatching(/Confirm your email/) });
-    expect(auth.signOut).toHaveBeenCalledTimes(1);
+    expect(await redirectedTo(actions.signIn({}, form({ ...valid, next: "/upload" })))).toBe("/upload");
+    expect(auth.signOut).not.toHaveBeenCalled();
   });
 });
 

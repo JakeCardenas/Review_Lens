@@ -39,6 +39,7 @@ function explain(error: { code?: string; status?: number; message: string }, fal
     return "ReviewLens can't send email to that address yet, because its email sender isn't set up. Try again later.";
   }
   if (error.code === "email_address_invalid") return "That email address can't receive email. Check it and try again.";
+  if (error.code === "user_already_exists") return "That email already has a ReviewLens account. Sign in instead.";
   return fallback;
 }
 
@@ -62,17 +63,10 @@ export async function signUp(_prev: AuthState, data: FormData): Promise<AuthStat
     options: { emailRedirectTo: `${await siteOrigin()}/auth/confirm?next=%2F` },
   });
   if (error) return { error: explain(error, "Your account couldn't be created. Try again in a moment.") };
-  // A session straight away means Supabase's "Confirm email" setting is off. ReviewLens requires a
-  // confirmed email, so it doesn't keep that session.
-  if (result.session) {
-    await supabase.auth.signOut();
-    return {
-      error:
-        "Sign-up is paused because email confirmation is turned off for this app. The app owner needs to turn on Confirm email in Supabase.",
-    };
-  }
-  // Supabase answers the same way when the email already has an account, so this doesn't reveal it.
-  redirect("/check-email");
+  // Supabase's "Confirm email" setting decides. When it's off, sign-up returns a session and the
+  // person is signed in. When it's on, there is no session until they open the emailed link; Supabase
+  // then answers the same way for an email that already has an account, so this doesn't reveal it.
+  redirect(result.session ? "/" : "/check-email");
 }
 
 export async function signIn(_prev: AuthState, data: FormData): Promise<AuthState> {
@@ -81,17 +75,18 @@ export async function signIn(_prev: AuthState, data: FormData): Promise<AuthStat
   if (!email.success || !password.success) return { error: "Enter your email and password." };
 
   const supabase = await createSupabaseServerClient();
-  const { data: result, error } = await supabase.auth.signInWithPassword({ email: email.data, password: password.data });
-  const unconfirmed =
-    "Confirm your email first: open the link we sent when you signed up. You can get a new link on the Check your email page.";
+  // Whether an unconfirmed email may sign in is Supabase's "Confirm email" setting; it refuses with
+  // email_not_confirmed while that setting is on.
+  const { error } = await supabase.auth.signInWithPassword({ email: email.data, password: password.data });
   if (error) {
-    if (error.code === "email_not_confirmed") return { error: unconfirmed };
+    if (error.code === "email_not_confirmed") {
+      return {
+        error:
+          "Confirm your email first: open the link we sent when you signed up. You can get a new link on the Check your email page.",
+      };
+    }
     if (error.code === "invalid_credentials") return { error: "Email or password is incorrect." };
     return { error: explain(error, "Signing in didn't work. Try again in a moment.") };
-  }
-  if (!result.user?.email_confirmed_at) {
-    await supabase.auth.signOut();
-    return { error: unconfirmed };
   }
   redirect(safeNextPath(data.get("next")));
 }

@@ -36,7 +36,6 @@ export default function SignUpPage() {
           { name: "confirm", label: "Type the password again", type: "password", autoComplete: "new-password" },
         ]}
       />
-      <p className="text-sm text-ink-2">We&apos;ll email you a link to confirm your address before you can sign in.</p>
     </AuthShell>
   );
 }
