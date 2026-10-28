@@ -40,15 +40,22 @@ ReviewLens only allows models that are free on the Gemini API’s free tier. The
 
 In AI mode, ReviewLens labels English, Tagalog, and Taglish reviews, including texting spellings like “nman” and “hndi.” The basic analyzer labels English only. Reviews in other languages are listed as not supported.
 
-## Label check
+## Label check and rating alignment
 
-To see how often ReviewLens agrees with you, add a column to your CSV with your own label for each review: `positive`, `neutral`, or `negative`. Name it something like `my_label`. On the upload page, match it to **Your label**. Spellings like `Positive`, `pos`, and `positibo` also work. Reviews you leave blank are left out of the check. Your labels are saved with the reviews but never sent to the AI.
+To see how often ReviewLens agrees with people, add a column to your CSV with your own label for each review: `positive`, `neutral`, or `negative`. Name it something like `my_label`. On the upload page, match it to **Your label**. Spellings like `Positive`, `pos`, and `positibo` also work. Your labels are saved with the reviews but never sent to Gemini.
 
-The dashboard’s **Label check** box shows how many labels match, how often they match at each confidence level, and a table of where they differ. **See the disagreements** lists those reviews, with your label next to ReviewLens’s. Both exports include the comparison.
+The dashboard’s **Label check** box shows:
 
-Without a label column, ReviewLens compares its labels with the star ratings instead: 4–5 stars count as positive, 3 as neutral, and 1–2 as negative. Stars are a rough guide, since a 5-star review can still complain.
+- how many eligible reviews match, and how many were left out and why: no label, a label that couldn’t be read, a language ReviewLens doesn’t read, or an analysis that failed or hasn’t finished
+- agreement at each confidence level
+- a table of where the labels match and differ
+- precision, recall, and F1 for each label
 
-The label check measures agreement, not accuracy. With a small sample, one review can change the result a lot.
+Below it, a list shows the reviews where the labels differ, with your label next to ReviewLens’s. Both exports include your labels and the comparison.
+
+Without a label column, the dashboard shows **Rating alignment** instead. It compares ReviewLens’s labels with what each star rating suggests: 4–5 stars count as positive, 3 as neutral, and 1–2 as negative. Ratings are only a rough proxy, not labels a person checked, so this doesn’t measure accuracy.
+
+Either way, the check measures agreement, not accuracy, and a small sample can swing a lot. See [docs/accuracy-check.md](docs/accuracy-check.md) for the pilot results and how to run a fair check.
 
 ## Privacy
 

@@ -1,5 +1,6 @@
 import { isTopicId, type TopicId } from "@/lib/analysis/topics";
 import { CONFIDENCE_LEVELS, SENTIMENTS, type Confidence, type Sentiment } from "@/lib/types";
+import { CHECK_REFERENCE_SQL } from "./label-check-sql";
 
 export const LIST_STATUSES = ["labeled", "not_labeled", "failed", "pending"] as const;
 export type ListStatus = (typeof LIST_STATUSES)[number];
@@ -8,7 +9,7 @@ export type ListStatus = (typeof LIST_STATUSES)[number];
 const OPINIONS = ["mixed"] as const;
 export type OpinionFilter = (typeof OPINIONS)[number];
 
-/** Whether ReviewLens's label matches the label it is checked against. */
+/** Whether ReviewLens's label matches what it is checked against: your label, or else the rating. */
 const CHECKS = ["agree", "disagree"] as const;
 export type CheckFilter = (typeof CHECKS)[number];
 
@@ -147,9 +148,9 @@ export function buildWhere(uploadId: string, filters: ReviewFilters): { sql: str
   if (filters.confidence) conditions.push(`r.confidence = ${add(filters.confidence)}`);
   if (filters.status) conditions.push(`r.status = ${add(filters.status)}`);
   if (filters.opinion === "mixed") conditions.push(`'mixed_opinion' = any(r.confidence_reasons)`);
-  // Reviews without a label to check against drop out of both, because comparing with null is never true.
-  if (filters.check === "agree") conditions.push(`r.status = 'labeled' and r.sentiment = r.reference_label`);
-  if (filters.check === "disagree") conditions.push(`r.status = 'labeled' and r.sentiment <> r.reference_label`);
+  // Reviews with nothing to check against drop out of both, because comparing with null is never true.
+  if (filters.check === "agree") conditions.push(`r.status = 'labeled' and r.sentiment = ${CHECK_REFERENCE_SQL}`);
+  if (filters.check === "disagree") conditions.push(`r.status = 'labeled' and r.sentiment <> ${CHECK_REFERENCE_SQL}`);
   if (filters.q) {
     const query = add(filters.q);
     const pattern = add(`%${filters.q.replace(/[\\%_]/g, "\\$&")}%`);

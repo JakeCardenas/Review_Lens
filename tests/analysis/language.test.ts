@@ -60,6 +60,16 @@ describe("detectLanguage for a provider that reads Tagalog", () => {
     });
   });
 
+  it("reads Taglish written in texting shorthand", () => {
+    for (const text of [
+      "ok nmn ung bag pero ndi matibay ung strap",
+      "wla pdn reply si seller, tas sira pa ung box",
+      "gnda sna kso ndi gumana agd",
+    ]) {
+      expect(detectLanguage(text, tagalog).code).toBe("tgl");
+    }
+  });
+
   it("does not mistake Spanish for Tagalog", () => {
     expect(
       detectLanguage("El producto llegó tarde y la caja estaba rota, pero el vendedor fue muy amable.", tagalog),

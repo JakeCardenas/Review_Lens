@@ -1,6 +1,6 @@
--- Label check: the label a review is compared with. It is either the person's own positive,
--- neutral or negative label from the uploaded file, or the label its star rating suggests.
--- It is stored only to compare with ReviewLens's label and is never sent to an AI service.
+-- Label check: the person's own positive, neutral or negative label for a review, from the
+-- uploaded file's label column. Ratings are never stored here; rating alignment is worked out when
+-- it's shown. The label is only compared with ReviewLens's label and is never sent to an AI service.
 
 alter table public.reviews
   add column if not exists reference_label text

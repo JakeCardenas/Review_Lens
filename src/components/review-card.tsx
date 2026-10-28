@@ -38,13 +38,14 @@ export function MixedOpinionTag({ review }: { review: ReviewRow }) {
 }
 
 /**
- * Shows the label a review is checked against next to ReviewLens's own. The person's own label always
- * shows; the stars' label only shows when it disagrees, because the rating is already on the card.
+ * Shows what a review is checked against next to ReviewLens's label. The person's own label always
+ * shows; the rating's label only shows when it disagrees, because the rating is already on the card.
  */
 export function LabelCheckTag({ review, source }: { review: ReviewRow; source: LabelCheckSource | null }) {
-  if (!source || !review.referenceLabel || review.status !== "labeled") return null;
-  const agrees = review.sentiment === review.referenceLabel;
-  if (source === "stars" && agrees) return null;
+  const reference = source === "label" ? review.referenceLabel : source === "rating" ? review.ratingLabel : null;
+  if (!reference || review.status !== "labeled") return null;
+  const agrees = review.sentiment === reference;
+  if (source === "rating" && agrees) return null;
   const Icon = source === "label" ? Tag : Star;
   return (
     <span
@@ -53,7 +54,7 @@ export function LabelCheckTag({ review, source }: { review: ReviewRow; source: L
       }`}
     >
       <Icon aria-hidden className="size-3.5" />
-      {source === "label" ? "Your label" : "Stars suggest"}: {SENTIMENT_META[review.referenceLabel].label}
+      {source === "label" ? "Your label" : "Stars suggest"}: {SENTIMENT_META[reference].label}
       <span className="sr-only">{agrees ? ", the same as ReviewLens" : ", different from ReviewLens"}</span>
     </span>
   );

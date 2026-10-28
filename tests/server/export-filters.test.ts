@@ -55,7 +55,7 @@ describe("parseFilters", () => {
     expect(parseFilters(new URLSearchParams("check=agree")).check).toBe("agree");
     expect(parseFilters(new URLSearchParams("check=maybe")).check).toBeNull();
     expect(filtersToQuery({ check: "disagree" })).toBe("check=disagree");
-    expect(describeFilters({ ...EMPTY_FILTERS, check: "disagree" })).toBe("Label check: disagreements");
+    expect(describeFilters({ ...EMPTY_FILTERS, check: "disagree" })).toBe("Agreement check: disagreements");
   });
 
   it("reads plain objects from Next.js search params", () => {
@@ -108,26 +108,67 @@ describe("exports", () => {
 
   it("exports every labeled review with masked, formula-safe text", async () => {
     const lines: string[] = [];
-    for await (const line of reviewCsvLines(db, upload.id, EMPTY_FILTERS)) lines.push(line);
+    for await (const line of reviewCsvLines(db, upload, EMPTY_FILTERS)) lines.push(line);
     expect(lines[0]).toBe(
-      "row_number,review_text,review_date,rating,product,sentiment,reference_label,confidence,confidence_reasons,topics,language_status,status,note\r\n",
+      "row_number,review_text,review_date,rating,product,sentiment,your_label,rating_suggests,confidence,confidence_reasons,topics,language_status,status,note\r\n",
     );
     expect(lines).toHaveLength(3);
     expect(lines[1]).toContain("'=HYPERLINK");
     expect(lines[1]).toContain("[email]");
-    expect(lines[2]).toMatch(/^3,"Terrible, delivery was late",,1,,negative,negative,/);
+    expect(lines[2]).toMatch(/^3,"Terrible, delivery was late",,1,,negative,,negative,/);
   });
 
-  it("adds the label check to the summary", async () => {
+  it("adds the rating alignment to the summary, marked as a rough proxy", async () => {
     const dashboard = await getDashboard(db, upload, EMPTY_FILTERS);
     const csv = summaryCsv(upload, dashboard, EMPTY_FILTERS);
+    expect(csv).toContain("\r\nRating alignment\r\n");
     expect(csv).toContain('Compared with,"Star ratings (4–5 stars = positive, 3 = neutral, 1–2 = negative)"\r\n');
-    expect(csv).toContain("Reviews compared,2\r\n");
+    expect(csv).toContain("Eligible reviews,2\r\n");
     expect(csv).toContain("Labels that match,2,100.0%\r\n");
+    expect(csv).toContain("Not counted: no rating,0\r\n");
     expect(csv).toContain(
       "Stars suggest,ReviewLens: Positive,ReviewLens: Neutral,ReviewLens: Negative\r\nPositive,1,0,0\r\nNeutral,0,0,0\r\nNegative,0,0,1\r\n",
     );
-    expect(csv).toMatch(/not proof/);
+    expect(csv).toMatch(/proxy/);
+    expect(csv).not.toContain("Precision");
+  });
+
+  it("adds your labels, what was left out and per-label scores to the exports", async () => {
+    const labeled = await createUpload(
+      db,
+      {
+        name: "Labeled export",
+        fileName: "labeled.csv",
+        columnMap: { text: "Review", date: null, rating: null, product: null, label: "My label" },
+        dateFormat: null,
+        ratingScale: null,
+        totalRows: 4,
+      },
+      mock,
+    );
+    await ingestRows(db, labeled, [
+      { rowNumber: 2, text: "I love it", label: "positive" },
+      { rowNumber: 3, text: "Terrible, it broke", label: "negative" },
+      { rowNumber: 4, text: "It is blue", label: "negative" },
+      { rowNumber: 5, text: "Great value" },
+    ]);
+    await startAnalysis(db, labeled.id);
+    await analyzeNextBatch(db, mock, labeled.id);
+
+    const lines: string[] = [];
+    for await (const line of reviewCsvLines(db, labeled, EMPTY_FILTERS)) lines.push(line);
+    expect(lines[3]).toMatch(/^4,It is blue,,,,neutral,negative,,/);
+
+    const csv = summaryCsv(labeled, await getDashboard(db, labeled, EMPTY_FILTERS), EMPTY_FILTERS);
+    expect(csv).toContain("\r\nLabel check\r\n");
+    expect(csv).toContain('Compared with,"Your labels (column ""My label"")"\r\n');
+    expect(csv).toContain("Eligible reviews,3\r\n");
+    expect(csv).toContain("Labels that match,2,66.7%\r\n");
+    expect(csv).toContain("Not counted: no label,1\r\n");
+    expect(csv).toContain("Label,Your label count,ReviewLens count,Precision,Recall,F1\r\n");
+    expect(csv).toContain("Positive,1,1,1.00,1.00,1.00\r\n");
+    expect(csv).toContain("Neutral,0,1,0.00,n/a,n/a\r\n");
+    expect(csv).toContain("Negative,2,1,1.00,0.50,0.67\r\n");
   });
 
   it("writes a summary with totals, sentiment shares and topics", async () => {

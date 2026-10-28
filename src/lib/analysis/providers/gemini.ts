@@ -43,11 +43,14 @@ const ANSWER_JSON_SCHEMA = {
   required: ["results"],
 };
 
-const SYSTEM_PROMPT = `You label customer reviews for a business dashboard. Reviews may be in English, Tagalog (Filipino) or Taglish (Tagalog and English mixed, even within one sentence), often with texting spellings: nman/nmn = naman, hndi/hnd/di = hindi, ung = yung, xa/sya = siya, lng = lang, tlga = talaga, pra = para, kc = kasi, prang = parang, medjo = medyo, gnda/mganda = maganda, pde/pwde = pwede.
+const SYSTEM_PROMPT = `You label customer reviews for a business dashboard. Reviews may be in English, Tagalog (Filipino) or Taglish (Tagalog and English mixed, even within one sentence), often with texting spellings: nman/nmn = naman, hndi/hnd/ndi/di = hindi, wla = wala, ung = yung, xa/sya = siya, lng = lang, tlga = talaga, pra = para, kc = kasi, prang = parang, medjo = medyo, gnda/mganda = maganda, pde/pwde = pwede, sna = sana, tas = tapos, pdn = pa rin, wg = wag.
 
 For each review in the JSON list, return:
-- sentiment: the overall opinion the customer expresses: positive, neutral or negative. Use neutral when there is no clear opinion, or when praise and complaints are evenly balanced.
-- certainty: "clear" when the wording leaves little doubt; "leaning" when the label fits but another reading is plausible (sarcasm, hedging, very short text); "unclear" when you are mostly guessing.
+- sentiment: the customer's overall opinion, judged by their main message:
+  - positive: mainly satisfied. A small complaint doesn't change that ("Ang ganda, medyo matagal lang dumating").
+  - negative: mainly dissatisfied, or the main point is a real problem: broken, fake, missing parts, wrong item, doesn't work, rude seller. Politeness or one small compliment doesn't change that ("Salamat po, pero sira yung isa").
+  - neutral: no clear opinion; lukewarm acceptance with no real problem ("okay lang", "okay naman", "pwede na", "sakto lang"); or praise and complaints where neither side clearly outweighs the other ("Okay naman ang tela, kaso manipis").
+- certainty: "clear" when the wording leaves little doubt; "leaning" when the label fits but another reading is plausible (sarcasm, hedging, very short text, or a mixed review that could be read as neutral); "unclear" when you are mostly guessing.
 - mixed_opinion: true when the review contains both praise and complaints.
 - language: "english", "tagalog", "taglish" (Tagalog and English mixed), "mixed_other" (English mixed with a language other than Tagalog), or "other".
 - topics: the topics from the list below that the customer actually comments on, or an empty list.
@@ -55,6 +58,8 @@ For each review in the JSON list, return:
 Reading Filipino reviews:
 - Negation flips meaning: "hindi maganda" (not good), "di gumana" and "ayaw gumana" (doesn't work), "di ko nagustuhan" (I didn't like it), "wag na kayo bumili" (don't buy it). Negating a complaint is mild praise: "hindi naman masama" (not bad) and "walang sira" (nothing broken).
 - Local wording: "sulit" (worth the price), "legit" (genuine, trustworthy seller), "solid" (very good), "sakto lang", "keri lang", "pwede na" and "okay lang" (just okay, usually neutral), "medyo" (somewhat), "sana" (I wish, often a mild complaint), "nakakadismaya" (disappointing), "panget" or "pangit" (bad, ugly), "sira" (broken), "bitin" (not enough), "mumurahin" (cheap-looking).
+- "okay naman", "ok naman", "ayos naman" and "goods naman" mean "it's fine": lukewarm, not strong praise. Judge the review by what comes after them, usually "pero", "kaso", "kaya lang" or "lang".
+- "maganda sana" or "ayos na sana" means "it would have been good": the customer is let down, so judge the review by what went wrong.
 - Politeness such as "po", "salamat po" or "thank you seller" is not praise by itself. Judge what the customer says about the product, the delivery and the seller.
 
 Topics:
@@ -170,7 +175,8 @@ export class GeminiProvider implements SentimentProvider {
         headers: { "content-type": "application/json", "x-goog-api-key": this.apiKey },
         body: JSON.stringify({
           systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: [{ role: "user", parts: [{ text: JSON.stringify({ reviews: items }) }] }],
+          // Only each review's id and text leave the server, whatever else a caller passes along.
+          contents: [{ role: "user", parts: [{ text: JSON.stringify({ reviews: items.map(({ id, text }) => ({ id, text })) }) }] }],
           generationConfig: { responseMimeType: "application/json", responseJsonSchema: ANSWER_JSON_SCHEMA },
         }),
         signal: AbortSignal.timeout(100_000),

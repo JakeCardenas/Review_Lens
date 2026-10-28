@@ -1,3 +1,4 @@
+import { CHECK_NOTES, classScores } from "@/lib/analysis/agreement";
 import { REASON_TEXT, STAR_RULES } from "@/lib/analysis/confidence";
 import { topicLabel } from "@/lib/analysis/topics";
 import { providerLabel } from "@/lib/provider-label";
@@ -31,7 +32,8 @@ const REVIEW_HEADER = [
   "rating",
   "product",
   "sentiment",
-  "reference_label",
+  "your_label",
+  "rating_suggests",
   "confidence",
   "confidence_reasons",
   "topics",
@@ -41,9 +43,10 @@ const REVIEW_HEADER = [
 ];
 
 /** Yields the labeled dataset as CSV lines, reading 1,000 reviews at a time. */
-export async function* reviewCsvLines(db: Db, uploadId: string, filters: ReviewFilters): AsyncGenerator<string> {
+export async function* reviewCsvLines(db: Db, upload: UploadRecord, filters: ReviewFilters): AsyncGenerator<string> {
   yield csvLine(REVIEW_HEADER);
-  const { sql, params } = buildWhere(uploadId, filters);
+  const hasLabelColumn = Boolean(upload.columnMap.label);
+  const { sql, params } = buildWhere(upload.id, filters);
   let after = 0;
   for (;;) {
     const rows = await queryReviews(
@@ -60,7 +63,8 @@ export async function* reviewCsvLines(db: Db, uploadId: string, filters: ReviewF
         r.rating,
         r.product,
         r.sentiment,
-        r.referenceLabel,
+        hasLabelColumn ? r.referenceLabel : null,
+        r.ratingLabel,
         r.confidence,
         r.confidenceReasons.map((code) => REASON_TEXT[code] ?? code).join(" "),
         r.topics.map(topicLabel),
@@ -88,7 +92,7 @@ export function describeFilters(filters: ReviewFilters): string {
   if (filters.confidence) parts.push(`Confidence: ${filters.confidence}`);
   if (filters.status) parts.push(`Status: ${filters.status}`);
   if (filters.opinion === "mixed") parts.push("Opinion: mixed praise and complaints");
-  if (filters.check) parts.push(filters.check === "agree" ? "Label check: matches" : "Label check: disagreements");
+  if (filters.check) parts.push(filters.check === "agree" ? "Agreement check: matches" : "Agreement check: disagreements");
   if (filters.q) parts.push(`Search: ${filters.q}`);
   return parts.length ? parts.join("; ") : "None";
 }
@@ -97,28 +101,54 @@ const percent = (part: number, whole: number) => (whole ? `${((part / whole) * 1
 
 const CONFIDENCE_NAMES = { high: "High", medium: "Medium", low: "Low" } as const;
 
+const score = (value: number | null) => (value === null ? "n/a" : value.toFixed(2));
+
 function labelCheckLines(upload: UploadRecord, check: LabelCheck): unknown[][] {
   const yours = check.source === "label";
-  return [
+  const thing = yours ? "label" : "rating";
+  const lines: unknown[][] = [
     [],
-    ["Label check"],
+    [yours ? "Label check" : "Rating alignment"],
     [
       "Compared with",
       yours ? `Your labels (column "${upload.columnMap.label}")` : `Star ratings (${STAR_RULES[upload.ratingScale ?? 5]})`,
     ],
-    ["Reviews compared", check.total],
-    ["Labels that match", check.agree, percent(check.agree, check.total)],
+    ["Eligible reviews", check.eligible],
+    ["Labels that match", check.agree, percent(check.agree, check.eligible)],
+    [`Not counted: no ${thing}`, check.excluded.missing],
+    [`Not counted: unreadable ${thing}`, check.excluded.invalid],
+    ["Not counted: not labeled (language)", check.excluded.notLabeled],
+    ["Not counted: analysis failed", check.excluded.failed],
+    ["Not counted: not analyzed yet", check.excluded.pending],
     [],
     [yours ? "Your label" : "Stars suggest", ...SENTIMENTS.map((s) => `ReviewLens: ${SENTIMENT_NAMES[s]}`)],
     ...SENTIMENTS.map((s) => [SENTIMENT_NAMES[s], ...SENTIMENTS.map((app) => check.matrix[s][app])]),
+  ];
+  // Precision and recall only mean something against labels a person gave, so ratings get none.
+  if (yours) {
+    lines.push(
+      [],
+      ["Label", "Your label count", "ReviewLens count", "Precision", "Recall", "F1"],
+      ...classScores(check.matrix).map((c) => [
+        SENTIMENT_NAMES[c.sentiment],
+        c.support,
+        c.predicted,
+        score(c.precision),
+        score(c.recall),
+        score(c.f1),
+      ]),
+    );
+  }
+  lines.push(
     [],
     ["Confidence", "Reviews compared", "Labels that match", "Share that match"],
     ...CONFIDENCE_LEVELS.map((level) => {
       const { total, agree } = check.byConfidence[level];
       return [CONFIDENCE_NAMES[level], total, agree, percent(agree, total)];
     }),
-    ["Note", "This shows how often ReviewLens agrees with these labels. It is not proof that ReviewLens is accurate."],
-  ];
+    ["Note", CHECK_NOTES[check.source]],
+  );
+  return lines;
 }
 
 /** A summary report as CSV: totals, sentiment shares, confidence, topics, keywords and trend. */

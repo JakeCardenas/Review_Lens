@@ -1,4 +1,3 @@
-import { sentimentFromRating } from "@/lib/analysis/confidence";
 import { detectLanguage } from "@/lib/analysis/language";
 import { providerLanguages } from "@/lib/analysis/providers/languages";
 import { prepareRow } from "@/lib/csv/prepare";
@@ -48,7 +47,7 @@ export async function ingestRows(db: Db, upload: UploadRecord, rows: RawRow[]): 
   const issues: RowIssue[] = [];
   const reviews: NewReview[] = [];
   const readsTagalog = providerLanguages(upload.provider).includes("tgl");
-  // The label check uses the person's own labels when the file has them, and the stars otherwise.
+  // Only the person's own labels are stored; ratings are compared at read time and never stored as labels.
   const hasLabelColumn = Boolean(upload.columnMap.label);
   for (const raw of rows) {
     const prepared = prepareRow(raw, { dateFormat: upload.dateFormat, ratingScale: upload.ratingScale });
@@ -75,7 +74,7 @@ export async function ingestRows(db: Db, upload: UploadRecord, rows: RawRow[]): 
       language_status: language.status,
       status: unsupported ? "not_labeled" : "pending",
       status_note: unsupported ? `Language not supported yet (detected: ${language.name}).` : null,
-      reference_label: hasLabelColumn ? prepared.referenceLabel : sentimentFromRating(prepared.rating, upload.ratingScale),
+      reference_label: hasLabelColumn ? prepared.referenceLabel : null,
     });
   }
 

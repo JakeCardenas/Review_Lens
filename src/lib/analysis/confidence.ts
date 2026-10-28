@@ -12,6 +12,7 @@ export type ReasonCode =
   | "rating_partly_agrees"
   | "rating_disagrees"
   | "mixed_opinion"
+  | "mixed_one_side"
   | "short_text"
   | "mixed_language"
   | "language_uncertain"
@@ -27,6 +28,7 @@ export const REASON_TEXT: Record<ReasonCode, string> = {
   rating_partly_agrees: "The star rating only partly agrees with the label.",
   rating_disagrees: "The star rating disagrees with the wording.",
   mixed_opinion: "The review mixes praise and complaints.",
+  mixed_one_side: "It was still labeled one way, and a reader might call it neutral.",
   short_text: "The review is very short.",
   mixed_language: "The review mixes languages.",
   language_uncertain: "The review is too short to confirm its language.",
@@ -54,9 +56,11 @@ export function hasMixedOpinion(reasons: readonly string[]): boolean {
 
 export function ratingPosition(rating: number | null, scale: RatingScale | null): number | null {
   if (rating === null || !scale) return null;
-  const min = scale === 100 ? 0 : 1;
-  const position = Math.min(1, Math.max(0, (rating - min) / (scale - min)));
-  return Math.round(position * 100) / 100;
+  const lowest = scale === 100 ? 0 : 1;
+  // Ratings have at most two decimals, so working in hundredths keeps the rounding exact and the
+  // same as the database's (RATING_LABEL_SQL).
+  const percent = (Math.round(rating * 100) - lowest * 100) / (scale - lowest);
+  return Math.round(Math.min(100, Math.max(0, percent))) / 100;
 }
 
 function sentimentFromPosition(position: number): Sentiment {
@@ -100,7 +104,13 @@ export function computeConfidence(input: ConfidenceInput): { level: Confidence; 
     else if (opposite) cap(0, "rating_disagrees");
     else cap(1, "rating_partly_agrees");
   }
-  if (input.mixedOpinion) cap(1, "mixed_opinion");
+  if (input.mixedOpinion) {
+    cap(1, "mixed_opinion");
+    // In AI mode, mixed reviews labeled positive or negative were where people most often disagreed
+    // and said neutral, so they are left for a person to read rather than presented as settled.
+    // Basic mode is left as it was.
+    if (input.mode === "ai" && input.sentiment !== "neutral") cap(0, "mixed_one_side");
+  }
   if (input.wordCount < 4) cap(1, "short_text");
   if (input.mixedLanguage || input.languageStatus === "mixed") cap(0, "mixed_language");
   else if (input.languageStatus === "undetermined") cap(1, "language_uncertain");

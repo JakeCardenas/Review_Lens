@@ -56,12 +56,13 @@ function modelNote(review: ReviewRow): string | null {
   return null;
 }
 
-/** "Neutral, different from ReviewLens", or just the label when the review has no label of its own yet. */
+/** "Neutral, different from ReviewLens", or just the label when ReviewLens hasn't labeled the review. */
 function referenceFact(review: ReviewRow, source: LabelCheckSource): [string, string] | null {
-  if (!review.referenceLabel) return null;
-  const label = SENTIMENT_META[review.referenceLabel].label;
+  const reference = source === "label" ? review.referenceLabel : review.ratingLabel;
+  if (!reference) return null;
+  const label = SENTIMENT_META[reference].label;
   const compared =
-    review.status !== "labeled" ? label : `${label}, ${review.sentiment === review.referenceLabel ? "the same as" : "different from"} ReviewLens`;
+    review.status !== "labeled" ? label : `${label}, ${review.sentiment === reference ? "the same as" : "different from"} ReviewLens`;
   return [source === "label" ? "Your label" : "Stars suggest", compared];
 }
 
@@ -134,7 +135,7 @@ export default async function ReviewsPage({ params, searchParams }: PageProps<"/
     Number.isInteger(reviewId) && reviewId > 0 ? getReview(db, id, reviewId) : Promise.resolve(null),
   ]);
 
-  const checkSource = options.hasLabelCheck ? labelCheckSource(upload) : null;
+  const checkSource = labelCheckSource(upload);
   const base = `/uploads/${id}/reviews`;
   const query = filtersToQuery(filters);
   const listHref = (p: number) => {

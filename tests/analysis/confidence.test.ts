@@ -25,6 +25,12 @@ describe("sentimentFromRating", () => {
     expect(sentimentFromRating(4, null)).toBeNull();
   });
 
+  it("rounds a rating's place on the scale exactly, the same way the database does", () => {
+    expect(ratingPosition(3.98, 5)).toBe(0.75);
+    expect(ratingPosition(74.5, 100)).toBe(0.75);
+    expect(ratingPosition(25.5, 100)).toBe(0.26);
+  });
+
   it("matches the star rules shown to people", () => {
     expect(STAR_RULES[5]).toBe("4–5 stars = positive, 3 = neutral, 1–2 = negative");
     expect([8, 7, 4, 3].map((r) => sentimentFromRating(r, 10))).toEqual(["positive", "neutral", "neutral", "negative"]);
@@ -81,12 +87,28 @@ describe("computeConfidence", () => {
     expect(computeConfidence({ ...base, certainty: "leaning" }).level).toBe("medium");
   });
 
-  it("caps mixed opinions and very short text at medium", () => {
-    expect(computeConfidence({ ...base, mixedOpinion: true })).toEqual({
+  it("caps a neutral label on a mixed review, and very short text, at medium", () => {
+    expect(computeConfidence({ ...base, sentiment: "neutral", mixedOpinion: true })).toEqual({
       level: "medium",
       reasons: ["model_clear", "mixed_opinion"],
     });
     expect(computeConfidence({ ...base, wordCount: 3 }).level).toBe("medium");
+  });
+
+  it("marks a mixed review labeled positive or negative as low, since a reader may call it neutral", () => {
+    for (const sentiment of ["positive", "negative"] as const) {
+      expect(computeConfidence({ ...base, sentiment, mixedOpinion: true })).toEqual({
+        level: "low",
+        reasons: ["model_clear", "mixed_opinion", "mixed_one_side"],
+      });
+    }
+  });
+
+  it("leaves Basic mode's confidence for mixed reviews as it was", () => {
+    expect(computeConfidence({ ...base, mode: "basic", mixedOpinion: true })).toEqual({
+      level: "medium",
+      reasons: ["wordlist_strong", "mixed_opinion"],
+    });
   });
 
   it("is low for mixed-language reviews", () => {

@@ -15,7 +15,7 @@ export type FilterOptionsProps = {
   hasRating: boolean;
   hasProduct: boolean;
   ratingScale: RatingScale | null;
-  /** Set when reviews have a label to check against, which turns on the label-check filter. */
+  /** What reviews are checked against, which turns on the agreement filter. */
   checkSource?: LabelCheckSource | null;
 };
 
@@ -212,7 +212,7 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
             </label>
             {options.checkSource && (
               <label className={field}>
-                Label check
+                {options.checkSource === "label" ? "Label check" : "Rating alignment"}
                 <select value={value("check")} onChange={(e) => update({ check: e.target.value || null })} className={selectClass}>
                   <option value="">All reviews</option>
                   <option value="disagree">{options.checkSource === "label" ? "Differs from your label" : "Differs from the stars"}</option>

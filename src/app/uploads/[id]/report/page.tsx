@@ -3,10 +3,17 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import type { ReactNode } from "react";
 import { SentimentBars } from "@/components/dashboard/charts";
-import { byConfidenceText, LABEL_CHECK_CAVEAT, LabelCheckTable } from "@/components/dashboard/label-check";
+import {
+  byConfidenceText,
+  CHECK_TITLES,
+  checkDescription,
+  ClassScoresTable,
+  exclusionSentence,
+  LabelCheckTable,
+} from "@/components/dashboard/label-check";
 import { PrintButton } from "@/components/print-button";
 import { buttonClasses } from "@/components/ui";
-import { STAR_RULES } from "@/lib/analysis/confidence";
+import { CHECK_NOTES } from "@/lib/analysis/agreement";
 import { formatDateTime, formatNumber, formatPercent, periodLabel } from "@/lib/format";
 import { providerLabel } from "@/lib/provider-label";
 import { getDashboard } from "@/lib/server/dashboard";
@@ -81,19 +88,16 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
       </Section>
 
       {check && (
-        <Section title="Label check">
+        <Section title={CHECK_TITLES[check.source]}>
           <p className="max-w-3xl leading-relaxed">
-            ReviewLens&apos;s label matches{" "}
-            {check.source === "label"
-              ? "the label you gave in your file"
-              : `what the star rating suggests (${STAR_RULES[upload.ratingScale ?? 5]})`}{" "}
-            on {formatNumber(check.agree)} of {formatNumber(check.total)} reviews ({formatPercent(check.agree, check.total)}).{" "}
-            {byConfidenceText(check)}.
+            {checkDescription(check, upload.ratingScale)} {formatNumber(check.agree)} of {formatNumber(check.eligible)} eligible
+            reviews match ({formatPercent(check.agree, check.eligible)}). {exclusionSentence(check)} {byConfidenceText(check)}
           </p>
-          <div className="mt-3 max-w-md">
+          <div className="mt-3 grid max-w-3xl gap-5 sm:grid-cols-2">
             <LabelCheckTable check={check} />
+            {check.source === "label" && check.eligible > 0 && <ClassScoresTable check={check} />}
           </div>
-          <p className="mt-3 max-w-3xl text-sm text-ink-2">{LABEL_CHECK_CAVEAT[check.source]}</p>
+          <p className="mt-3 max-w-3xl text-sm text-ink-2">{CHECK_NOTES[check.source]}</p>
         </Section>
       )}
 

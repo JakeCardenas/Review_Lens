@@ -8,8 +8,11 @@ export type Confidence = (typeof CONFIDENCE_LEVELS)[number];
 export type DateFormat = "ymd" | "mdy" | "dmy";
 export type RatingScale = 5 | 10 | 100;
 
-/** What the label check compares with: the person's own labels, or the label each star rating suggests. */
-export type LabelCheckSource = "label" | "stars";
+/**
+ * What ReviewLens's labels are checked against: the person's own labels ("label check"), or the
+ * label each rating suggests ("rating alignment"), which is only a rough proxy.
+ */
+export type LabelCheckSource = "label" | "rating";
 
 export type ColumnField = "text" | "date" | "rating" | "product" | "label";
 /** `label` is optional because uploads made before the label check have no entry for it. */

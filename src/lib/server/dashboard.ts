@@ -1,8 +1,10 @@
+import type { AgreementMatrix, CheckExclusions } from "@/lib/analysis/agreement";
 import { rankKeywords, type KeywordCount, type KeywordsBySentiment } from "@/lib/analysis/keywords";
 import { TOPICS, type TopicId } from "@/lib/analysis/topics";
 import type { Confidence, LabelCheckSource, Sentiment } from "@/lib/types";
 import type { Db } from "./db-types";
 import { buildWhere, type ReviewFilters } from "./filters";
+import { RATING_LABEL_SQL } from "./label-check-sql";
 import { queryReviews, REVIEW_COLUMNS, type ReviewRow } from "./reviews";
 import type { UploadRecord } from "./uploads";
 
@@ -13,15 +15,20 @@ export type Trend =
 
 export type TopicBreakdown = { id: TopicId; label: string; total: number } & Record<Sentiment, number>;
 
-/** How often ReviewLens's label matches the person's own label, or the one the stars suggest. */
+/**
+ * How often ReviewLens's label matches the person's own label ("label") or, without a label
+ * column, the label each rating suggests ("rating", only a rough proxy).
+ */
 export type LabelCheck = {
   source: LabelCheckSource;
-  /** Labeled reviews that have a label to compare with. */
-  total: number;
+  /** Labeled reviews that have something valid to compare with. */
+  eligible: number;
   agree: number;
-  /** Counts by the label checked against (rows) and ReviewLens's label (columns). */
-  matrix: Record<Sentiment, Record<Sentiment, number>>;
+  matrix: AgreementMatrix;
   byConfidence: Record<Confidence, { total: number; agree: number }>;
+  excluded: CheckExclusions;
+  /** The first few disagreements, most confident first. */
+  disagreements: ReviewRow[];
 };
 
 export type Dashboard = {
@@ -43,7 +50,7 @@ export type Dashboard = {
   topics: TopicBreakdown[];
   keywords: KeywordsBySentiment;
   readFirst: ReviewRow[];
-  /** Null when no labeled review has a label to compare with. */
+  /** Null when the upload has neither a label column nor ratings. */
   check: LabelCheck | null;
 };
 
@@ -127,14 +134,6 @@ export async function getDashboard(db: Db, upload: UploadRecord, filters: Review
     params,
   );
 
-  const checkRows = await db.query<CheckRow>(
-    `select r.reference_label as reference, r.sentiment, r.confidence, count(*)::int as n
-     from reviews r
-     where ${sql} and r.status = 'labeled' and r.reference_label is not null
-     group by 1, 2, 3`,
-    params,
-  );
-
   return {
     totals: {
       all: summary.all,
@@ -153,30 +152,78 @@ export async function getDashboard(db: Db, upload: UploadRecord, filters: Review
     topics,
     keywords: rankKeywords(keywordRows, sentiment),
     readFirst,
-    check: labelCheck(labelCheckSource(upload), checkRows),
+    check: await getLabelCheck(db, upload, sql, params),
   };
 }
 
-/** The label check uses the person's own labels when the upload has a label column, and the stars otherwise. */
-export function labelCheckSource(upload: UploadRecord): LabelCheckSource {
-  return upload.columnMap.label ? "label" : "stars";
+/** Your own labels when the upload has a label column; otherwise its ratings, if it has any. */
+export function labelCheckSource(upload: UploadRecord): LabelCheckSource | null {
+  if (upload.columnMap.label) return "label";
+  return upload.hasRating ? "rating" : null;
 }
 
-type CheckRow = { reference: Sentiment; sentiment: Sentiment; confidence: Confidence | null; n: number };
+/** Issue codes that mean a label or rating was there but couldn't be read. */
+const UNREADABLE_CODES: Record<LabelCheckSource, string> = {
+  label: "'LABEL_UNREADABLE'",
+  rating: "'RATING_UNREADABLE', 'RATING_OUT_OF_RANGE'",
+};
 
-function labelCheck(source: LabelCheckSource, rows: CheckRow[]): LabelCheck | null {
-  if (!rows.length) return null;
+async function getLabelCheck(db: Db, upload: UploadRecord, sql: string, params: unknown[]): Promise<LabelCheck | null> {
+  const source = labelCheckSource(upload);
+  if (!source) return null;
+  // Ratings are compared at read time, so their label is never stored as if a person gave it.
+  const reference = source === "label" ? "r.reference_label" : RATING_LABEL_SQL;
+
+  const rows = await db.query<{ reference: Sentiment; sentiment: Sentiment; confidence: Confidence | null; n: number }>(
+    `select x.reference, r.sentiment, r.confidence, count(*)::int as n
+     from reviews r cross join lateral (select ${reference} as reference) x
+     where ${sql} and r.status = 'labeled' and x.reference is not null
+     group by 1, 2, 3`,
+    params,
+  );
+  const [left] = await db.query<{ missing: number; invalid: number; not_labeled: number; failed: number; pending: number }>(
+    `select count(*) filter (where x.reference is null and not x.unreadable)::int as missing,
+       count(*) filter (where x.reference is null and x.unreadable)::int as invalid,
+       count(*) filter (where x.reference is not null and r.status = 'not_labeled')::int as not_labeled,
+       count(*) filter (where x.reference is not null and r.status = 'failed')::int as failed,
+       count(*) filter (where x.reference is not null and r.status in ('pending', 'processing'))::int as pending
+     from reviews r
+     cross join lateral (
+       select ${reference} as reference,
+         exists (select 1 from upload_issues i where i.upload_id = r.upload_id and i.row_number = r.row_number
+           and i.code in (${UNREADABLE_CODES[source]})) as unreadable
+     ) x
+     where ${sql}`,
+    params,
+  );
+  const disagreements = await queryReviews(
+    db,
+    `select ${REVIEW_COLUMNS} from reviews r cross join lateral (select ${reference} as reference) x
+     where ${sql} and r.status = 'labeled' and r.sentiment <> x.reference
+     order by case r.confidence when 'high' then 0 when 'medium' then 1 else 2 end, r.row_number
+     limit 5`,
+    params,
+  );
+
   const bySentiment = () => ({ positive: 0, neutral: 0, negative: 0 });
   const check: LabelCheck = {
     source,
-    total: 0,
+    eligible: 0,
     agree: 0,
     matrix: { positive: bySentiment(), neutral: bySentiment(), negative: bySentiment() },
     byConfidence: { high: { total: 0, agree: 0 }, medium: { total: 0, agree: 0 }, low: { total: 0, agree: 0 } },
+    excluded: {
+      missing: left.missing,
+      invalid: left.invalid,
+      notLabeled: left.not_labeled,
+      failed: left.failed,
+      pending: left.pending,
+    },
+    disagreements,
   };
   for (const row of rows) {
     const agree = row.reference === row.sentiment ? row.n : 0;
-    check.total += row.n;
+    check.eligible += row.n;
     check.agree += agree;
     check.matrix[row.reference][row.sentiment] += row.n;
     if (row.confidence) {

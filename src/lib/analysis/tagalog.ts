@@ -2,7 +2,7 @@ import { words } from "./english";
 
 /** Tagalog words that say "not" or "none", including common texting spellings. */
 export const TAGALOG_NEGATIONS = words(`
-  hindi hndi hnd hinde nde indi di wala walang wla wlang ayaw ayoko wag huwag hwag
+  hindi hndi hnd hinde nde ndi indi di wala walang wla wlang ayaw ayoko wag wg huwag hwag
 `);
 
 /**
@@ -25,10 +25,12 @@ export const TAGALOG_SPELLINGS: ReadonlyMap<string, string> = new Map([
   ["hnd", "hindi"],
   ["hinde", "hindi"],
   ["nde", "hindi"],
+  ["ndi", "hindi"],
   ["indi", "hindi"],
   ["wla", "wala"],
   ["wlang", "walang"],
   ["hwag", "huwag"],
+  ["wg", "huwag"],
 ]);
 
 /** Frequent words in Filipino shopping reviews, used only to recognise Tagalog text. */

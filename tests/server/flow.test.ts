@@ -115,17 +115,15 @@ describe("ingestRows", () => {
     expect(await count("upload_issues where code = 'LABEL_UNREADABLE'")).toBe(1);
   });
 
-  it("uses the stars as the label check when there is no label column", async () => {
-    const upload = await newUpload(3);
+  it("never stores star ratings as your own labels", async () => {
+    const upload = await newUpload(2);
     await ingestRows(db, upload, [
       { rowNumber: 2, text: "Great kettle", rating: "5" },
       { rowNumber: 3, text: "Late delivery", rating: "2" },
-      { rowNumber: 4, text: "No stars given" },
     ]);
     expect(await db.query("select row_number, reference_label from reviews order by row_number")).toEqual([
-      { row_number: 2, reference_label: "positive" },
-      { row_number: 3, reference_label: "negative" },
-      { row_number: 4, reference_label: null },
+      { row_number: 2, reference_label: null },
+      { row_number: 3, reference_label: null },
     ]);
   });
 

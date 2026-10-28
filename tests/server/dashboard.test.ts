@@ -7,7 +7,8 @@ import { EMPTY_FILTERS } from "@/lib/server/filters";
 import { ingestRows } from "@/lib/server/ingest";
 import { getFilterOptions, listIssues, searchReviews } from "@/lib/server/reviews";
 import { createUpload, type UploadRecord } from "@/lib/server/uploads";
-import { CONFIDENCE_LEVELS } from "@/lib/types";
+import { sentimentFromRating } from "@/lib/analysis/confidence";
+import { CONFIDENCE_LEVELS, type RatingScale } from "@/lib/types";
 import { createTestDb } from "../helpers/pglite";
 
 const mock = new MockProvider();
@@ -193,6 +194,7 @@ describe("mixed opinions", () => {
 });
 
 describe("label check", () => {
+  const SPANISH = "El producto llegó tarde y la caja estaba rota, pero el vendedor fue muy amable.";
   let handLabeled: UploadRecord;
 
   beforeAll(async () => {
@@ -204,7 +206,7 @@ describe("label check", () => {
         columnMap: { text: "Review", date: null, rating: "Stars", product: null, label: "My label" },
         dateFormat: null,
         ratingScale: 5,
-        totalRows: 5,
+        totalRows: 9,
       },
       mock,
     );
@@ -214,13 +216,28 @@ describe("label check", () => {
       { rowNumber: 4, text: TEXT.neutral, rating: "3", label: "positive" },
       { rowNumber: 5, text: TEXT.negative, rating: "1", label: "neutral" },
       { rowNumber: 6, text: TEXT.positive, rating: "5" },
+      { rowNumber: 7, text: TEXT.positive, rating: "5", label: "maybe" },
+      { rowNumber: 8, text: SPANISH, label: "negative" },
+      { rowNumber: 9, text: TEXT.neutral, label: "neutral" },
+      { rowNumber: 10, text: TEXT.neutral, label: "neutral" },
     ]);
     await analyzeAll(handLabeled.id);
+    await db.query(
+      `update reviews set status = case row_number when 9 then 'failed' else 'pending' end,
+         sentiment = null, confidence = null, confidence_reasons = '{}'
+       where upload_id = $1::uuid and row_number in (9, 10)`,
+      [handLabeled.id],
+    );
   });
 
-  it("compares the labels with your own and leaves out reviews you didn't label", async () => {
+  it("compares the labels with your own and counts what it leaves out", async () => {
     const { check } = await getDashboard(db, handLabeled, EMPTY_FILTERS);
-    expect(check).toMatchObject({ source: "label", total: 4, agree: 2 });
+    expect(check).toMatchObject({
+      source: "label",
+      eligible: 4,
+      agree: 2,
+      excluded: { missing: 1, invalid: 1, notLabeled: 1, failed: 1, pending: 1 },
+    });
     // Rows are your label; columns are ReviewLens's label.
     expect(check?.matrix).toEqual({
       positive: { positive: 1, neutral: 1, negative: 0 },
@@ -229,11 +246,19 @@ describe("label check", () => {
     });
   });
 
+  it("lists the disagreements, most confident first", async () => {
+    const { check } = await getDashboard(db, handLabeled, EMPTY_FILTERS);
+    expect(check?.disagreements.map((r) => [r.rowNumber, r.referenceLabel, r.sentiment])).toEqual([
+      [5, "neutral", "negative"],
+      [4, "positive", "neutral"],
+    ]);
+  });
+
   it("splits agreement by confidence level", async () => {
     const { check } = await getDashboard(db, handLabeled, EMPTY_FILTERS);
     const { rows } = await searchReviews(db, handLabeled.id, EMPTY_FILTERS, 1);
     for (const level of CONFIDENCE_LEVELS) {
-      const atLevel = rows.filter((r) => r.referenceLabel && r.confidence === level);
+      const atLevel = rows.filter((r) => r.status === "labeled" && r.referenceLabel && r.confidence === level);
       expect(check?.byConfidence[level]).toEqual({
         total: atLevel.length,
         agree: atLevel.filter((r) => r.sentiment === r.referenceLabel).length,
@@ -251,15 +276,79 @@ describe("label check", () => {
     expect(agree.rows.map((r) => r.rowNumber)).toEqual([2, 3]);
   });
 
-  it("compares with the stars when there is no label column", async () => {
+  it("checks against the ratings instead when there is no label column", async () => {
     const { check } = await getDashboard(db, upload, EMPTY_FILTERS);
-    expect(check).toMatchObject({ source: "stars", total: 40, agree: 40 });
+    expect(check).toMatchObject({
+      source: "rating",
+      eligible: 40,
+      agree: 40,
+      excluded: { missing: 0, invalid: 0, notLabeled: 0, failed: 0, pending: 0 },
+    });
   });
 
-  it("has nothing to compare without labels or stars", async () => {
+  it("leaves reviews without a usable rating out of the rating alignment", async () => {
+    const rated = await createUpload(
+      db,
+      {
+        name: "Rated",
+        fileName: "rated.csv",
+        columnMap: { text: "Review", date: null, rating: "Stars", product: null },
+        dateFormat: null,
+        ratingScale: 5,
+        totalRows: 4,
+      },
+      mock,
+    );
+    await ingestRows(db, rated, [
+      { rowNumber: 2, text: TEXT.positive, rating: "5" },
+      { rowNumber: 3, text: TEXT.positive, rating: "2" },
+      { rowNumber: 4, text: TEXT.negative },
+      { rowNumber: 5, text: TEXT.negative, rating: "great" },
+    ]);
+    await analyzeAll(rated.id);
+    const { check } = await getDashboard(db, rated, EMPTY_FILTERS);
+    expect(check).toMatchObject({ source: "rating", eligible: 2, agree: 1, excluded: { missing: 1, invalid: 1 } });
+    const disagree = await searchReviews(db, rated.id, { ...EMPTY_FILTERS, check: "disagree" }, 1);
+    expect(disagree.rows.map((r) => [r.rowNumber, r.ratingLabel, r.sentiment])).toEqual([[3, "negative", "positive"]]);
+    // A rating is never stored as the person's own label.
+    expect(disagree.rows[0].referenceLabel).toBeNull();
+  });
+
+  it("works out the rating's label in the database exactly as the app does", async () => {
+    const grids: Record<RatingScale, number[]> = {
+      5: [0, 1, 1.5, 2, 2.01, 2.02, 2.5, 3, 3.5, 3.97, 3.98, 4, 4.5, 5],
+      10: [0, 1, 3, 3.25, 3.26, 4, 7, 7.7, 7.71, 7.75, 8, 10],
+      100: [0, 10, 25, 25.49, 25.5, 26, 50, 74, 74.49, 74.5, 75, 100],
+    };
+    for (const [scale, ratings] of Object.entries(grids)) {
+      const ratingScale = Number(scale) as RatingScale;
+      const grid = await createUpload(
+        db,
+        {
+          name: `Scale ${scale}`,
+          fileName: "grid.csv",
+          columnMap: { text: "Review", date: null, rating: "Stars", product: null },
+          dateFormat: null,
+          ratingScale,
+          totalRows: ratings.length,
+        },
+        mock,
+      );
+      await ingestRows(
+        db,
+        grid,
+        ratings.map((rating, i) => ({ rowNumber: i + 2, text: TEXT.neutral, rating: String(rating) })),
+      );
+      const { rows } = await searchReviews(db, grid.id, EMPTY_FILTERS, 1, 100);
+      expect(rows.map((r) => [r.rating, r.ratingLabel])).toEqual(
+        ratings.map((rating) => [rating, sentimentFromRating(rating, ratingScale)]),
+      );
+    }
+  });
+
+  it("has nothing to compare without labels or ratings", async () => {
     const { check } = await getDashboard(db, undated, EMPTY_FILTERS);
     expect(check).toBeNull();
-    expect((await getFilterOptions(db, undated.id)).hasLabelCheck).toBe(false);
   });
 });
 
@@ -274,7 +363,6 @@ describe("getFilterOptions and listIssues", () => {
       maxDate: "2026-04-20",
       minRating: 1,
       maxRating: 5,
-      hasLabelCheck: true,
     });
   });
 

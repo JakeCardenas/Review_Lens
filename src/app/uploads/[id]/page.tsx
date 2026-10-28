@@ -40,7 +40,7 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
     for (const [key, value] of Object.entries(extra)) query.set(key, value);
     return `${base}?${query}`;
   };
-  const { totals, sentiment } = dashboard;
+  const { totals, sentiment, check } = dashboard;
   const filtered = hasActiveFilters(filters);
   const scale = upload.ratingScale ?? 5;
 
@@ -177,12 +177,29 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
             </Card>
           </div>
 
-          {dashboard.check && (
-            <LabelCheckCard
-              check={dashboard.check}
-              ratingScale={upload.ratingScale}
-              disagreementsHref={linkTo({ check: "disagree" })}
-            />
+          {check && <LabelCheckCard check={check} ratingScale={upload.ratingScale} />}
+
+          {check && check.disagreements.length > 0 && (
+            <Card
+              title={check.source === "label" ? "Where ReviewLens and your labels differ" : "Where ReviewLens and the stars differ"}
+              description={`${plural(check.eligible - check.agree, "review")} got a different label. The most confident ones are first.`}
+              actions={
+                <ButtonLink href={linkTo({ check: "disagree" })} variant="secondary" size="sm">
+                  See all {formatNumber(check.eligible - check.agree)}
+                </ButtonLink>
+              }
+            >
+              <ul className="grid gap-3">
+                {check.disagreements.map((review) => (
+                  <ReviewCard
+                    key={review.id}
+                    review={review}
+                    href={linkTo({ check: "disagree", review: String(review.id) })}
+                    checkSource={check.source}
+                  />
+                ))}
+              </ul>
+            </Card>
           )}
 
           <Card
@@ -220,7 +237,7 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
                     key={review.id}
                     review={review}
                     href={linkTo({ review: String(review.id) })}
-                    checkSource={dashboard.check?.source ?? null}
+                    checkSource={check?.source ?? null}
                   />
                 ))}
               </ul>

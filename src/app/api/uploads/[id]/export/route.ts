@@ -37,7 +37,7 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/api/uploads/
     }
 
     const encoder = new TextEncoder();
-    const lines = reviewCsvLines(db, upload.id, filters);
+    const lines = reviewCsvLines(db, upload, filters);
     const stream = new ReadableStream<Uint8Array>({
       start(controller) {
         controller.enqueue(encoder.encode(BOM));

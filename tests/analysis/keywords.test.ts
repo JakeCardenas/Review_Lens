@@ -35,6 +35,12 @@ describe("extractKeywords", () => {
     expect(extractKeywords("hndi maganda, wlang reply")).toEqual(expect.arrayContaining(["hindi maganda", "walang reply"]));
   });
 
+  it("reads the shorthand ndi and wg as negations", () => {
+    const keywords = extractKeywords("ndi gumana yung charger. wg bumili dito");
+    expect(keywords).toEqual(expect.arrayContaining(["hindi gumana", "huwag bumili"]));
+    expect(keywords).not.toContain("ndi");
+  });
+
   it("keeps at most 30 unique keywords", () => {
     const text = Array.from({ length: 60 }, (_, i) => `word${String.fromCharCode(97 + (i % 26))}${i}`).join(" ");
     expect(extractKeywords(text).length).toBeLessThanOrEqual(30);
