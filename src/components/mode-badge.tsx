@@ -7,7 +7,7 @@ export function ModeBadge({ provider }: { provider: string }) {
   const label = ai ? "AI mode (Gemini)" : provider === "basic" ? "Basic mode (English only)" : "Test mode";
   const Icon = ai ? Sparkles : Languages;
   return (
-    <span className={`${tagClasses} ${ai ? "border-accent bg-accent-soft text-accent-ink" : "border-line bg-surface text-ink-2"}`}>
+    <span className={`${tagClasses} ${ai ? "bg-accent-soft text-accent-ink" : "bg-surface-2 text-ink-2"}`}>
       <Icon aria-hidden className="size-3.5" strokeWidth={2.5} />
       {label}
     </span>

@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2 } from "lucide-react";
 import { BrandMark } from "@/components/brand";
-import { JourneyPath } from "@/components/journey-path";
 import { Button, ButtonLink, Notice } from "@/components/ui";
 import { api, ApiRequestError, sleep } from "@/lib/client-api";
 import { formatNumber, plural } from "@/lib/format";
@@ -117,56 +116,59 @@ export function AnalyzeProgress({
   const hasIssues = progress.failed + progress.skipped + progress.warnings > 0;
 
   return (
-    <div className="grid gap-4">
-      <JourneyPath current={progress.done ? 3 : 2} />
-      <section className="rounded-card border-2 border-line bg-surface p-5 sm:p-7" aria-labelledby="progress-title">
+    <div className="grid gap-6">
+      <section className="grid gap-6" aria-labelledby="progress-title">
         <div className="flex items-center gap-4">
-          <BrandMark height={84} />
+          <BrandMark height={64} />
           <div className="min-w-0">
-            <h2 id="progress-title" className="flex items-center gap-2 text-subheading font-extrabold text-ink">
-              {progress.done && <CheckCircle2 aria-hidden className="size-5 text-brand-ink" />}
-              {progress.done ? "Analysis complete" : running ? "Analyzing reviews" : "Analysis paused"}
+            {!progress.done && <p className="text-[15px] font-bold text-ink-2">Step 3 of 4: Analyze</p>}
+            <h2 id="progress-title" className="flex items-center gap-2 text-2xl font-extrabold text-ink">
+              {progress.done && <CheckCircle2 aria-hidden className="size-6 shrink-0 text-brand-ink" />}
+              {progress.done ? "Your reviews are ready" : running ? "Reading your reviews" : "Analysis is paused"}
             </h2>
-            <p className="mt-0.5 text-sm text-ink-2">Method: {methodLabel}</p>
+            <p className="mt-0.5 text-[15px] text-ink-2 tabular" aria-live="polite">
+              {progress.done
+                ? "Let's see what customers are saying."
+                : `${formatNumber(processed)} of ${formatNumber(progress.imported)} reviews done`}
+            </p>
           </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-end gap-x-3 gap-y-1">
-          <span className="font-display text-heading font-black leading-none text-brand-display tabular sm:text-display">{percent}%</span>
-          <span className="pb-1 text-sm text-ink-2 tabular" aria-live="polite">
-            {formatNumber(processed)} of {formatNumber(progress.imported)} reviews processed
-          </span>
-        </div>
-        <div
-          role="progressbar"
-          aria-label="Analysis progress"
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-valuenow={percent}
-          className="meter mt-5"
-        >
-          <div
-            className="meter-fill"
-            style={{ transform: `scaleX(${percent / 100})` }}
-          />
-        </div>
+        {!progress.done && (
+          <div>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="font-display text-[2.5rem] font-black leading-none text-ink tabular">{percent}%</span>
+              {waiting > 0 && <span className="text-[15px] text-ink-2 tabular">{plural(waiting, "review")} to go</span>}
+            </div>
+            <div
+              role="progressbar"
+              aria-label="Analysis progress"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={percent}
+              className="meter mt-4"
+            >
+              <div className="meter-fill" style={{ transform: `scaleX(${percent / 100})` }} />
+            </div>
+          </div>
+        )}
 
-        <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <dl className="grid grid-cols-3 gap-4 border-t-2 border-line pt-5 sm:max-w-lg">
           {[
             ["Labeled", progress.labeled],
             ["Not labeled", progress.notLabeled],
             ["Failed", progress.failed],
-            ["Waiting", waiting],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-control border-2 border-line px-4 py-3">
-              <dt className="nav-label text-[12px] text-ink-2">{label}</dt>
-              <dd className="mt-1 font-display text-heading-sm font-black text-ink tabular">{formatNumber(Number(value))}</dd>
+            <div key={label}>
+              <dt className="text-[15px] text-ink-2">{label}</dt>
+              <dd className="font-display text-2xl font-black text-ink tabular">{formatNumber(Number(value))}</dd>
             </div>
           ))}
         </dl>
-        {progress.skipped > 0 && (
-          <p className="mt-3 text-sm text-ink-2">{plural(progress.skipped, "row")} had no review text and were skipped during import.</p>
-        )}
+        <div className="grid gap-1 text-[15px] text-ink-2">
+          {progress.skipped > 0 && <p>{plural(progress.skipped, "row")} had no review text and were skipped during import.</p>}
+          <p>Labeled with {methodLabel}.</p>
+        </div>
       </section>
 
       {note && !error && !progress.done && (
@@ -190,7 +192,7 @@ export function AnalyzeProgress({
 
       {!progress.done && !error && (
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-sm text-ink-2">Keep this page open. If you leave, analysis pauses and you can resume here.</p>
+          <p className="text-[15px] text-ink-2">Keep this page open while ReviewLens works. If you leave, it pauses and you can pick up here later.</p>
           {running ? (
             <Button variant="secondary" onClick={() => (stopRef.current = true)}>
               Pause

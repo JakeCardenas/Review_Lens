@@ -14,7 +14,7 @@ export type AuthField = {
 };
 
 export const fieldClasses =
-  "min-h-12 w-full rounded-control border-2 border-field bg-surface-2 px-4 text-[17px] font-semibold text-ink placeholder:text-ink-3 hover:border-ink-3 focus-visible:border-accent focus-visible:bg-surface";
+  "min-h-12 w-full rounded-control border-2 border-field bg-surface px-4 text-[17px] font-semibold text-ink placeholder:text-ink-3 hover:border-ink-3 focus-visible:border-accent";
 
 /** A small account form posted to a Server Action, showing its error or confirmation message. */
 export function AuthForm({
@@ -78,7 +78,7 @@ export function AuthForm({
               className={fieldClasses}
             />
             {field.help && (
-              <p id={`auth-${field.name}-help`} className="text-sm text-ink-2">
+              <p id={`auth-${field.name}-help`} className="text-[15px] text-ink-2">
                 {field.help}
               </p>
             )}

@@ -28,17 +28,3 @@ export function BrandMark({
     />
   );
 }
-
-/** The St. Paul University Philippines seal, unaltered, at a small size. */
-export function SpupSeal({ size = 32 }: { size?: number }) {
-  return (
-    <Image
-      src="/brand/spup-seal.png"
-      alt="St. Paul University Philippines seal"
-      width={size}
-      height={size}
-      className="shrink-0"
-      style={{ width: size, height: size }}
-    />
-  );
-}

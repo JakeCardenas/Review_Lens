@@ -3,15 +3,15 @@ import { ChevronDown, CircleHelp } from "lucide-react";
 /** Plain-language explanation of the confidence levels. */
 export function ConfidenceExplainer({ basicMode }: { basicMode: boolean }) {
   return (
-    <details className="group rounded-card border-2 border-line bg-surface text-sm">
-      <summary className="flex cursor-pointer list-none items-center gap-2.5 rounded-card px-5 py-4 text-accent-ink hover:bg-accent-soft nav-label text-[13px] [&::-webkit-details-marker]:hidden">
+    <details className="group rounded-card bg-surface-2 text-[15px]">
+      <summary className="flex min-h-12 cursor-pointer list-none items-center gap-2.5 rounded-card px-5 py-3 font-bold text-accent-ink [&::-webkit-details-marker]:hidden">
         <CircleHelp aria-hidden className="size-5" strokeWidth={2.5} />
         <span className="flex-1">What does confidence mean?</span>
         <ChevronDown aria-hidden className="size-4 text-ink-2 transition-transform duration-150 group-open:rotate-180" />
       </summary>
       <div className="grid max-w-3xl gap-2 px-5 pb-5 text-ink-2">
         <p>
-          Confidence shows how sure ReviewLens is about a label, on a three-step scale: High, Medium or Low. It combines how clearly
+          Confidence shows how sure ReviewLens is about a label: High, Medium or Low. It combines how clearly
           the model read the wording with simple checks: whether the review mixes praise and complaints, whether it is very short,
           whether it mixes in a language ReviewLens doesn&apos;t read, and whether its star rating agrees with the wording.
         </p>

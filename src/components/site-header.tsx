@@ -15,7 +15,7 @@ async function signedInUser(): Promise<SessionUser | null> {
   }
 }
 
-/** White top bar: the eagle and green wordmark, then New upload and the account pill when signed in. */
+/** White top bar: the eagle mark and green wordmark, then Upload reviews and the account pill when signed in. */
 export async function SiteHeader() {
   const user = await signedInUser();
   return (

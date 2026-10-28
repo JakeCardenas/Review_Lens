@@ -16,13 +16,13 @@ export default async function UploadPage() {
   return (
     <div className="mx-auto grid max-w-3xl gap-8">
       <div className="grid gap-5">
-        <Link href="/" className="press nav-label inline-flex w-fit items-center gap-1.5 rounded-control py-1 pr-2 text-[13px] text-accent-ink">
+        <Link href="/" className="press inline-flex w-fit items-center gap-1.5 rounded-control py-1 pr-2 text-[15px] font-bold text-accent-ink">
           <ArrowLeft aria-hidden className="size-4" strokeWidth={3} />
           All uploads
         </Link>
         <PageHeader
           title="Upload reviews"
-          description="Add a CSV of customer reviews. ReviewLens labels each review and finds what customers talk about."
+          description="Add a CSV of customer reviews. ReviewLens labels each one positive, neutral or negative, and finds what customers talk about."
         />
       </div>
       <UploadWizard provider={{ label: provider.label, external: provider.external, problem: provider.problem }} />

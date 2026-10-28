@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
 import { ConfidenceBars, SENTIMENT_META, SentimentIcon } from "@/components/sentiment";
 import type { KeywordsBySentiment } from "@/lib/analysis/keywords";
 import { formatNumber, formatPercent, plural } from "@/lib/format";
@@ -125,31 +124,6 @@ export function TopicBars({ topics, reviewsHref }: { topics: TopicBreakdown[]; r
   );
 }
 
-export function AttentionTopics({ topics, href }: { topics: TopicBreakdown[]; href: (topic: string) => string }) {
-  return (
-    <ol className="grid gap-2">
-      {topics.map((t, i) => (
-        <li key={t.id}>
-          <Link
-            href={href(t.id)}
-            className="sticker group flex items-center gap-3 rounded-card bg-surface px-4 py-3.5"
-          >
-            <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-control bg-neg-soft font-display text-base font-black text-neg-ink">
-              {i + 1}
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-extrabold text-ink">{t.label}</span>
-              <span className="block text-[15px] text-ink-2 tabular">
-                {formatNumber(t.negative)} negative of {plural(t.total, "mention")} ({formatPercent(t.negative, t.total)})
-              </span>
-            </span>
-            <ChevronRight aria-hidden className="size-5 shrink-0 text-line-strong transition-transform group-hover:translate-x-0.5 group-hover:text-accent-ink" strokeWidth={3} />
-          </Link>
-        </li>
-      ))}
-    </ol>
-  );
-}
 
 const CONFIDENCE_META: Record<Confidence, { label: string; filled: number; swatch: string }> = {
   high: { label: "High", filled: 3, swatch: "bg-conf-high" },

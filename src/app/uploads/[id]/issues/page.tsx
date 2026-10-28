@@ -45,16 +45,16 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
   return (
     <div className="grid gap-5">
       <div className="max-w-3xl">
-        <h2 className="text-subheading font-extrabold text-ink">Data issues</h2>
-        <p className="mt-1.5 text-sm text-ink-2">
-          Errors are rows that weren&apos;t analyzed, for example rows with no review text. Warnings are rows that were kept but changed,
-          for example a date that couldn&apos;t be read, or reviews in other languages that weren&apos;t labeled.
+        <h2 className="text-2xl font-extrabold text-ink">Data issues</h2>
+        <p className="mt-1 text-body text-ink-2">
+          Rows that needed a second look. Errors are rows ReviewLens couldn&apos;t analyze, like rows with no review text. Warnings are
+          rows that were kept but changed, like a date that couldn&apos;t be read or a review in a language ReviewLens doesn&apos;t read.
         </p>
       </div>
 
       {progress && progress.failed > 0 && (
         <Notice tone="error" title={`${formatNumber(progress.failed)} reviews couldn't be analyzed`} action={<RetryFailedButton uploadId={id} count={progress.failed} />}>
-          The analysis service didn&apos;t answer after 3 tries. Retrying sends them again.
+          The analysis service didn&apos;t answer after 3 tries. Retry to send them again.
         </Notice>
       )}
 
@@ -64,8 +64,8 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
             key={label}
             href={tabHref(value)}
             aria-current={severity === value ? "page" : undefined}
-            className={`press nav-label inline-flex min-h-11 items-center rounded-control border-2 px-4 text-[13px] ${
-              severity === value ? "border-accent bg-accent-soft text-accent-ink" : "border-line-strong bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink"
+            className={`press inline-flex min-h-11 items-center rounded-full border-2 px-4 text-[15px] font-bold ${
+              severity === value ? "border-fresh-leaf bg-brand-soft text-brand-ink" : "border-line bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink"
             }`}
           >
             {label} ({formatNumber(count)})
@@ -74,7 +74,7 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
       </nav>
 
       {issues.rows.length === 0 ? (
-        <EmptyState mascot title={severity ? `No ${severity}s` : "No problems found"}>
+        <EmptyState mascot title={severity ? `No ${severity}s` : "Nothing to fix here"}>
           Every row in the file was read without changes.
         </EmptyState>
       ) : (
@@ -91,7 +91,7 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
               <tbody>
                 {issues.rows.map((issue) => (
                   <tr key={issue.id} className="border-b border-line align-top last:border-0">
-                    <td className="px-4 py-3 tabular">{issue.rowNumber ?? "—"}</td>
+                    <td className="px-4 py-3 tabular">{issue.rowNumber ?? "None"}</td>
                     <td className="px-4 py-3">
                       {issue.severity === "error" ? (
                         <span className="inline-flex items-center gap-1.5 font-bold text-danger">

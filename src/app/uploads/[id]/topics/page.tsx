@@ -35,26 +35,28 @@ export default async function TopicsPage({ params, searchParams }: PageProps<"/u
   const filtered = hasActiveFilters(filters);
 
   return (
-    <div className="grid gap-6">
-      <div className="max-w-2xl">
-        <h2 className="text-heading-sm font-extrabold text-ink">Topics</h2>
-        <p className="mt-2 text-body text-ink-2">What customers mention, how they feel about each topic, and the words that stand out.</p>
-      </div>
+    <div className="grid gap-10">
+      <div className="grid gap-5">
+        <div className="max-w-2xl">
+          <h2 className="text-2xl font-extrabold text-ink">Topics</h2>
+          <p className="mt-1 text-body text-ink-2">What customers talk about, how they feel about each topic, and the words that stand out.</p>
+        </div>
 
-      <Suspense fallback={null}>
-        <FiltersBar
-          mode="dashboard"
-          options={{
-            products: options.products,
-            minDate: options.minDate,
-            maxDate: options.maxDate,
-            hasDate: upload.hasDate,
-            hasRating: upload.hasRating,
-            hasProduct: upload.hasProduct,
-            ratingScale: upload.ratingScale,
-          }}
-        />
-      </Suspense>
+        <Suspense fallback={null}>
+          <FiltersBar
+            mode="dashboard"
+            options={{
+              products: options.products,
+              minDate: options.minDate,
+              maxDate: options.maxDate,
+              hasDate: upload.hasDate,
+              hasRating: upload.hasRating,
+              hasProduct: upload.hasProduct,
+              ratingScale: upload.ratingScale,
+            }}
+          />
+        </Suspense>
+      </div>
 
       {dashboard.totals.all === 0 ? (
         filtered ? (
@@ -76,23 +78,27 @@ export default async function TopicsPage({ params, searchParams }: PageProps<"/u
             title="What customers mention most"
             description={
               dashboard.topics.length
-                ? `${dashboard.topics[0].label} comes up most, in ${plural(dashboard.topics[0].total, "review")}. Bar length is how many reviews mention a topic. Select a topic to read them.`
+                ? `${dashboard.topics[0].label} comes up most, in ${plural(dashboard.topics[0].total, "review")}. Longer bars mean more reviews. Select a topic to read them.`
                 : undefined
             }
           >
             {dashboard.topics.length ? (
               <TopicBars topics={dashboard.topics} reviewsHref={(topic) => linkTo({ topic })} />
             ) : (
-              <p className="text-[15px] text-ink-2">None of the eight tracked topics (delivery, price, quality and others) came up yet.</p>
+              <p className="text-[15px] text-ink-2">None of the eight topics ReviewLens looks for (delivery, price, quality and others) came up yet.</p>
             )}
           </Card>
 
           {dashboard.trend.status === "ok" ? (
-            <Card title="Sentiment over time" description="Share of each sentiment per period, from the review dates in the file.">
+            <Card
+              title="Sentiment over time"
+              description="How the mix of positive, neutral and negative changed, using the review dates in your file."
+              className="border-t-2 border-line pt-10"
+            >
               <TrendChart points={dashboard.trend.points} grain={dashboard.trend.grain} />
             </Card>
           ) : (
-            <p className="flex items-start gap-2.5 text-[15px] text-ink-2">
+            <p className="flex items-start gap-2.5 border-t-2 border-line pt-10 text-[15px] text-ink-2">
               <CalendarX2 aria-hidden className="mt-0.5 size-5 shrink-0" strokeWidth={2.5} />
               <span>
                 <span className="font-extrabold text-ink">No timeline for this upload.</span> {dashboard.trend.reason}
@@ -102,7 +108,8 @@ export default async function TopicsPage({ params, searchParams }: PageProps<"/u
 
           <Card
             title="Words that stand out"
-            description="Words and phrases from at least 2 reviews that are more common in one sentiment than the others. Select one to read those reviews."
+            description="Words and phrases used in at least 2 reviews, and more often in one sentiment than the others. Select one to read those reviews."
+            className="border-t-2 border-line pt-10"
           >
             <KeywordColumns keywords={dashboard.keywords} totals={dashboard.sentiment} searchHref={(term, s) => linkTo({ q: term, sentiment: s })} />
           </Card>

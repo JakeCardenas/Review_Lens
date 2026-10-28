@@ -1,54 +1,51 @@
-# ReviewLens redesign: Refero "Duolingo" style
+# ReviewLens design: friendly and simple, Duolingo-inspired
 
-A visual redesign of every screen, following the Refero "Duolingo" style board (https://styles.refero.design/style/7088d695-362b-4e09-b325-fa8136d4f350). Features, data, API behavior, auth, limits and analysis are unchanged.
+A visual and UX redesign of every screen, inspired by Duolingo's design context (https://www.designmd.co/d/duolingo) and the earlier Refero "Duolingo" board. Features, data, API behavior, auth, limits and analysis are unchanged.
 
 ## Intent
 
-White paper canvas, chubby rounded headings, one saturated green for progress and primary actions, Spark Blue for links and secondary actions, calm gray body text, and 12px controls with 2px borders and a solid bottom lip, like stickers pressed onto the page. ReviewLens keeps its own identity: its own square logo and green eagle mark, never Duolingo's name, wordmark, owl, illustrations or game features (no XP, hearts, streaks or leaderboards).
+A white page with dark, readable text. Bright green marks what you can do next, what is selected and how far along you are. Each screen shows the most useful thing first and one clear next step, with detail on its own page. ReviewLens keeps its own identity: its square logo and green eagle mark, never Duolingo's name, wordmark, owl, illustrations or game features (no XP, hearts, streaks or leaderboards).
 
 ## Colors (src/app/globals.css)
 
-| Refero token | Value | Used for |
+| Token | Value | Used for |
 | --- | --- | --- |
-| Paper White | `#ffffff` | page and card surfaces |
-| Eager Green | `#58cc02` | primary button fills, progress meters, positive sentiment, footer band, wordmark |
-| Storybook Green | `#d7ffb8` | soft washes behind positive and success tags |
-| Fresh Leaf | `#a5ed6e` | outlines of green tags and success notices |
-| Spark Blue | `#1cb0f6` | selected tabs and pills (2px outline), blue accents |
-| Night Ink | `#000437` | labels on green buttons, negative sentiment, footer text |
-| Charcoal | `#4b4b4b` | headings and primary text |
-| Pencil Gray | `#777777` | body text (see below), medium confidence |
-| Faded Gray | `#afafaf` | outlined button and pill borders, neutral sentiment, low confidence |
+| Page | `#ffffff` | page and list surfaces |
+| Green | `#58cc02` | primary buttons, selected tab and filter outlines, progress, positive sentiment |
+| Lime | `#a5ed6e` | selected outlines, the current step of the progress path |
+| Soft green | `#d7ffb8` | selected tab fill, success tags, active filter chips |
+| Sky blue | `#ddf4ff` | occasional soft surfaces: the overview takeaway, "How it works", AI mode tag |
+| Blue | `#1cb0f6` | secondary accents; link text uses `#1274a2` (4.6:1 on sky blue) |
+| Text | `#3c3c3c` | headings and main text (11:1) |
+| Supporting text | `#5f5f5f` | descriptions and meta (6.4:1); hints and placeholders `#6b6b6b` (5.3:1) |
+| Light gray | `#f7f7f7` | soft panels, notices, tags |
+| Line | `#e5e5e5` | the few outlines and dividers left |
 
-Readable text: where a Refero color would carry small text and fall below WCAG AA, a same-hue shade is used for the text only. Green text `#377e01` (big green headings `#49a902`, 3:1 for large text), blue links and secondary labels `#1274a2`, body gray `#717171` (Pencil Gray is 4.48:1, just under 4.5:1). Labels on Eager Green buttons are Night Ink (9.4:1; white would be 2.1:1). Input borders are `#949494` (3:1). Fills, bars, borders and washes use the exact Refero values.
+Readable text: green text is `#377e01` and labels on green buttons are Night Ink `#000437` (9.4:1; white would be 2.1:1). Input borders are `#949494` (3:1). The "ReviewLens" wordmark is a logotype, so it keeps the bright green.
 
-Charts: sentiment uses Eager Green, Faded Gray and Night Ink (validated with the dataviz palette script: color-blind ΔE 14.4, normal-vision ΔE 22.9); confidence uses Faded Gray, Pencil Gray and Charcoal as an ordered light-to-dark ramp. Every chart has text values, icons and a table view; the timeline also uses dash patterns.
+Charts: sentiment uses green, Faded Gray `#afafaf` and Night Ink (validated with the dataviz palette script); confidence uses an ordered gray ramp. Every chart has text values, icons and a table view.
 
 ## Type
 
-Nunito Black for large headings (64 and 48px, -0.02em), Nunito Sans for everything else: 32px small headings, 19px subheadings, 17px body at weight 500, 15px uppercase navigation and buttons with 0.053em tracking, 13px captions. Both load through `next/font/google`. Sentence case everywhere except navigation, buttons and tags.
+Nunito Black for page titles and big numbers, Nunito Sans for everything else. Page titles 28 to 32px (the welcome title up to 44px), section headings 19 to 24px, body 17px, supporting text 15px. Sentence case everywhere. Uppercase is kept only for things you press (buttons and tabs). No small uppercase labels above headings.
 
 ## Shapes and layout
 
-12px controls with 2px borders; primary and secondary buttons have a 4px or 3px lip that disappears on press; link cards ("stickers") have a 2px border with a 4px bottom edge; cards 16px radius with 2px `#e5e5e5` borders; thick 16px progress meters with a highlight strip. No gradients, glass or blurred shadows. Content max width 1200px. A full-width Eager Green footer band.
+12px controls with 2px borders; buttons keep a 3 to 4px bottom lip that presses in. Outlines are used sparingly: the latest upload card, lists of uploads and reviews (one outline with dividers), the report page and form fields. Panels, notices and tags use soft fills instead of outlines, and nothing is nested box in box. Sections are separated by space or a single divider. Content max width 1200px.
+
+Motion is small and purposeful: 90 to 100ms press feedback, 150ms color changes, a 500ms progress fill. `prefers-reduced-motion` turns transitions and animations off.
 
 ## Screens
 
-Header (eagle mark, green wordmark, Upload reviews, account pill), account screens (eagle mark beside the form), upload wizard, analysis progress, upload pages, and the empty, loading, error and not-found states.
-
-Every upload follows one four-step path, Upload → Match columns → Analyze → Insights (`src/components/journey-path.tsx`, steps in `src/lib/journey.ts`): done steps are filled green with a check, the current step is ringed, later steps are outlined, and the words say the same for screen readers. The home page, the wizard, analysis progress, an unfinished import and an unfinished analysis all show it, next to the one action that moves the upload forward.
-
-Home (`src/app/page.tsx`):
-- No uploads: a short welcome, one Upload reviews button, the four steps explained, and a sample CSV. No empty charts.
-- Latest upload: its name, file, status and mode, the path, and the next action (Upload again, Continue analysis, or the review count, one sentiment bar with labels, and See insights).
-- Earlier uploads as sticker rows; on phones the status sits under the name.
-
-Upload overview (`src/app/uploads/[id]/page.tsx`): reviews analyzed, one labeled positive/neutral/negative bar, the top 3 topics, up to 3 reviews that need attention (only when there are negative reviews), and links to all reviews, topics, the accuracy check and the report. Every number comes from the upload; nothing is estimated.
-
-Detail pages, as tabs (a bottom bar on phones): Overview, Reviews (search, filters, details, CSV exports), Topics (every topic, the timeline when the file has dates, standout words, with filters), Accuracy (label or rating check, disagreements, confidence) and Report (printable summary and exports). Data issues is linked from where it matters.
+- **Home, no uploads:** the eagle mark, "Let's see what your customers are saying", one Upload reviews button, a sample CSV link and the four steps on a sky-blue panel.
+- **Home, with uploads:** Upload reviews is the main action. The latest upload shows its status and one next step (See insights, Continue analysis or Upload again); earlier uploads are compact rows.
+- **Progress path** (`src/components/journey-path.tsx`): a short "Step 3 of 4: Analyze" line over four slim segments. It shows only while an upload is in progress (the wizard, the latest upload while analyzing, the overview while analyzing). The analysis page uses the same text line with its own progress bar; finished screens don't show the path.
+- **Upload overview:** how customers feel (one headline, one labeled bar, counts), one takeaway worked out from the upload (the topic in the most negative reviews, else the most mentioned topic), compact "Keep exploring" links, and Delete upload at the bottom.
+- **Detail pages, as tabs** (a bottom bar on phones; the selected tab is green): Reviews (search, filters folded behind one button with chips for what's active, CSV downloads), Topics (topic bars, timeline when dates exist, standout words), Accuracy (label or rating check, disagreements, confidence), Report (downloads, printable summary, negative reviews to read first). Data issues is linked where it matters.
+- **Account screens:** Email, Password and Confirm password labels, with short guidance outside the labels.
+- **Footer:** a small, neutral ReviewLens footer: "Only you can see your uploads."
 
 ## Brand assets
 
 - Square logo ("Magnifying Bird Mascot Icon"), for the browser and home screen only, resized and never cropped or recolored: `src/app/favicon.ico` (16, 32 and 48px), `src/app/icon.png` (192px), `src/app/apple-icon.png` (180px), and `public/icons/icon-192.png` and `icon-512.png` for `src/app/manifest.ts`. The manifest lists plain icons only; a maskable icon would let Android crop the logo.
-- Eagle silhouette, `public/brand/reviewlens-mark.png`: the provided transparent PNG, byte-for-byte, drawn by `BrandMark` in `src/components/brand.tsx`. It sits in the top-left of the header and is the in-app mark on the welcome screen, account screens, empty states, analysis progress and the error page. It is never used as a browser icon, and the square logo never appears in the header.
-- `public/brand/spup-seal.png`: the official seal from spup.edu.ph, unaltered, on a white badge in the footer band.
+- Eagle silhouette, `public/brand/reviewlens-mark.png`: the provided transparent PNG, byte-for-byte, drawn by `BrandMark` in `src/components/brand.tsx`. It sits in the top-left of the header and is the in-app mark on the welcome screen, account screens, empty states, the analysis screen and the error page. It is never used as a browser icon, and the square logo never appears in the header.

@@ -1,75 +1,123 @@
 import Link from "next/link";
 import { connection } from "next/server";
+import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { BadgeCheck, ChevronRight, FileText, Inbox, MessageSquareText, Tags } from "lucide-react";
+import { BadgeCheck, FileText, Inbox, MessageSquareText, Tags } from "lucide-react";
 import { ImportUnfinished } from "@/components/import-unfinished";
 import { JourneyPath } from "@/components/journey-path";
-import { ReviewSnippet } from "@/components/review-card";
 import { SentimentLegend, SentimentStackedBar } from "@/components/sentiment";
-import { ButtonLink, Card, EmptyState, linkClasses } from "@/components/ui";
+import { DeleteUploadButton } from "@/components/upload-actions";
+import { ButtonLink, EmptyState, linkClasses } from "@/components/ui";
 import { getProviderInfo } from "@/lib/analysis/providers";
 import { formatNumber, formatPercent, plural } from "@/lib/format";
 import { requireOwnedUpload } from "@/lib/server/auth";
-import { getDashboard } from "@/lib/server/dashboard";
+import { getDashboard, type TopicBreakdown } from "@/lib/server/dashboard";
 import { getDb } from "@/lib/server/db";
 import { dashboardFilters, parseFilters } from "@/lib/server/filters";
 import { getProgress } from "@/lib/server/uploads";
 
-function ExploreTile({ href, icon: Icon, title, text }: { href: string; icon: LucideIcon; title: string; text: string }) {
+type Takeaway = { text: string; action: string; href: string };
+
+/**
+ * One thing worth reading next, worked out from the upload's own counts: the topic that shows up in
+ * the most negative reviews, or else the most mentioned topic, or else the negative reviews themselves.
+ */
+function pickTakeaway(topics: TopicBreakdown[], negative: number, labeled: number, reviewsHref: (q: Record<string, string>) => string): Takeaway | null {
+  const complaint = topics.filter((t) => t.negative > 0).sort((a, b) => b.negative - a.negative)[0];
+  if (complaint) {
+    const share =
+      complaint.negative === negative
+        ? negative === 1
+          ? "It's in the one negative review."
+          : `All ${formatNumber(negative)} negative reviews mention it.`
+        : `${formatNumber(complaint.negative)} of the ${formatNumber(negative)} negative reviews mention it.`;
+    return {
+      text: `${complaint.label} comes up most in complaints. ${share}`,
+      action: "Read these reviews",
+      href: reviewsHref({ topic: complaint.id, sentiment: "negative" }),
+    };
+  }
+  const top = topics[0];
+  if (top) {
+    return {
+      text: `${top.label} comes up most. ${formatNumber(top.total)} of the ${formatNumber(labeled)} analyzed reviews mention it.`,
+      action: "Read these reviews",
+      href: reviewsHref({ topic: top.id }),
+    };
+  }
+  if (negative > 0) {
+    return {
+      text: negative === 1 ? "1 review is negative." : `${formatNumber(negative)} reviews are negative.`,
+      action: negative === 1 ? "Read it" : "Read them",
+      href: reviewsHref({ sentiment: "negative" }),
+    };
+  }
+  return null;
+}
+
+function NextLink({ href, icon: Icon, children }: { href: string; icon: LucideIcon; children: ReactNode }) {
   return (
     <li>
-      <Link href={href} className="sticker group flex h-full items-start gap-4 rounded-card bg-surface p-5">
-        <span aria-hidden className="grid size-11 shrink-0 place-items-center rounded-control bg-accent-soft text-accent-ink">
-          <Icon className="size-6" strokeWidth={2.5} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block font-extrabold text-ink group-hover:text-accent-ink">{title}</span>
-          <span className="mt-0.5 block text-[15px] text-ink-2">{text}</span>
-        </span>
-        <ChevronRight aria-hidden className="mt-2.5 size-5 shrink-0 text-line-strong group-hover:text-accent-ink" strokeWidth={3} />
+      <Link
+        href={href}
+        className="press inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-line px-4 text-[15px] font-bold text-ink transition-colors duration-150 hover:border-line-strong hover:bg-surface-2"
+      >
+        <Icon aria-hidden className="size-[18px] text-accent-ink" strokeWidth={2.5} />
+        {children}
       </Link>
     </li>
   );
 }
 
-/** A finished upload at a glance: how many reviews, how customers feel, top topics, what needs attention, and where to go next. */
+/** A finished upload at a glance: how customers feel, one thing worth a closer look, and where to go next. */
 export default async function OverviewPage({ params }: PageProps<"/uploads/[id]">) {
   await connection();
   const { id } = await params;
   const db = getDb();
   const { user, upload } = await requireOwnedUpload(id, `/uploads/${id}`);
-  if (upload.status === "importing") return <ImportUnfinished />;
+  const deleteButton = (
+    <div className="no-print border-t-2 border-line pt-6">
+      <DeleteUploadButton uploadId={upload.id} name={upload.name} />
+    </div>
+  );
+  if (upload.status === "importing") {
+    return (
+      <div className="grid gap-10">
+        <ImportUnfinished />
+        {deleteButton}
+      </div>
+    );
+  }
 
   const [dashboard, progress] = await Promise.all([
     getDashboard(db, upload, dashboardFilters(parseFilters({}))),
     getProgress(db, user.id, id),
   ]);
-  const { totals, sentiment, check } = dashboard;
+  const { totals, sentiment, topics } = dashboard;
   const base = `/uploads/${id}`;
   const reviews = (query: Record<string, string>) => `${base}/reviews?${new URLSearchParams(query)}`;
   const provider = getProviderInfo();
   const aiAvailable = provider.external && !provider.problem;
   const notCounted = totals.notLabeled + totals.failed;
-  const topTopics = dashboard.topics.slice(0, 3);
-  const readFirst = dashboard.readFirst.slice(0, 3);
+  const takeaway = totals.labeled ? pickTakeaway(topics, sentiment.negative, totals.labeled, reviews) : null;
 
   return (
-    <div className="grid gap-8">
+    <div className="grid gap-10">
       {progress && !progress.done && (
-        <section aria-labelledby="progress-title" className="rounded-card border-2 border-line p-6 sm:p-8">
+        <section aria-labelledby="progress-title" className="rounded-card bg-surface-2 p-6 sm:p-8">
           <h2 id="progress-title" className="text-subheading font-extrabold text-ink">
-            Analysis isn&apos;t finished
+            Still analyzing your reviews
           </h2>
-          <div className="mt-6">
+          <p className="mt-1 text-[15px] text-ink-2">
+            {formatNumber(progress.labeled + progress.notLabeled + progress.failed)} of {plural(progress.imported, "review")} done. The numbers
+            below will update as the rest finish.
+          </p>
+          <div className="mt-5">
             <JourneyPath current={2} />
           </div>
-          <div className="mt-8 flex flex-wrap items-center gap-4 border-t-2 border-line pt-6">
-            <ButtonLink href={`${base}/analyze`}>Continue analysis</ButtonLink>
-            <p className="max-w-md text-[15px] text-ink-2">
-              {formatNumber(progress.labeled + progress.notLabeled + progress.failed)} of {plural(progress.imported, "review")} processed. The
-              numbers below change as the rest are analyzed.
-            </p>
-          </div>
+          <ButtonLink href={`${base}/analyze`} className="mt-6">
+            Continue analysis
+          </ButtonLink>
         </section>
       )}
 
@@ -77,136 +125,99 @@ export default async function OverviewPage({ params }: PageProps<"/uploads/[id]"
         <EmptyState
           icon={<Inbox aria-hidden className="size-6" />}
           title="No reviews were imported"
-          action={<ButtonLink href={`${base}/issues`} variant="secondary">See why</ButtonLink>}
+          action={
+            <>
+              <ButtonLink href={`${base}/issues`} variant="secondary">
+                See what happened
+              </ButtonLink>
+              <ButtonLink href="/upload" variant="secondary">
+                Upload another file
+              </ButtonLink>
+            </>
+          }
         >
           Every row in the file was skipped, usually because the review text column was empty.
         </EmptyState>
       ) : (
         <>
-          <section
-            aria-labelledby="summary-title"
-            className="grid gap-8 rounded-card border-2 border-line p-6 sm:p-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-center lg:gap-12"
-          >
-            <div>
-              <h2 id="summary-title" className="nav-label text-[13px] text-ink-2">
-                Reviews analyzed
+          {/* Side by side on wide screens: how customers feel, then the one thing worth a closer look. */}
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-12">
+            <section aria-labelledby="feel-title" className="min-w-0">
+              <h2 id="feel-title" className="text-subheading font-extrabold text-ink">
+                How customers feel
               </h2>
-              <p className="mt-3 font-display text-heading font-black leading-none text-brand-display tabular sm:text-display">
-                {formatNumber(totals.labeled)}
-              </p>
-              <p className="mt-3 text-[15px] text-ink-2">of {plural(totals.all, "review")} imported</p>
-              {notCounted > 0 && (
-                <p className="mt-2 text-[15px] text-ink-2">
-                  {plural(notCounted, "review")} {notCounted === 1 ? "wasn't" : "weren't"} labeled.{" "}
-                  <Link href={`${base}/issues`} className={linkClasses}>
-                    See why
-                  </Link>
-                </p>
-              )}
-              {upload.provider === "basic" && totals.notLabeled > 0 && aiAvailable && (
-                <p className="mt-2 text-[15px] text-ink-2">
-                  Basic mode reads English only.{" "}
-                  <Link href="/upload" className={linkClasses}>
-                    Upload again in AI mode
-                  </Link>{" "}
-                  to label Tagalog and Taglish too.
-                </p>
-              )}
-            </div>
-            <div>
-              <h3 className="nav-label text-[13px] text-ink-2">How customers feel</h3>
               {totals.labeled ? (
                 <>
-                  <p className="mt-3 text-heading-sm font-extrabold text-ink">
+                  <p className="mt-2 font-display text-[2rem] font-black leading-tight text-ink tabular sm:text-[2.5rem]">
                     {formatPercent(sentiment.positive, totals.labeled)} positive, {formatPercent(sentiment.negative, totals.labeled)} negative
                   </p>
-                  <SentimentStackedBar counts={sentiment} className="mt-5 h-5" />
+                  <SentimentStackedBar counts={sentiment} className="mt-6 h-5" />
                   <div className="mt-4">
                     <SentimentLegend counts={sentiment} />
                   </div>
+                  <p className="mt-5 text-[15px] text-ink-2">
+                    Based on {formatNumber(totals.labeled)} of {plural(totals.all, "review")}.
+                    {notCounted > 0 && (
+                      <>
+                        {" "}
+                        {plural(notCounted, "review")} couldn&apos;t be labeled.{" "}
+                        <Link href={`${base}/issues`} className={linkClasses}>
+                          See why
+                        </Link>
+                      </>
+                    )}
+                  </p>
+                  {upload.provider === "basic" && totals.notLabeled > 0 && aiAvailable && (
+                    <p className="mt-2 text-[15px] text-ink-2">
+                      Basic mode reads English only.{" "}
+                      <Link href="/upload" className={linkClasses}>
+                        Upload again in AI mode
+                      </Link>{" "}
+                      to label Tagalog and Taglish reviews too.
+                    </p>
+                  )}
                 </>
               ) : (
-                <p className="mt-3 text-[15px] text-ink-2">No reviews are labeled yet.</p>
+                <p className="mt-2 text-body text-ink-2">No reviews are labeled yet.</p>
               )}
-            </div>
-          </section>
+            </section>
 
-          <div className={`grid gap-6 ${readFirst.length ? "lg:grid-cols-2" : ""}`}>
-            <Card
-              title="Most mentioned topics"
-              actions={
-                dashboard.topics.length > 3 && (
-                  <Link href={`${base}/topics`} className={`${linkClasses} py-1 text-[15px]`}>
-                    See all {dashboard.topics.length}
-                  </Link>
-                )
-              }
-            >
-              {topTopics.length ? (
-                <ol className="grid gap-3">
-                  {topTopics.map((topic, i) => (
-                    <li key={topic.id}>
-                      <Link href={reviews({ topic: topic.id })} className="sticker group flex items-center gap-4 rounded-card bg-surface px-4 py-3">
-                        <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-control bg-brand-soft font-display text-lg font-black text-brand-ink">
-                          {i + 1}
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block font-extrabold text-ink group-hover:text-accent-ink">{topic.label}</span>
-                          <span className="block text-[15px] text-ink-2 tabular">
-                            {plural(topic.total, "mention")}, {formatPercent(topic.negative, topic.total)} negative
-                          </span>
-                        </span>
-                        <ChevronRight aria-hidden className="size-5 shrink-0 text-line-strong group-hover:text-accent-ink" strokeWidth={3} />
-                      </Link>
-                    </li>
-                  ))}
-                </ol>
-              ) : (
-                <p className="text-[15px] text-ink-2">None of the eight tracked topics (delivery, price, quality and others) came up yet.</p>
-              )}
-            </Card>
-
-            {readFirst.length > 0 && (
-              <Card
-                title="Needs attention"
-                description="Negative reviews, most confident and newest first."
-                actions={
-                  <Link href={reviews({ sentiment: "negative" })} className={`${linkClasses} py-1 text-[15px]`}>
-                    All {formatNumber(sentiment.negative)}
-                  </Link>
-                }
-              >
-                <ul className="grid gap-3">
-                  {readFirst.map((review) => (
-                    <ReviewSnippet key={review.id} review={review} href={reviews({ sentiment: "negative", review: String(review.id) })} />
-                  ))}
-                </ul>
-              </Card>
+            {takeaway && (
+              <section aria-labelledby="takeaway-title" className="rounded-card bg-accent-soft p-6 sm:p-8">
+                <h2 id="takeaway-title" className="text-subheading font-extrabold text-ink">
+                  Worth a closer look
+                </h2>
+                <p className="mt-2 text-xl font-bold leading-snug text-ink">{takeaway.text}</p>
+                <ButtonLink href={takeaway.href} variant="secondary" size="sm" className="mt-5">
+                  {takeaway.action}
+                </ButtonLink>
+              </section>
             )}
           </div>
 
-          <section aria-labelledby="explore-title" className="grid gap-3">
-            <h2 id="explore-title" className="nav-label text-[13px] text-ink-2">
-              Explore this upload
+          <nav aria-labelledby="next-title" className="no-print">
+            <h2 id="next-title" className="text-subheading font-extrabold text-ink">
+              Keep exploring
             </h2>
-            <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <ExploreTile href={`${base}/reviews`} icon={MessageSquareText} title="All reviews" text={`Search and filter ${plural(totals.all, "review")}.`} />
-              <ExploreTile href={`${base}/topics`} icon={Tags} title="Topics" text="Every topic, trends over time and the words that stand out." />
-              <ExploreTile
-                href={`${base}/accuracy`}
-                icon={BadgeCheck}
-                title="Accuracy check"
-                text={
-                  check && check.eligible
-                    ? `${formatNumber(check.agree)} of ${formatNumber(check.eligible)} match ${check.source === "label" ? "your labels" : "the star ratings"}.`
-                    : "How sure ReviewLens is about each label."
-                }
-              />
-              <ExploreTile href={`${base}/report`} icon={FileText} title="Report & exports" text="A printable summary and CSV downloads." />
+            <ul className="mt-4 flex flex-wrap gap-2.5">
+              <NextLink href={`${base}/reviews`} icon={MessageSquareText}>
+                All {plural(totals.all, "review")}
+              </NextLink>
+              <NextLink href={`${base}/topics`} icon={Tags}>
+                {topics.length ? `All ${plural(topics.length, "topic")}` : "Topics"}
+              </NextLink>
+              <NextLink href={`${base}/accuracy`} icon={BadgeCheck}>
+                Accuracy check
+              </NextLink>
+              <NextLink href={`${base}/report`} icon={FileText}>
+                Report and downloads
+              </NextLink>
             </ul>
-          </section>
+          </nav>
         </>
       )}
+
+      {deleteButton}
     </div>
   );
 }

@@ -4,9 +4,9 @@ import { formatNumber, formatPercent } from "@/lib/format";
 import { SENTIMENTS, type Confidence, type Sentiment } from "@/lib/types";
 
 export const SENTIMENT_META: Record<Sentiment, { label: string; icon: LucideIcon; chip: string; swatch: string; ink: string }> = {
-  positive: { label: "Positive", icon: Smile, chip: "border-fresh-leaf bg-pos-soft text-pos-ink", swatch: "bg-pos", ink: "text-pos-ink" },
-  neutral: { label: "Neutral", icon: Meh, chip: "border-line bg-neu-soft text-neu-ink", swatch: "bg-neu", ink: "text-neu-ink" },
-  negative: { label: "Negative", icon: Frown, chip: "border-[#c9cbe0] bg-neg-soft text-neg-ink", swatch: "bg-neg", ink: "text-neg-ink" },
+  positive: { label: "Positive", icon: Smile, chip: "bg-pos-soft text-pos-ink", swatch: "bg-pos", ink: "text-pos-ink" },
+  neutral: { label: "Neutral", icon: Meh, chip: "bg-neu-soft text-neu-ink", swatch: "bg-neu", ink: "text-neu-ink" },
+  negative: { label: "Negative", icon: Frown, chip: "bg-neg-soft text-neg-ink", swatch: "bg-neg", ink: "text-neg-ink" },
 };
 
 export function SentimentIcon({ sentiment, className = "size-4" }: { sentiment: Sentiment; className?: string }) {

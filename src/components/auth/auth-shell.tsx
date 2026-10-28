@@ -10,7 +10,7 @@ const POINTS = [
   "Your uploads stay private to your account.",
 ];
 
-/** The account pages: the eagle and what ReviewLens does beside the form, like a storybook spread. */
+/** The account pages: the eagle and what ReviewLens does beside the form on wide screens, the form alone on phones. */
 export function AuthShell({
   title,
   intro,
@@ -42,10 +42,10 @@ export function AuthShell({
       <div className="mx-auto grid w-full max-w-md gap-8 lg:max-w-none">
         <div className="grid justify-items-center gap-4 text-center lg:justify-items-start lg:text-left">
           <BrandMark height={110} className="lg:hidden" />
-          <h1 className="font-display text-heading-sm font-black text-brand-display sm:text-heading">{title}</h1>
+          <h1 className="font-display text-[2rem] font-black leading-tight text-ink sm:text-[2.5rem]">{title}</h1>
           {intro && <div className="text-body text-ink-2">{intro}</div>}
         </div>
-        <section className="grid gap-6 rounded-card border-2 border-line bg-surface p-6 sm:p-8">{children}</section>
+        <section className="grid gap-6">{children}</section>
         {footer && <div className="grid gap-3 text-center text-[15px] text-ink-2 lg:text-left">{footer}</div>}
       </div>
     </div>

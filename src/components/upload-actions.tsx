@@ -59,17 +59,17 @@ export function DeleteUploadButton({ uploadId, name }: { uploadId: string; name:
     return (
       <Button variant="ghost" size="sm" onClick={() => setConfirming(true)} className="text-ink-2! hover:bg-danger-soft! hover:text-danger!">
         <Trash2 aria-hidden className="size-4" />
-        Delete
+        Delete upload
       </Button>
     );
   }
   return (
     <div
-      className="pop-in flex flex-wrap items-center gap-2 rounded-card border-2 border-danger-line bg-danger-soft px-4 py-3"
+      className="pop-in flex flex-wrap items-center gap-2 rounded-card bg-danger-soft px-4 py-3"
       role="group"
       aria-label="Confirm delete"
     >
-      <span className="text-[15px] font-extrabold text-ink">Delete this upload and all its reviews?</span>
+      <span className="text-[15px] font-extrabold text-ink">Delete this upload and all its reviews? This can&apos;t be undone.</span>
       <Button variant="danger" size="sm" onClick={() => void remove()} disabled={busy}>
         {busy ? "Deleting…" : "Delete permanently"}
       </Button>

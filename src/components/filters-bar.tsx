@@ -28,9 +28,26 @@ function ratingSteps(scale: RatingScale | null): number[] {
 }
 
 const selectClass =
-  "min-h-11 w-full rounded-control border-2 border-field bg-surface-2 px-2.5 text-[15px] font-semibold text-ink hover:border-ink-3 focus-visible:border-accent focus-visible:bg-surface";
+  "min-h-11 w-full rounded-control border-2 border-field bg-surface px-2.5 text-[16px] font-semibold text-ink hover:border-ink-3 focus-visible:border-accent";
 
-/** Filters live in the URL so reload, Back and shared links keep them. */
+const capitalize = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
+
+/** Plain words for each active filter, shown next to the Filters button while the panel is closed. */
+const SUMMARY: Record<string, (value: string) => string> = {
+  from: (v) => `From ${v}`,
+  to: (v) => `Until ${v}`,
+  product: (v) => v,
+  rating_min: (v) => `Rating ${v} or more`,
+  rating_max: (v) => `Rating ${v} or less`,
+  sentiment: (v) => capitalize(v),
+  topic: (v) => TOPICS.find((t) => t.id === v)?.label ?? v,
+  confidence: (v) => `${capitalize(v)} confidence`,
+  opinion: () => "Mixed opinions",
+  check: (v) => (v === "disagree" ? "Different label" : "Same label"),
+  status: (v) => ({ labeled: "Labeled", not_labeled: "Not labeled", failed: "Failed", pending: "Waiting" })[v] ?? v,
+};
+
+/** Filters live in the URL so reload, Back and shared links keep them. The panel stays folded away until it's needed. */
 export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mode: "dashboard" | "reviews" }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -41,6 +58,7 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
 
   const keys = mode === "dashboard" ? DASHBOARD_KEYS : REVIEW_KEYS;
   const active = keys.filter((k) => searchParams.get(k)).length;
+  const summary = keys.filter((k) => k !== "q" && searchParams.get(k)).map((k) => SUMMARY[k]?.(searchParams.get(k) ?? "") ?? k);
   const value = (key: string) => searchParams.get(key) ?? "";
 
   function update(changes: Record<string, string | null>) {
@@ -83,21 +101,32 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
               enterKeyHint="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search words in reviews, like refund or late"
-              className="min-h-12 w-full rounded-control border-2 border-field bg-surface-2 pl-10 pr-3 font-semibold text-ink hover:border-ink-3 focus-visible:border-accent focus-visible:bg-surface"
+              placeholder="Search reviews"
+              className="min-h-12 w-full rounded-control border-2 border-field bg-surface pl-10 pr-3 font-semibold text-ink placeholder:text-ink-3 hover:border-ink-3 focus-visible:border-accent"
             />
           </div>
           <Button type="submit">Search</Button>
         </form>
       )}
 
-      <div className="flex items-center justify-between gap-2 sm:hidden">
+      <div className="flex flex-wrap items-center gap-2">
         <Button variant="secondary" size="sm" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls="filter-panel">
           <SlidersHorizontal aria-hidden className="size-4" />
-          Filters{active ? ` (${active})` : ""}
+          {open ? "Hide filters" : "Filters"}
+          {active ? ` (${active})` : ""}
         </Button>
+        {summary.length > 0 && (
+          <ul className="flex flex-wrap gap-1.5" aria-label="Active filters">
+            {summary.map((item) => (
+              <li key={item} className="rounded-full bg-brand-soft px-2.5 py-0.5 text-[13px] font-bold text-brand-ink">
+                {item}
+              </li>
+            ))}
+          </ul>
+        )}
         {active > 0 && (
           <Button variant="ghost" size="sm" onClick={clearAll}>
+            <X aria-hidden className="size-4" />
             Clear all
           </Button>
         )}
@@ -105,7 +134,7 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
 
       <div
         id="filter-panel"
-        className={`${open ? "grid" : "hidden"} gap-3 rounded-card border-2 border-line bg-surface p-4 sm:grid sm:p-5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end`}
+        className={`${open ? "grid" : "hidden"} gap-3 rounded-card bg-surface-2 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-4 lg:items-end`}
       >
         {options.hasDate && (
           <>
@@ -235,17 +264,11 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
         )}
 
         {!options.hasDate && !options.hasProduct && !options.hasRating && mode === "dashboard" && (
-          <p className="text-sm text-ink-2 sm:col-span-2">
-            Date, product and rating filters appear when those columns are matched during upload.
+          <p className="text-[15px] text-ink-2 sm:col-span-2">
+            Date, product and rating filters show up when you match those columns during upload.
           </p>
         )}
 
-        {active > 0 && (
-          <Button variant="ghost" size="sm" onClick={clearAll} className="hidden justify-self-start sm:inline-flex">
-            <X aria-hidden className="size-4" />
-            Clear filters
-          </Button>
-        )}
       </div>
     </div>
   );

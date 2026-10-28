@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "Choose a new password" };
 export default async function ResetPasswordPage() {
   const user = await requireUser("/reset-password");
   return (
-    <AuthShell title="Choose a new password" intro={`For ${user.email}. Use a new password just for ReviewLens.`}>
+    <AuthShell title="Choose a new password" intro={`For ${user.email}. Pick a new password just for ReviewLens.`}>
       <AuthForm
         action={updatePassword}
         submitLabel="Save new password"
@@ -18,7 +18,7 @@ export default async function ResetPasswordPage() {
         fields={[
           {
             name: "password",
-            label: "New password",
+            label: "Password",
             type: "password",
             autoComplete: "new-password",
             help: "At least 8 characters.",

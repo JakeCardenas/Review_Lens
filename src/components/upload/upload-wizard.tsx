@@ -350,7 +350,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
             />
           </label>
           {fileError && <Notice tone="error" title="This file can't be used">{fileError}</Notice>}
-          <div className="rounded-card border-2 border-line bg-surface p-5 text-sm text-ink-2">
+          <div className="rounded-card bg-surface-2 p-5 text-[15px] text-ink-2">
             <p className="font-semibold text-ink">What the file needs</p>
             <ul className="mt-2 grid gap-1.5">
               <li>A header row naming the columns, and one review per row.</li>
@@ -366,7 +366,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
 
       {step === "map" && parsed && (
         <section className="grid gap-4">
-          <div className="flex items-center gap-3 rounded-card border-2 border-line bg-surface p-4">
+          <div className="flex items-center gap-3 rounded-card bg-surface-2 p-4">
             <FileSpreadsheet aria-hidden className="size-6 shrink-0 text-brand-ink" />
             <div className="min-w-0">
               <p className="truncate font-semibold">{parsed.fileName}</p>
@@ -381,10 +381,10 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
             </Notice>
           ))}
 
-          <div className="grid gap-5 rounded-card border-2 border-line bg-surface p-5 sm:p-6">
+          <div className="grid gap-5">
             <div>
               <h2 className="text-subheading font-extrabold text-ink">Match your columns</h2>
-              <p className="mt-1 text-sm text-ink-2">Suggestions are filled in. Only the columns you match are sent to the server.</p>
+              <p className="mt-1 text-[15px] text-ink-2">ReviewLens filled in its best guesses. Only the columns you match are sent to the server.</p>
             </div>
             {FIELDS.map((field) => {
               const id = `map-${field.id}`;
@@ -400,7 +400,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                       id={id}
                       value={current ?? ""}
                       onChange={(e) => updateField(field.id, e.target.value)}
-                      className="min-h-12 w-full rounded-control border-2 border-field bg-surface-2 px-3.5 font-semibold text-ink hover:border-ink-3 focus-visible:border-accent focus-visible:bg-surface"
+                      className="min-h-12 w-full rounded-control border-2 border-field bg-surface px-3.5 font-semibold text-ink hover:border-ink-3 focus-visible:border-accent"
                       aria-describedby={`${id}-help`}
                     >
                       <option value="">{field.required ? "Choose a column" : "Not in this file"}</option>
@@ -476,7 +476,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                         <select
                           value={ratingScale}
                           onChange={(e) => setRatingScale(Number(e.target.value) as RatingScale)}
-                          className="min-h-11 rounded-control border-2 border-field bg-surface-2 px-2.5 font-semibold text-ink hover:border-ink-3 focus-visible:border-accent focus-visible:bg-surface"
+                          className="min-h-11 rounded-control border-2 border-field bg-surface px-2.5 font-semibold text-ink hover:border-ink-3 focus-visible:border-accent"
                         >
                           <option value={5}>5</option>
                           <option value={10}>10</option>
@@ -498,12 +498,12 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                 value={name}
                 maxLength={120}
                 onChange={(e) => setName(e.target.value)}
-                className="min-h-12 w-full rounded-control border-2 border-field bg-surface-2 px-3.5 font-semibold text-ink hover:border-ink-3 focus-visible:border-accent focus-visible:bg-surface"
+                className="min-h-12 w-full rounded-control border-2 border-field bg-surface px-3.5 font-semibold text-ink hover:border-ink-3 focus-visible:border-accent"
               />
             </div>
           </div>
 
-          <div className="grid gap-3 rounded-card border-2 border-line bg-surface-2 p-5 text-sm">
+          <div className="grid gap-3 rounded-card bg-surface-2 p-5 text-[15px]">
             <p className="flex items-center gap-2 font-semibold">
               <Lock aria-hidden className="size-4 text-brand-ink" />
               Stays on this device
@@ -533,16 +533,16 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
       {(step === "preview" || step === "import") && parsed && preview && (
         <section className="grid gap-4">
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-card border-2 border-line bg-surface p-4">
-              <p className="nav-label text-[13px] text-ink-2">Ready to analyze</p>
+            <div className="rounded-card bg-surface-2 p-4">
+              <p className="text-[15px] font-bold text-ink-2">Ready to analyze</p>
               <p className="mt-3 font-display text-heading-sm font-black leading-none text-ink tabular">{formatNumber(preview.ready)}</p>
             </div>
-            <div className="rounded-card border-2 border-line bg-surface p-4">
-              <p className="nav-label text-[13px] text-ink-2">Skipped, no review text</p>
+            <div className="rounded-card bg-surface-2 p-4">
+              <p className="text-[15px] font-bold text-ink-2">Skipped, no review text</p>
               <p className="mt-3 font-display text-heading-sm font-black leading-none text-ink tabular">{formatNumber(preview.skipped)}</p>
             </div>
-            <div className="rounded-card border-2 border-line bg-surface p-4">
-              <p className="nav-label text-[13px] text-ink-2">Kept with a warning</p>
+            <div className="rounded-card bg-surface-2 p-4">
+              <p className="text-[15px] font-bold text-ink-2">Kept with a warning</p>
               <p className="mt-3 font-display text-heading-sm font-black leading-none text-ink tabular">{formatNumber(preview.warnings.length)}</p>
             </div>
           </div>
@@ -606,10 +606,10 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                           <span className="font-semibold text-danger">Skipped: no review text</span>
                         )}
                       </td>
-                      {mapping.date && <td className="px-4 py-2.5 whitespace-nowrap">{row.reviewDate ? formatDate(row.reviewDate) : "—"}</td>}
-                      {mapping.rating && <td className="px-4 py-2.5 tabular">{row.rating ?? "—"}</td>}
-                      {mapping.product && <td className="px-4 py-2.5">{row.product ?? "—"}</td>}
-                      {mapping.label && <td className="px-4 py-2.5">{row.referenceLabel ? SENTIMENT_META[row.referenceLabel].label : "—"}</td>}
+                      {mapping.date && <td className="px-4 py-2.5 whitespace-nowrap">{row.reviewDate ? formatDate(row.reviewDate) : "None"}</td>}
+                      {mapping.rating && <td className="px-4 py-2.5 tabular">{row.rating ?? "None"}</td>}
+                      {mapping.product && <td className="px-4 py-2.5">{row.product ?? "None"}</td>}
+                      {mapping.label && <td className="px-4 py-2.5">{row.referenceLabel ? SENTIMENT_META[row.referenceLabel].label : "None"}</td>}
                     </tr>
                   ))}
                 </tbody>
@@ -668,7 +668,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
           )}
 
           {step === "import" && (
-            <div className="grid gap-3 rounded-card border-2 border-line bg-surface p-5" aria-live="polite">
+            <div className="grid gap-3 rounded-card bg-surface-2 p-5" aria-live="polite">
               {importState.phase === "running" && (
                 <>
                   <p className="font-semibold">{importState.label}…</p>

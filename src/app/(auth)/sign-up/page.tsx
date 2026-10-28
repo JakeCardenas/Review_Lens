@@ -9,20 +9,17 @@ export const metadata: Metadata = { title: "Create an account" };
 export default function SignUpPage() {
   return (
     <AuthShell
-      title="Create an account"
-      intro="Use any personal email address. Gmail is fine."
+      title="Create your account"
+      intro="Start with any personal email address. Gmail works too."
       footer={
         <p>
           Already have an account? <AuthLink href="/sign-in">Sign in</AuthLink>
         </p>
       }
     >
-      <p className="flex gap-2.5 rounded-control border-2 border-fresh-leaf bg-brand-tint p-4 text-[15px] text-ink">
+      <p className="flex gap-2.5 rounded-card bg-brand-tint p-4 text-[15px] text-ink">
         <KeyRound aria-hidden className="mt-0.5 size-4 shrink-0 text-brand-ink" />
-        <span>
-          Create a new password just for ReviewLens. Don&apos;t use your Gmail or school (SIAS) password. ReviewLens
-          never asks for those.
-        </span>
+        <span>Pick a new password just for ReviewLens, not your Gmail or school password.</span>
       </p>
       <AuthForm
         action={signUp}

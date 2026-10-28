@@ -9,7 +9,7 @@ export default function ForgotPasswordPage() {
   return (
     <AuthShell
       title="Reset your password"
-      intro="We'll email you a link to choose a new ReviewLens password."
+      intro="Enter your email and we'll send you a link to choose a new password."
       footer={
         <p>
           Remembered it? <AuthLink href="/sign-in">Sign in</AuthLink>

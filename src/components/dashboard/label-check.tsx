@@ -100,7 +100,7 @@ export function byConfidenceText(check: LabelCheck): string {
     .join(" ");
 }
 
-const score = (value: number | null) => (value === null ? "—" : value.toFixed(2));
+const score = (value: number | null) => (value === null ? "n/a" : value.toFixed(2));
 
 /** Precision, recall and F1 per label. Only for the person's own labels; a rating proxy gets none. */
 export function ClassScoresTable({ check }: { check: LabelCheck }) {
@@ -137,7 +137,7 @@ export function ClassScoresTable({ check }: { check: LabelCheck }) {
       </div>
       <p className="mt-2 text-[13px] text-ink-2">
         Precision: of the reviews ReviewLens gave a label, the share you gave it too. Recall: of the reviews you gave a
-        label, the share ReviewLens found. F1 combines the two. A dash means there was nothing to work it out from.
+        label, the share ReviewLens found. F1 combines the two. n/a means there was nothing to work it out from.
       </p>
     </div>
   );
@@ -159,7 +159,7 @@ export function LabelCheckCard({ check, ratingScale }: { check: LabelCheck; rati
               <span className="text-xl font-extrabold text-ink-3"> of {formatNumber(check.eligible)}</span>
             </p>
             <p className="text-sm text-ink-2">
-              eligible reviews {yours ? "match your label" : "match the stars"} ({formatPercent(check.agree, check.eligible)})
+              reviews that could be compared {yours ? "match your label" : "match the stars"} ({formatPercent(check.agree, check.eligible)})
             </p>
             <p className="mt-2 text-sm text-ink-2">{exclusionSentence(check)}</p>
           </div>

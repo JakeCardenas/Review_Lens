@@ -5,7 +5,7 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, LayoutList } from "lucide-react";
 
 export const menuItemClasses =
-  "nav-label flex min-h-12 w-full items-center gap-3 rounded-control px-3 text-left text-ink-2 hover:bg-accent-soft hover:text-accent-ink";
+  "nav-label flex min-h-12 w-full items-center gap-3 rounded-control px-3 text-left text-ink-2 hover:bg-surface-2 hover:text-ink";
 
 /** Account pill and its menu: the signed-in email, a link home and the sign-out form (passed in as children). */
 export function AccountMenu({ email, children }: { email: string; children: ReactNode }) {
@@ -45,7 +45,7 @@ export function AccountMenu({ email, children }: { email: string; children: Reac
         onClick={() => setOpen((value) => !value)}
         className={`lip flex min-h-10 items-center gap-2 rounded-control border-2 px-2 [--lip:3px] ${
           open
-            ? "border-accent bg-accent-soft [--edge:var(--accent)]"
+            ? "border-fresh-leaf bg-brand-tint [--edge:var(--fresh-leaf)]"
             : "border-line-strong bg-surface hover:bg-surface-2 [--edge:var(--line-strong)]"
         }`}
       >

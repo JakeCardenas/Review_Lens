@@ -5,7 +5,7 @@ import { SearchX } from "lucide-react";
 import { ConfidenceExplainer } from "@/components/confidence-explainer";
 import { FiltersBar } from "@/components/filters-bar";
 import { Pagination } from "@/components/pagination";
-import { LabelCheckTag, MixedOpinionTag, ReviewCard, StatusBadge, TopicChips } from "@/components/review-card";
+import { LabelCheckTag, MixedOpinionTag, ReviewCard, StatusBadge, TopicChips, reviewListClasses } from "@/components/review-card";
 import { ExportLinks } from "@/components/upload-actions";
 import { ReviewDialog } from "@/components/review-dialog";
 import { ConfidenceMeter, SENTIMENT_META } from "@/components/sentiment";
@@ -154,8 +154,8 @@ export default async function ReviewsPage({ params, searchParams }: PageProps<"/
   return (
     <div className="grid gap-5">
       <div className="max-w-2xl">
-        <h2 className="text-heading-sm font-extrabold text-ink">Reviews</h2>
-        <p className="mt-2 text-body text-ink-2">Search, filter and read every review. Select one to see why it got its label.</p>
+        <h2 className="text-2xl font-extrabold text-ink">Reviews</h2>
+        <p className="mt-1 text-body text-ink-2">Read what customers wrote. Select a review to see why it got its label.</p>
       </div>
       <Suspense fallback={null}>
         <FiltersBar
@@ -173,11 +173,11 @@ export default async function ReviewsPage({ params, searchParams }: PageProps<"/
         />
       </Suspense>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-ink-2" role="status">
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-[15px] text-ink-2" role="status">
           <span className="font-bold text-ink">{plural(result.total, "review")}</span>
           {hasActiveFilters(filters) ? " match the filters" : " in this upload"}
-          {result.pageCount > 1 ? `, showing ${(result.page - 1) * result.pageSize + 1}–${Math.min(result.page * result.pageSize, result.total)}` : ""}
+          {result.pageCount > 1 ? `, showing ${(result.page - 1) * result.pageSize + 1} to ${Math.min(result.page * result.pageSize, result.total)}` : ""}
         </p>
         <Suspense fallback={null}>
           <ExportLinks uploadId={id} />
@@ -185,7 +185,7 @@ export default async function ReviewsPage({ params, searchParams }: PageProps<"/
       </div>
 
       {result.rows.length ? (
-        <ul className="grid gap-3">
+        <ul className={reviewListClasses}>
           {result.rows.map((review) => (
             <ReviewCard key={review.id} review={review} href={reviewHref(review.id)} checkSource={checkSource} />
           ))}
@@ -196,7 +196,7 @@ export default async function ReviewsPage({ params, searchParams }: PageProps<"/
           title="No reviews match"
           action={hasActiveFilters(filters) ? <ButtonLink href={base} variant="secondary">Clear search and filters</ButtonLink> : undefined}
         >
-          {filters.q ? `Nothing contains “${filters.q}” with these filters. Try a shorter word or fewer filters.` : "Try fewer filters."}
+          {filters.q ? `No review contains “${filters.q}” with these filters. Try a shorter word or fewer filters.` : "Try removing a filter or two."}
         </EmptyState>
       )}
 

@@ -2,48 +2,41 @@ import { Check } from "lucide-react";
 import { JOURNEY_STEPS } from "@/lib/journey";
 
 /**
- * The four-step path every upload follows: done steps are filled green with a check, the current
- * step is ringed, later steps are outlined. The words carry the state too, for screen readers.
+ * Where an upload is on its four steps, shown only while it's in progress: a short line naming the
+ * current step and one slim segment per step (done green, current lime, later gray). Step names show
+ * under the segments on wider screens; screen readers get every step and its state.
  */
 export function JourneyPath({ current, label = "Upload progress" }: { current: number; label?: string }) {
   return (
-    <ol aria-label={label} className="grid grid-cols-4">
-      {JOURNEY_STEPS.map((step, i) => {
-        const done = i < current;
-        const now = i === current;
-        return (
-          <li key={step} aria-current={now ? "step" : undefined} className="relative flex flex-col items-center text-center">
-            {i > 0 && (
+    <div>
+      <p aria-hidden className="text-[15px] font-bold text-ink">
+        <span className="text-ink-2">
+          Step {current + 1} of {JOURNEY_STEPS.length}:
+        </span>{" "}
+        {JOURNEY_STEPS[current]}
+      </p>
+      <ol aria-label={label} className="mt-2.5 grid grid-cols-4 gap-1.5">
+        {JOURNEY_STEPS.map((step, i) => {
+          const done = i < current;
+          const now = i === current;
+          return (
+            <li key={step} aria-current={now ? "step" : undefined} className="min-w-0">
+              <span aria-hidden className={`block h-2.5 rounded-full ${done ? "bg-brand" : now ? "bg-fresh-leaf" : "bg-surface-3"}`} />
               <span
                 aria-hidden
-                className={`absolute right-1/2 top-6 z-0 h-2 w-full -translate-y-1/2 rounded-full ${i <= current ? "bg-brand" : "bg-surface-3"}`}
-              />
-            )}
-            <span
-              className={`relative z-10 grid size-12 place-items-center rounded-full font-display text-lg font-black ${
-                done
-                  ? "bg-brand text-on-brand"
-                  : now
-                    ? "bg-brand-soft text-brand-ink ring-4 ring-brand"
-                    : "bg-surface text-ink-2 ring-2 ring-line"
-              }`}
-            >
-              {done ? <Check aria-hidden className="size-6" strokeWidth={3.5} /> : <span aria-hidden>{i + 1}</span>}
-            </span>
-            <span
-              className={`nav-label mt-3 max-w-full text-[11px] leading-tight tracking-normal [overflow-wrap:anywhere] sm:px-1 sm:text-[13px] sm:tracking-[0.053em] ${
-                now ? "text-ink" : "text-ink-2"
-              }`}
-            >
+                className={`mt-2 hidden items-center gap-1 truncate text-[13px] font-bold sm:flex ${now ? "text-ink" : "text-ink-2"}`}
+              >
+                {done && <Check className="size-3.5 shrink-0 text-brand-ink" strokeWidth={3.5} />}
+                {step}
+              </span>
               <span className="sr-only">
                 Step {i + 1} of {JOURNEY_STEPS.length}
-                {done ? ", done" : now ? ", current" : ""}:{" "}
+                {done ? ", done" : now ? ", current" : ""}: {step}
               </span>
-              {step}
-            </span>
-          </li>
-        );
-      })}
-    </ol>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
   );
 }

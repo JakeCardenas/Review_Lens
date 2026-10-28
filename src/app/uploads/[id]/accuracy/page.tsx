@@ -5,7 +5,7 @@ import { ConfidenceExplainer } from "@/components/confidence-explainer";
 import { ConfidenceBreakdown } from "@/components/dashboard/charts";
 import { LabelCheckCard } from "@/components/dashboard/label-check";
 import { ImportUnfinished } from "@/components/import-unfinished";
-import { ReviewCard } from "@/components/review-card";
+import { ReviewCard, reviewListClasses } from "@/components/review-card";
 import { ButtonLink, Card, linkClasses } from "@/components/ui";
 import { formatNumber, formatPercent, plural } from "@/lib/format";
 import { requireOwnedUpload } from "@/lib/server/auth";
@@ -27,10 +27,10 @@ export default async function AccuracyPage({ params }: PageProps<"/uploads/[id]/
   const reviews = (query: Record<string, string>) => `/uploads/${id}/reviews?${new URLSearchParams(query)}`;
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-10">
       <div className="max-w-2xl">
-        <h2 className="text-heading-sm font-extrabold text-ink">Accuracy check</h2>
-        <p className="mt-2 text-body text-ink-2">
+        <h2 className="text-2xl font-extrabold text-ink">Accuracy check</h2>
+        <p className="mt-1 text-body text-ink-2">
           {check?.source === "label"
             ? "How often ReviewLens agrees with the labels in your file, and how sure it is about each label."
             : check?.source === "rating"
@@ -44,6 +44,7 @@ export default async function AccuracyPage({ params }: PageProps<"/uploads/[id]/
           <LabelCheckCard check={check} ratingScale={upload.ratingScale} />
           {check.disagreements.length > 0 && (
             <Card
+              className="border-t-2 border-line pt-10"
               title={check.source === "label" ? "Where ReviewLens and your labels differ" : "Where ReviewLens and the stars differ"}
               description={`${plural(check.eligible - check.agree, "review")} got a different label. The most confident ones are first.`}
               actions={
@@ -52,7 +53,7 @@ export default async function AccuracyPage({ params }: PageProps<"/uploads/[id]/
                 </ButtonLink>
               }
             >
-              <ul className="grid gap-3">
+              <ul className={reviewListClasses}>
                 {check.disagreements.map((review) => (
                   <ReviewCard
                     key={review.id}
@@ -66,7 +67,7 @@ export default async function AccuracyPage({ params }: PageProps<"/uploads/[id]/
           )}
         </>
       ) : (
-        <Card title="Compare with your own labels">
+        <Card title="Compare with your own labels" className="rounded-card bg-accent-soft p-6 sm:p-8">
           <p className="max-w-prose text-[15px] text-ink-2">
             Add a column to your CSV with your own label for each review: positive, neutral or negative. When you upload it, match that
             column to <span className="font-extrabold text-ink">Your label</span>, and this page shows how often ReviewLens agrees with you.
@@ -81,6 +82,7 @@ export default async function AccuracyPage({ params }: PageProps<"/uploads/[id]/
       )}
 
       <Card
+        className="border-t-2 border-line pt-10"
         title="How sure ReviewLens is"
         description={
           totals.labeled

@@ -12,8 +12,8 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
   const next = safeNextPath(Array.isArray(sp.next) ? sp.next[0] : sp.next);
   return (
     <AuthShell
-      title="Sign in"
-      intro="Sign in to see your uploads. Each account only sees its own."
+      title="Welcome back"
+      intro="Sign in to see your uploads. Only you can see them."
       footer={
         <>
           <p>
@@ -27,7 +27,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
     >
       {sp.error === "link" && (
         <Notice tone="warning" title="That link didn't work">
-          It may have expired or been used already. Sign in, or ask for a new link.
+          It may have expired or been used already. Sign in below, or ask for a new link.
         </Notice>
       )}
       <AuthForm
