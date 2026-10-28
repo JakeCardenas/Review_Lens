@@ -6,18 +6,20 @@ import { SearchX } from "lucide-react";
 import { ConfidenceExplainer } from "@/components/confidence-explainer";
 import { FiltersBar } from "@/components/filters-bar";
 import { Pagination } from "@/components/pagination";
-import { MixedOpinionTag, ReviewCard, StatusBadge, TopicChips } from "@/components/review-card";
+import { LabelCheckTag, MixedOpinionTag, ReviewCard, StatusBadge, TopicChips } from "@/components/review-card";
 import { ReviewDialog } from "@/components/review-dialog";
-import { ConfidenceMeter } from "@/components/sentiment";
+import { ConfidenceMeter, SENTIMENT_META } from "@/components/sentiment";
 import { ButtonLink, EmptyState } from "@/components/ui";
 import { REASON_TEXT } from "@/lib/analysis/confidence";
 import { describeLanguage } from "@/lib/analysis/language";
 import { TOPICS } from "@/lib/analysis/topics";
 import { formatDate, plural } from "@/lib/format";
+import { labelCheckSource } from "@/lib/server/dashboard";
 import { getDb } from "@/lib/server/db";
 import { filtersToQuery, hasActiveFilters, parseFilters } from "@/lib/server/filters";
 import { getFilterOptions, getReview, searchReviews, type ReviewRow } from "@/lib/server/reviews";
 import { getUpload } from "@/lib/server/uploads";
+import type { LabelCheckSource } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Reviews" };
 
@@ -54,11 +56,22 @@ function modelNote(review: ReviewRow): string | null {
   return null;
 }
 
-function ReviewDetail({ review }: { review: ReviewRow }) {
+/** "Neutral, different from ReviewLens", or just the label when the review has no label of its own yet. */
+function referenceFact(review: ReviewRow, source: LabelCheckSource): [string, string] | null {
+  if (!review.referenceLabel) return null;
+  const label = SENTIMENT_META[review.referenceLabel].label;
+  const compared =
+    review.status !== "labeled" ? label : `${label}, ${review.sentiment === review.referenceLabel ? "the same as" : "different from"} ReviewLens`;
+  return [source === "label" ? "Your label" : "Stars suggest", compared];
+}
+
+function ReviewDetail({ review, checkSource }: { review: ReviewRow; checkSource: LabelCheckSource | null }) {
+  const reference = checkSource ? referenceFact(review, checkSource) : null;
   const facts: [string, string][] = [
     ["Row in file", String(review.rowNumber)],
     ["Date", formatDate(review.reviewDate)],
     ["Rating", review.rating === null ? "None" : String(review.rating)],
+    ...(reference ? [reference] : []),
     ["Product", review.product ?? "None"],
     ["Language", describeLanguage(review.languageStatus, review.language)],
   ];
@@ -69,6 +82,7 @@ function ReviewDetail({ review }: { review: ReviewRow }) {
         <StatusBadge review={review} />
         {review.status === "labeled" && review.confidence && <ConfidenceMeter level={review.confidence} />}
         <MixedOpinionTag review={review} />
+        <LabelCheckTag review={review} source={checkSource} />
       </div>
       <blockquote className="whitespace-pre-wrap rounded-card bg-surface-2 p-4 text-[16px] leading-relaxed">
         {highlightTopics(review.text, review.topics)}
@@ -120,6 +134,7 @@ export default async function ReviewsPage({ params, searchParams }: PageProps<"/
     Number.isInteger(reviewId) && reviewId > 0 ? getReview(db, id, reviewId) : Promise.resolve(null),
   ]);
 
+  const checkSource = options.hasLabelCheck ? labelCheckSource(upload) : null;
   const base = `/uploads/${id}/reviews`;
   const query = filtersToQuery(filters);
   const listHref = (p: number) => {
@@ -148,6 +163,7 @@ export default async function ReviewsPage({ params, searchParams }: PageProps<"/
             hasRating: upload.hasRating,
             hasProduct: upload.hasProduct,
             ratingScale: upload.ratingScale,
+            checkSource,
           }}
         />
       </Suspense>
@@ -161,7 +177,7 @@ export default async function ReviewsPage({ params, searchParams }: PageProps<"/
       {result.rows.length ? (
         <ul className="grid gap-3">
           {result.rows.map((review) => (
-            <ReviewCard key={review.id} review={review} href={reviewHref(review.id)} />
+            <ReviewCard key={review.id} review={review} href={reviewHref(review.id)} checkSource={checkSource} />
           ))}
         </ul>
       ) : (
@@ -179,7 +195,7 @@ export default async function ReviewsPage({ params, searchParams }: PageProps<"/
 
       {selected && (
         <ReviewDialog key={selected.id} title={`Review from row ${selected.rowNumber}`} closeHref={listHref(result.page)}>
-          <ReviewDetail review={selected} />
+          <ReviewDetail review={selected} checkSource={checkSource} />
         </ReviewDialog>
       )}
     </div>

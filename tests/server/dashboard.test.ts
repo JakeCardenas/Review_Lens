@@ -7,6 +7,7 @@ import { EMPTY_FILTERS } from "@/lib/server/filters";
 import { ingestRows } from "@/lib/server/ingest";
 import { getFilterOptions, listIssues, searchReviews } from "@/lib/server/reviews";
 import { createUpload, type UploadRecord } from "@/lib/server/uploads";
+import { CONFIDENCE_LEVELS } from "@/lib/types";
 import { createTestDb } from "../helpers/pglite";
 
 const mock = new MockProvider();
@@ -191,6 +192,77 @@ describe("mixed opinions", () => {
   });
 });
 
+describe("label check", () => {
+  let handLabeled: UploadRecord;
+
+  beforeAll(async () => {
+    handLabeled = await createUpload(
+      db,
+      {
+        name: "Hand labels",
+        fileName: "hand.csv",
+        columnMap: { text: "Review", date: null, rating: "Stars", product: null, label: "My label" },
+        dateFormat: null,
+        ratingScale: 5,
+        totalRows: 5,
+      },
+      mock,
+    );
+    await ingestRows(db, handLabeled, [
+      { rowNumber: 2, text: TEXT.positive, rating: "5", label: "positive" },
+      { rowNumber: 3, text: TEXT.negative, rating: "1", label: "Negative" },
+      { rowNumber: 4, text: TEXT.neutral, rating: "3", label: "positive" },
+      { rowNumber: 5, text: TEXT.negative, rating: "1", label: "neutral" },
+      { rowNumber: 6, text: TEXT.positive, rating: "5" },
+    ]);
+    await analyzeAll(handLabeled.id);
+  });
+
+  it("compares the labels with your own and leaves out reviews you didn't label", async () => {
+    const { check } = await getDashboard(db, handLabeled, EMPTY_FILTERS);
+    expect(check).toMatchObject({ source: "label", total: 4, agree: 2 });
+    // Rows are your label; columns are ReviewLens's label.
+    expect(check?.matrix).toEqual({
+      positive: { positive: 1, neutral: 1, negative: 0 },
+      neutral: { positive: 0, neutral: 0, negative: 1 },
+      negative: { positive: 0, neutral: 0, negative: 1 },
+    });
+  });
+
+  it("splits agreement by confidence level", async () => {
+    const { check } = await getDashboard(db, handLabeled, EMPTY_FILTERS);
+    const { rows } = await searchReviews(db, handLabeled.id, EMPTY_FILTERS, 1);
+    for (const level of CONFIDENCE_LEVELS) {
+      const atLevel = rows.filter((r) => r.referenceLabel && r.confidence === level);
+      expect(check?.byConfidence[level]).toEqual({
+        total: atLevel.length,
+        agree: atLevel.filter((r) => r.sentiment === r.referenceLabel).length,
+      });
+    }
+  });
+
+  it("filters the review list to disagreements and matches", async () => {
+    const disagree = await searchReviews(db, handLabeled.id, { ...EMPTY_FILTERS, check: "disagree" }, 1);
+    expect(disagree.rows.map((r) => [r.rowNumber, r.referenceLabel, r.sentiment])).toEqual([
+      [4, "positive", "neutral"],
+      [5, "neutral", "negative"],
+    ]);
+    const agree = await searchReviews(db, handLabeled.id, { ...EMPTY_FILTERS, check: "agree" }, 1);
+    expect(agree.rows.map((r) => r.rowNumber)).toEqual([2, 3]);
+  });
+
+  it("compares with the stars when there is no label column", async () => {
+    const { check } = await getDashboard(db, upload, EMPTY_FILTERS);
+    expect(check).toMatchObject({ source: "stars", total: 40, agree: 40 });
+  });
+
+  it("has nothing to compare without labels or stars", async () => {
+    const { check } = await getDashboard(db, undated, EMPTY_FILTERS);
+    expect(check).toBeNull();
+    expect((await getFilterOptions(db, undated.id)).hasLabelCheck).toBe(false);
+  });
+});
+
 describe("getFilterOptions and listIssues", () => {
   it("returns products, date range and rating range", async () => {
     expect(await getFilterOptions(db, upload.id)).toEqual({
@@ -202,6 +274,7 @@ describe("getFilterOptions and listIssues", () => {
       maxDate: "2026-04-20",
       minRating: 1,
       maxRating: 5,
+      hasLabelCheck: true,
     });
   });
 

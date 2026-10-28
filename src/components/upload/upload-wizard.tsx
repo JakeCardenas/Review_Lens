@@ -4,11 +4,12 @@ import { useRouter } from "next/navigation";
 import Papa from "papaparse";
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, FileSpreadsheet, Lock, UploadCloud } from "lucide-react";
+import { SENTIMENT_META } from "@/components/sentiment";
 import { Button, Notice } from "@/components/ui";
 import { api, ApiRequestError, withRetry } from "@/lib/client-api";
 import { csvColumnsProblem, guessColumnMapping, isPersonalColumn } from "@/lib/csv/columns";
 import { cleanText, looksMisencoded, maskPersonalData } from "@/lib/csv/clean";
-import { detectDateFormat, detectRatingScale, type DateFormatGuess } from "@/lib/csv/parse-values";
+import { detectDateFormat, detectRatingScale, labelColumnLooksValid, type DateFormatGuess } from "@/lib/csv/parse-values";
 import { prepareRow } from "@/lib/csv/prepare";
 import { formatDate, formatNumber, plural } from "@/lib/format";
 import { LIMITS } from "@/lib/limits";
@@ -37,6 +38,11 @@ const FIELDS: { id: ColumnField; label: string; help: string; required?: boolean
   { id: "date", label: "Date", help: "Used for the timeline and the date filter." },
   { id: "rating", label: "Rating", help: "Stars or score. Used for filters and to double-check confidence." },
   { id: "product", label: "Product", help: "Product or item name. Used for the product filter." },
+  {
+    id: "label",
+    label: "Your label",
+    help: "Your own positive, neutral or negative label for each review. ReviewLens checks its labels against yours.",
+  },
 ];
 
 type ImportState =
@@ -131,7 +137,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
   const [fileError, setFileError] = useState<string | null>(null);
   const [reading, setReading] = useState(false);
   const [dragging, setDragging] = useState(false);
-  const [mapping, setMapping] = useState<ColumnMap>({ text: null, date: null, rating: null, product: null });
+  const [mapping, setMapping] = useState<ColumnMap>({ text: null, date: null, rating: null, product: null, label: null });
   const [dateChoice, setDateChoice] = useState<DateFormat | null>(null);
   const [ratingScale, setRatingScale] = useState<RatingScale>(5);
   const [name, setName] = useState("");
@@ -147,6 +153,10 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
   const detectedDate: DateFormatGuess = useMemo(
     () => (parsed && mapping.date ? detectDateFormat(columnValues(parsed.rows, mapping.date)) : "none"),
     [parsed, mapping.date],
+  );
+  const labelColumnOk = useMemo(
+    () => !parsed || !mapping.label || labelColumnLooksValid(columnValues(parsed.rows, mapping.label)),
+    [parsed, mapping.label],
   );
   const dateFormat: DateFormat | null =
     detectedDate === "ymd" || detectedDate === "mdy" || detectedDate === "dmy" ? detectedDate : dateChoice;
@@ -164,6 +174,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
       date: pick(row, mapping.date, 100),
       rating: pick(row, mapping.rating, 50),
       product: mapping.product ? scrub(row[mapping.product] ?? "", 500) : null,
+      label: mapping.label ? scrub(row[mapping.label] ?? "", 50) : null,
     }));
   }, [parsed, mapping]);
 
@@ -206,6 +217,8 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
     try {
       const result = await parseCsv(file);
       const guess = guessColumnMapping(result.headers);
+      // A column named like a label but holding something else (0 and 1, say) is left for the person to choose.
+      if (guess.label && !labelColumnLooksValid(columnValues(result.rows, guess.label))) guess.label = null;
       const scale = detectRatingScale(columnValues(result.rows, guess.rating));
       setParsed(result);
       setMapping(guess);
@@ -441,6 +454,14 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                       </div>
                     )}
 
+                    {field.id === "label" && current && (
+                      <p className={`mt-2 text-sm ${labelColumnOk ? "text-ink-2" : "text-warn-ink"}`}>
+                        {labelColumnOk
+                          ? "ReviewLens will compare its labels with these. They are never sent to the AI."
+                          : "Most values here aren't positive, neutral or negative. Reviews with other values are left out of the label check."}
+                      </p>
+                    )}
+
                     {field.id === "rating" && current && (
                       <label className="mt-2 flex flex-wrap items-center gap-2 text-sm">
                         <span className="text-ink-2">Ratings are out of</span>
@@ -550,6 +571,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                     {mapping.date && <th scope="col" className="px-4 py-2 font-semibold">Date</th>}
                     {mapping.rating && <th scope="col" className="px-4 py-2 font-semibold">Rating</th>}
                     {mapping.product && <th scope="col" className="px-4 py-2 font-semibold">Product</th>}
+                    {mapping.label && <th scope="col" className="px-4 py-2 font-semibold">Your label</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -566,6 +588,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                       {mapping.date && <td className="px-4 py-2.5 whitespace-nowrap">{row.reviewDate ? formatDate(row.reviewDate) : "—"}</td>}
                       {mapping.rating && <td className="px-4 py-2.5 tabular">{row.rating ?? "—"}</td>}
                       {mapping.product && <td className="px-4 py-2.5">{row.product ?? "—"}</td>}
+                      {mapping.label && <td className="px-4 py-2.5">{row.referenceLabel ? SENTIMENT_META[row.referenceLabel].label : "—"}</td>}
                     </tr>
                   ))}
                 </tbody>

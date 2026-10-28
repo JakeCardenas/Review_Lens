@@ -1,8 +1,8 @@
-import { REASON_TEXT } from "@/lib/analysis/confidence";
+import { REASON_TEXT, STAR_RULES } from "@/lib/analysis/confidence";
 import { topicLabel } from "@/lib/analysis/topics";
 import { providerLabel } from "@/lib/provider-label";
-import { SENTIMENTS, type Sentiment } from "@/lib/types";
-import type { Dashboard } from "./dashboard";
+import { CONFIDENCE_LEVELS, SENTIMENTS, type Sentiment } from "@/lib/types";
+import type { Dashboard, LabelCheck } from "./dashboard";
 import type { Db } from "./db-types";
 import { buildWhere, type ReviewFilters } from "./filters";
 import { queryReviews, REVIEW_COLUMNS } from "./reviews";
@@ -31,6 +31,7 @@ const REVIEW_HEADER = [
   "rating",
   "product",
   "sentiment",
+  "reference_label",
   "confidence",
   "confidence_reasons",
   "topics",
@@ -59,6 +60,7 @@ export async function* reviewCsvLines(db: Db, uploadId: string, filters: ReviewF
         r.rating,
         r.product,
         r.sentiment,
+        r.referenceLabel,
         r.confidence,
         r.confidenceReasons.map((code) => REASON_TEXT[code] ?? code).join(" "),
         r.topics.map(topicLabel),
@@ -86,11 +88,38 @@ export function describeFilters(filters: ReviewFilters): string {
   if (filters.confidence) parts.push(`Confidence: ${filters.confidence}`);
   if (filters.status) parts.push(`Status: ${filters.status}`);
   if (filters.opinion === "mixed") parts.push("Opinion: mixed praise and complaints");
+  if (filters.check) parts.push(filters.check === "agree" ? "Label check: matches" : "Label check: disagreements");
   if (filters.q) parts.push(`Search: ${filters.q}`);
   return parts.length ? parts.join("; ") : "None";
 }
 
 const percent = (part: number, whole: number) => (whole ? `${((part / whole) * 100).toFixed(1)}%` : "0.0%");
+
+const CONFIDENCE_NAMES = { high: "High", medium: "Medium", low: "Low" } as const;
+
+function labelCheckLines(upload: UploadRecord, check: LabelCheck): unknown[][] {
+  const yours = check.source === "label";
+  return [
+    [],
+    ["Label check"],
+    [
+      "Compared with",
+      yours ? `Your labels (column "${upload.columnMap.label}")` : `Star ratings (${STAR_RULES[upload.ratingScale ?? 5]})`,
+    ],
+    ["Reviews compared", check.total],
+    ["Labels that match", check.agree, percent(check.agree, check.total)],
+    [],
+    [yours ? "Your label" : "Stars suggest", ...SENTIMENTS.map((s) => `ReviewLens: ${SENTIMENT_NAMES[s]}`)],
+    ...SENTIMENTS.map((s) => [SENTIMENT_NAMES[s], ...SENTIMENTS.map((app) => check.matrix[s][app])]),
+    [],
+    ["Confidence", "Reviews compared", "Labels that match", "Share that match"],
+    ...CONFIDENCE_LEVELS.map((level) => {
+      const { total, agree } = check.byConfidence[level];
+      return [CONFIDENCE_NAMES[level], total, agree, percent(agree, total)];
+    }),
+    ["Note", "This shows how often ReviewLens agrees with these labels. It is not proof that ReviewLens is accurate."],
+  ];
+}
 
 /** A summary report as CSV: totals, sentiment shares, confidence, topics, keywords and trend. */
 export function summaryCsv(upload: UploadRecord, dashboard: Dashboard, filters: ReviewFilters): string {
@@ -116,6 +145,7 @@ export function summaryCsv(upload: UploadRecord, dashboard: Dashboard, filters: 
     ["High", dashboard.confidence.high],
     ["Medium", dashboard.confidence.medium],
     ["Low", dashboard.confidence.low],
+    ...(dashboard.check ? labelCheckLines(upload, dashboard.check) : []),
     [],
     ["Topic", "Mentions", "Positive", "Neutral", "Negative"],
     ...dashboard.topics.map((t) => [t.label, t.total, t.positive, t.neutral, t.negative]),

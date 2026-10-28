@@ -15,8 +15,22 @@ describe("prepareRow", () => {
       reviewDate: "2025-04-25",
       rating: 2,
       product: "Kettle",
+      referenceLabel: null,
       issues: [],
     });
+  });
+
+  it("reads your own label for the label check", () => {
+    expect(prepareRow({ rowNumber: 6, text: "Fine", label: " Negative " }, options)).toMatchObject({
+      referenceLabel: "negative",
+      issues: [],
+    });
+  });
+
+  it("keeps the review but warns about a label it can't read", () => {
+    const row = prepareRow({ rowNumber: 8, text: "Fine", label: "4" }, options);
+    expect(row.referenceLabel).toBeNull();
+    expect(row.issues).toEqual([expect.objectContaining({ severity: "warning", code: "LABEL_UNREADABLE" })]);
   });
 
   it("skips a row with no review text", () => {

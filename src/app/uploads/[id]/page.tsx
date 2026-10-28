@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { CalendarX2, Filter, Inbox } from "lucide-react";
 import { ConfidenceExplainer } from "@/components/confidence-explainer";
 import { KeywordColumns, SentimentBars, TopicRows } from "@/components/dashboard/charts";
+import { LabelCheckCard } from "@/components/dashboard/label-check";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { FiltersBar } from "@/components/filters-bar";
 import { ImportUnfinished } from "@/components/import-unfinished";
@@ -176,6 +177,14 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
             </Card>
           </div>
 
+          {dashboard.check && (
+            <LabelCheckCard
+              check={dashboard.check}
+              ratingScale={upload.ratingScale}
+              disagreementsHref={linkTo({ check: "disagree" })}
+            />
+          )}
+
           <Card
             title="Common topics"
             description={
@@ -207,7 +216,12 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
             >
               <ul className="grid gap-3">
                 {dashboard.readFirst.map((review) => (
-                  <ReviewCard key={review.id} review={review} href={linkTo({ review: String(review.id) })} />
+                  <ReviewCard
+                    key={review.id}
+                    review={review}
+                    href={linkTo({ review: String(review.id) })}
+                    checkSource={dashboard.check?.source ?? null}
+                  />
                 ))}
               </ul>
             </Card>

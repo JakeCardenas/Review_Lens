@@ -59,6 +59,23 @@ export function ratingPosition(rating: number | null, scale: RatingScale | null)
   return Math.round(position * 100) / 100;
 }
 
+function sentimentFromPosition(position: number): Sentiment {
+  return position >= 0.75 ? "positive" : position <= 0.25 ? "negative" : "neutral";
+}
+
+/** The sentiment a star rating suggests: the top quarter of the scale is positive, the bottom quarter negative. */
+export function sentimentFromRating(rating: number | null, scale: RatingScale | null): Sentiment | null {
+  const position = ratingPosition(rating, scale);
+  return position === null ? null : sentimentFromPosition(position);
+}
+
+/** What sentimentFromRating does with whole-number ratings on each scale, in words. */
+export const STAR_RULES: Record<RatingScale, string> = {
+  5: "4–5 stars = positive, 3 = neutral, 1–2 = negative",
+  10: "8–10 = positive, 4–7 = neutral, 1–3 = negative",
+  100: "75–100 = positive, 26–74 = neutral, 0–25 = negative",
+};
+
 /**
  * Turns the model's own certainty plus simple checks into High / Medium / Low.
  * This is a ranking of how sure the label is, not a probability of being correct.
@@ -75,8 +92,7 @@ export function computeConfidence(input: ConfidenceInput): { level: Confidence; 
   };
 
   if (input.ratingPosition !== null) {
-    const r = input.ratingPosition;
-    const expected: Sentiment = r >= 0.75 ? "positive" : r <= 0.25 ? "negative" : "neutral";
+    const expected = sentimentFromPosition(input.ratingPosition);
     const opposite =
       (input.sentiment === "positive" && expected === "negative") ||
       (input.sentiment === "negative" && expected === "positive");

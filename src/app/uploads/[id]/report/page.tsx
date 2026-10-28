@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import type { ReactNode } from "react";
 import { SentimentBars } from "@/components/dashboard/charts";
+import { byConfidenceText, LABEL_CHECK_CAVEAT, LabelCheckTable } from "@/components/dashboard/label-check";
 import { PrintButton } from "@/components/print-button";
 import { buttonClasses } from "@/components/ui";
+import { STAR_RULES } from "@/lib/analysis/confidence";
 import { formatDateTime, formatNumber, formatPercent, periodLabel } from "@/lib/format";
 import { providerLabel } from "@/lib/provider-label";
 import { getDashboard } from "@/lib/server/dashboard";
@@ -35,7 +37,7 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
   if (!upload) notFound();
   const filters = dashboardFilters(parseFilters(await searchParams));
   const dashboard = await getDashboard(db, upload, filters);
-  const { totals, sentiment } = dashboard;
+  const { totals, sentiment, check } = dashboard;
   const query = filtersToQuery(filters);
 
   return (
@@ -77,6 +79,23 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
           {formatNumber(dashboard.confidence.low)} low. Confidence is a ranking of how sure the label is, not a measured accuracy.
         </p>
       </Section>
+
+      {check && (
+        <Section title="Label check">
+          <p className="max-w-3xl leading-relaxed">
+            ReviewLens&apos;s label matches{" "}
+            {check.source === "label"
+              ? "the label you gave in your file"
+              : `what the star rating suggests (${STAR_RULES[upload.ratingScale ?? 5]})`}{" "}
+            on {formatNumber(check.agree)} of {formatNumber(check.total)} reviews ({formatPercent(check.agree, check.total)}).{" "}
+            {byConfidenceText(check)}.
+          </p>
+          <div className="mt-3 max-w-md">
+            <LabelCheckTable check={check} />
+          </div>
+          <p className="mt-3 max-w-3xl text-sm text-ink-2">{LABEL_CHECK_CAVEAT[check.source]}</p>
+        </Section>
+      )}
 
       <Section title="Topics">
         {dashboard.topics.length ? (
@@ -159,7 +178,7 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
         <ul className="grid max-w-3xl list-disc gap-1 pl-5 text-sm text-ink-2">
           <li>Each review gets one label: positive, neutral or negative. Shares are of labeled reviews only.</li>
           <li>Topics come from a fixed list of words and phrases, so reviews can mention more than one topic.</li>
-          <li>Reviews in languages other than English, and reviews that couldn&apos;t be analyzed, are counted separately.</li>
+          <li>Reviews in languages ReviewLens can&apos;t read, and reviews that couldn&apos;t be analyzed, are counted separately.</li>
           <li>Personal details such as emails and phone numbers were masked before analysis.</li>
         </ul>
         <p className="mt-2 text-sm text-ink-2">Labels: {SENTIMENTS.map((s) => `${NAMES[s]} ${formatNumber(sentiment[s])}`).join(", ")}.</p>

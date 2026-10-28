@@ -5,7 +5,7 @@ import { useState, useTransition, type FormEvent } from "react";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui";
 import { TOPICS } from "@/lib/analysis/topics";
-import type { RatingScale } from "@/lib/types";
+import type { LabelCheckSource, RatingScale } from "@/lib/types";
 
 export type FilterOptionsProps = {
   products: { name: string; count: number }[];
@@ -15,10 +15,12 @@ export type FilterOptionsProps = {
   hasRating: boolean;
   hasProduct: boolean;
   ratingScale: RatingScale | null;
+  /** Set when reviews have a label to check against, which turns on the label-check filter. */
+  checkSource?: LabelCheckSource | null;
 };
 
 const DASHBOARD_KEYS = ["from", "to", "product", "rating_min", "rating_max"];
-const REVIEW_KEYS = [...DASHBOARD_KEYS, "sentiment", "topic", "confidence", "opinion", "status", "q"];
+const REVIEW_KEYS = [...DASHBOARD_KEYS, "sentiment", "topic", "confidence", "opinion", "check", "status", "q"];
 
 function ratingSteps(scale: RatingScale | null): number[] {
   if (scale === 100) return Array.from({ length: 11 }, (_, i) => i * 10);
@@ -208,6 +210,16 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
                 <option value="mixed">Mixed praise and complaints</option>
               </select>
             </label>
+            {options.checkSource && (
+              <label className={field}>
+                Label check
+                <select value={value("check")} onChange={(e) => update({ check: e.target.value || null })} className={selectClass}>
+                  <option value="">All reviews</option>
+                  <option value="disagree">{options.checkSource === "label" ? "Differs from your label" : "Differs from the stars"}</option>
+                  <option value="agree">{options.checkSource === "label" ? "Matches your label" : "Matches the stars"}</option>
+                </select>
+              </label>
+            )}
             <label className={field}>
               Status
               <select value={value("status")} onChange={(e) => update({ status: e.target.value || null })} className={selectClass}>

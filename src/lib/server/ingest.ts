@@ -1,3 +1,4 @@
+import { sentimentFromRating } from "@/lib/analysis/confidence";
 import { detectLanguage } from "@/lib/analysis/language";
 import { providerLanguages } from "@/lib/analysis/providers/languages";
 import { prepareRow } from "@/lib/csv/prepare";
@@ -27,6 +28,7 @@ type NewReview = {
   language_status: string;
   status: ReviewStatus;
   status_note: string | null;
+  reference_label: string | null;
 };
 
 /** Cleans a chunk of mapped CSV rows and stores them as pending reviews. Safe to call twice with the same rows. */
@@ -46,6 +48,8 @@ export async function ingestRows(db: Db, upload: UploadRecord, rows: RawRow[]): 
   const issues: RowIssue[] = [];
   const reviews: NewReview[] = [];
   const readsTagalog = providerLanguages(upload.provider).includes("tgl");
+  // The label check uses the person's own labels when the file has them, and the stars otherwise.
+  const hasLabelColumn = Boolean(upload.columnMap.label);
   for (const raw of rows) {
     const prepared = prepareRow(raw, { dateFormat: upload.dateFormat, ratingScale: upload.ratingScale });
     issues.push(...prepared.issues);
@@ -71,6 +75,7 @@ export async function ingestRows(db: Db, upload: UploadRecord, rows: RawRow[]): 
       language_status: language.status,
       status: unsupported ? "not_labeled" : "pending",
       status_note: unsupported ? `Language not supported yet (detected: ${language.name}).` : null,
+      reference_label: hasLabelColumn ? prepared.referenceLabel : sentimentFromRating(prepared.rating, upload.ratingScale),
     });
   }
 
@@ -78,11 +83,11 @@ export async function ingestRows(db: Db, upload: UploadRecord, rows: RawRow[]): 
     const added = reviews.length
       ? await tx.query<{ row_number: number; status: ReviewStatus }>(
           `insert into reviews (upload_id, row_number, text, review_date, rating, product, language,
-             language_status, status, status_note)
+             language_status, status, status_note, reference_label)
            select $1::uuid, r.row_number, r.text, r.review_date, r.rating, r.product, r.language,
-             r.language_status, r.status, r.status_note
+             r.language_status, r.status, r.status_note, r.reference_label
            from jsonb_to_recordset($2::text::jsonb) as r(row_number int, text text, review_date date, rating numeric,
-             product text, language text, language_status text, status text, status_note text)
+             product text, language text, language_status text, status text, status_note text, reference_label text)
            on conflict (upload_id, row_number) do nothing
            returning row_number, status`,
           [upload.id, JSON.stringify(reviews)],

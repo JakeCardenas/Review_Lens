@@ -1,6 +1,6 @@
 import { rankKeywords, type KeywordCount, type KeywordsBySentiment } from "@/lib/analysis/keywords";
 import { TOPICS, type TopicId } from "@/lib/analysis/topics";
-import type { Confidence, Sentiment } from "@/lib/types";
+import type { Confidence, LabelCheckSource, Sentiment } from "@/lib/types";
 import type { Db } from "./db-types";
 import { buildWhere, type ReviewFilters } from "./filters";
 import { queryReviews, REVIEW_COLUMNS, type ReviewRow } from "./reviews";
@@ -12,6 +12,17 @@ export type Trend =
   | { status: "unavailable"; reason: string };
 
 export type TopicBreakdown = { id: TopicId; label: string; total: number } & Record<Sentiment, number>;
+
+/** How often ReviewLens's label matches the person's own label, or the one the stars suggest. */
+export type LabelCheck = {
+  source: LabelCheckSource;
+  /** Labeled reviews that have a label to compare with. */
+  total: number;
+  agree: number;
+  /** Counts by the label checked against (rows) and ReviewLens's label (columns). */
+  matrix: Record<Sentiment, Record<Sentiment, number>>;
+  byConfidence: Record<Confidence, { total: number; agree: number }>;
+};
 
 export type Dashboard = {
   totals: {
@@ -32,6 +43,8 @@ export type Dashboard = {
   topics: TopicBreakdown[];
   keywords: KeywordsBySentiment;
   readFirst: ReviewRow[];
+  /** Null when no labeled review has a label to compare with. */
+  check: LabelCheck | null;
 };
 
 /** Fewer dated reviews than this and the timeline would mislead more than it helps. */
@@ -114,6 +127,14 @@ export async function getDashboard(db: Db, upload: UploadRecord, filters: Review
     params,
   );
 
+  const checkRows = await db.query<CheckRow>(
+    `select r.reference_label as reference, r.sentiment, r.confidence, count(*)::int as n
+     from reviews r
+     where ${sql} and r.status = 'labeled' and r.reference_label is not null
+     group by 1, 2, 3`,
+    params,
+  );
+
   return {
     totals: {
       all: summary.all,
@@ -132,7 +153,38 @@ export async function getDashboard(db: Db, upload: UploadRecord, filters: Review
     topics,
     keywords: rankKeywords(keywordRows, sentiment),
     readFirst,
+    check: labelCheck(labelCheckSource(upload), checkRows),
   };
+}
+
+/** The label check uses the person's own labels when the upload has a label column, and the stars otherwise. */
+export function labelCheckSource(upload: UploadRecord): LabelCheckSource {
+  return upload.columnMap.label ? "label" : "stars";
+}
+
+type CheckRow = { reference: Sentiment; sentiment: Sentiment; confidence: Confidence | null; n: number };
+
+function labelCheck(source: LabelCheckSource, rows: CheckRow[]): LabelCheck | null {
+  if (!rows.length) return null;
+  const bySentiment = () => ({ positive: 0, neutral: 0, negative: 0 });
+  const check: LabelCheck = {
+    source,
+    total: 0,
+    agree: 0,
+    matrix: { positive: bySentiment(), neutral: bySentiment(), negative: bySentiment() },
+    byConfidence: { high: { total: 0, agree: 0 }, medium: { total: 0, agree: 0 }, low: { total: 0, agree: 0 } },
+  };
+  for (const row of rows) {
+    const agree = row.reference === row.sentiment ? row.n : 0;
+    check.total += row.n;
+    check.agree += agree;
+    check.matrix[row.reference][row.sentiment] += row.n;
+    if (row.confidence) {
+      check.byConfidence[row.confidence].total += row.n;
+      check.byConfidence[row.confidence].agree += agree;
+    }
+  }
+  return check;
 }
 
 async function getTrend(db: Db, upload: UploadRecord, sql: string, params: unknown[]): Promise<Trend> {

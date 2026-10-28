@@ -1,6 +1,31 @@
-import type { DateFormat, RatingScale } from "@/lib/types";
+import type { DateFormat, RatingScale, Sentiment } from "@/lib/types";
 
 export type DateFormatGuess = DateFormat | "ambiguous" | "none";
+
+const LABELS = new Map<string, Sentiment>([
+  ["positive", "positive"],
+  ["pos", "positive"],
+  ["positibo", "positive"],
+  ["+", "positive"],
+  ["neutral", "neutral"],
+  ["neu", "neutral"],
+  ["neutro", "neutral"],
+  ["negative", "negative"],
+  ["neg", "negative"],
+  ["negatibo", "negative"],
+  ["-", "negative"],
+]);
+
+/** Reads a person's own sentiment label, or null when it isn't one ReviewLens recognizes. */
+export function parseLabel(value: string): Sentiment | null {
+  return LABELS.get(value.trim().toLowerCase()) ?? null;
+}
+
+/** True when most filled-in values are labels, so the column can be suggested as "Your label". */
+export function labelColumnLooksValid(values: string[]): boolean {
+  const filled = values.map((value) => value.trim()).filter(Boolean);
+  return filled.length > 0 && filled.filter((value) => parseLabel(value) !== null).length / filled.length >= 0.8;
+}
 
 const ISO = /^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})(?:[ T].*)?$/;
 const NUMERIC = /^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4}|\d{2})(?:[ T,].*)?$/;

@@ -9,7 +9,13 @@ export const CreateUploadBody = z
     name: z.string().trim().min(1).max(120),
     fileName: z.string().trim().min(1).max(255),
     columnMap: z
-      .object({ text: header, date: header.nullable(), rating: header.nullable(), product: header.nullable() })
+      .object({
+        text: header,
+        date: header.nullable(),
+        rating: header.nullable(),
+        product: header.nullable(),
+        label: header.nullable().optional(),
+      })
       .strict(),
     dateFormat: z.enum(["ymd", "mdy", "dmy"]).nullable(),
     ratingScale: z.union([z.literal(5), z.literal(10), z.literal(100)]).nullable(),
@@ -29,6 +35,7 @@ export const RawRowBody = z
     date: z.string().max(100).nullable().optional(),
     rating: z.string().max(50).nullable().optional(),
     product: z.string().max(500).nullable().optional(),
+    label: z.string().max(50).nullable().optional(),
   })
   .strict();
 

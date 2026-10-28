@@ -1,5 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { detectDateFormat, detectRatingScale, parseDate, parseRating } from "@/lib/csv/parse-values";
+import { detectDateFormat, detectRatingScale, labelColumnLooksValid, parseDate, parseLabel, parseRating } from "@/lib/csv/parse-values";
+
+describe("parseLabel", () => {
+  it("reads positive, neutral and negative in common spellings", () => {
+    expect(["Positive", " pos ", "positibo", "+"].map(parseLabel)).toEqual(["positive", "positive", "positive", "positive"]);
+    expect(["Neutral", "neu", "neutro"].map(parseLabel)).toEqual(["neutral", "neutral", "neutral"]);
+    expect(["NEGATIVE", "neg", "negatibo", "-"].map(parseLabel)).toEqual(["negative", "negative", "negative", "negative"]);
+  });
+
+  it("returns null for anything else, such as star numbers", () => {
+    expect(["4", "", "good", "mixed"].map(parseLabel)).toEqual([null, null, null, null]);
+  });
+});
+
+describe("labelColumnLooksValid", () => {
+  it("accepts a column of labels and rejects a column of numbers", () => {
+    expect(labelColumnLooksValid(["positive", "negative", "neutral", "pos", ""])).toBe(true);
+    expect(labelColumnLooksValid(["0", "4", "3", "2"])).toBe(false);
+    expect(labelColumnLooksValid([])).toBe(false);
+  });
+});
 
 describe("detectDateFormat", () => {
   it("returns ymd when every date is ISO", () => {

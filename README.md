@@ -18,7 +18,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Add your database URL to `.env.local` and apply the Supabase migration first.
+Add your database URL to `.env.local`. Then, in the Supabase SQL Editor, run each file in `supabase/migrations` in order. If your database is from an earlier version, run only the files it doesn’t have yet. For example, `20261028000000_label_check.sql` adds the label check.
 
 ReviewLens uses a basic sentiment analyzer by default. Add a Gemini API key to use AI mode on Google’s free tier. No AI training is needed.
 
@@ -39,6 +39,16 @@ ReviewLens only allows models that are free on the Gemini API’s free tier. The
 ## Languages
 
 In AI mode, ReviewLens labels English, Tagalog, and Taglish reviews, including texting spellings like “nman” and “hndi.” The basic analyzer labels English only. Reviews in other languages are listed as not supported.
+
+## Label check
+
+To see how often ReviewLens agrees with you, add a column to your CSV with your own label for each review: `positive`, `neutral`, or `negative`. Name it something like `my_label`. On the upload page, match it to **Your label**. Spellings like `Positive`, `pos`, and `positibo` also work. Reviews you leave blank are left out of the check. Your labels are saved with the reviews but never sent to the AI.
+
+The dashboard’s **Label check** box shows how many labels match, how often they match at each confidence level, and a table of where they differ. **See the disagreements** lists those reviews, with your label next to ReviewLens’s. Both exports include the comparison.
+
+Without a label column, ReviewLens compares its labels with the star ratings instead: 4–5 stars count as positive, 3 as neutral, and 1–2 as negative. Stars are a rough guide, since a 5-star review can still complain.
+
+The label check measures agreement, not accuracy. With a small sample, one review can change the result a lot.
 
 ## Privacy
 

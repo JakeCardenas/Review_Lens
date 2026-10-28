@@ -8,8 +8,12 @@ export type Confidence = (typeof CONFIDENCE_LEVELS)[number];
 export type DateFormat = "ymd" | "mdy" | "dmy";
 export type RatingScale = 5 | 10 | 100;
 
-export type ColumnField = "text" | "date" | "rating" | "product";
-export type ColumnMap = Record<ColumnField, string | null>;
+/** What the label check compares with: the person's own labels, or the label each star rating suggests. */
+export type LabelCheckSource = "label" | "stars";
+
+export type ColumnField = "text" | "date" | "rating" | "product" | "label";
+/** `label` is optional because uploads made before the label check have no entry for it. */
+export type ColumnMap = Record<Exclude<ColumnField, "label">, string | null> & { label?: string | null };
 
 /** One CSV row after column mapping, before cleaning. `rowNumber` counts the header as row 1. */
 export type RawRow = {
@@ -18,6 +22,8 @@ export type RawRow = {
   date?: string | null;
   rating?: string | null;
   product?: string | null;
+  /** The person's own positive, neutral or negative label, used only for the label check. */
+  label?: string | null;
 };
 
 export type IssueCode =
@@ -27,6 +33,7 @@ export type IssueCode =
   | "RATING_OUT_OF_RANGE"
   | "RATING_UNREADABLE"
   | "PRODUCT_SHORTENED"
+  | "LABEL_UNREADABLE"
   | "LANGUAGE_UNSUPPORTED"
   | "LANGUAGE_MIXED"
   | "ANALYSIS_FAILED";

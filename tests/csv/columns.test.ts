@@ -41,6 +41,7 @@ describe("guessColumnMapping", () => {
       date: "Date",
       rating: "Stars",
       product: "Product",
+      label: null,
     });
   });
 
@@ -54,10 +55,17 @@ describe("guessColumnMapping", () => {
       date: null,
       rating: null,
       product: null,
+      label: null,
     });
   });
 
   it("leaves the text field empty when nothing looks like review text", () => {
     expect(guessColumnMapping(["sku", "price"]).text).toBeNull();
+  });
+
+  it("suggests a column that holds your own labels", () => {
+    expect(guessColumnMapping(["review_text", "my_label"]).label).toBe("my_label");
+    expect(guessColumnMapping(["review", "sentiment"]).label).toBe("sentiment");
+    expect(guessColumnMapping(["review", "stars"]).label).toBeNull();
   });
 });

@@ -91,6 +91,44 @@ describe("ingestRows", () => {
     expect(row.status_note).toMatch(/not supported yet/);
   });
 
+  it("stores your own labels for the label check, and leaves unreadable ones out", async () => {
+    const upload = await createUpload(
+      db,
+      {
+        name: "Labeled",
+        fileName: "labeled.csv",
+        columnMap: { text: "Review", date: null, rating: null, product: null, label: "My label" },
+        dateFormat: null,
+        ratingScale: null,
+        totalRows: 2,
+      },
+      mock,
+    );
+    await ingestRows(db, upload, [
+      { rowNumber: 2, text: "Great kettle", label: "Positive" },
+      { rowNumber: 3, text: "Late delivery", label: "4" },
+    ]);
+    expect(await db.query("select row_number, reference_label from reviews order by row_number")).toEqual([
+      { row_number: 2, reference_label: "positive" },
+      { row_number: 3, reference_label: null },
+    ]);
+    expect(await count("upload_issues where code = 'LABEL_UNREADABLE'")).toBe(1);
+  });
+
+  it("uses the stars as the label check when there is no label column", async () => {
+    const upload = await newUpload(3);
+    await ingestRows(db, upload, [
+      { rowNumber: 2, text: "Great kettle", rating: "5" },
+      { rowNumber: 3, text: "Late delivery", rating: "2" },
+      { rowNumber: 4, text: "No stars given" },
+    ]);
+    expect(await db.query("select row_number, reference_label from reviews order by row_number")).toEqual([
+      { row_number: 2, reference_label: "positive" },
+      { row_number: 3, reference_label: "negative" },
+      { row_number: 4, reference_label: null },
+    ]);
+  });
+
   it("ignores a chunk that is sent twice", async () => {
     const upload = await newUpload(2);
     const rows = [

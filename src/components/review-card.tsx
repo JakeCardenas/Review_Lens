@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Ban, Clock3, Scale, XCircle } from "lucide-react";
-import { ConfidenceMeter, SentimentBadge } from "@/components/sentiment";
+import { Ban, Clock3, Scale, Star, Tag, XCircle } from "lucide-react";
+import { ConfidenceMeter, SENTIMENT_META, SentimentBadge } from "@/components/sentiment";
 import { hasMixedOpinion } from "@/lib/analysis/confidence";
 import { topicLabel } from "@/lib/analysis/topics";
 import { formatDate } from "@/lib/format";
 import type { ReviewRow } from "@/lib/server/reviews";
+import type { LabelCheckSource } from "@/lib/types";
 
 export function StatusBadge({ review }: { review: ReviewRow }) {
   if (review.status === "labeled" && review.sentiment) return <SentimentBadge sentiment={review.sentiment} />;
@@ -36,6 +37,28 @@ export function MixedOpinionTag({ review }: { review: ReviewRow }) {
   );
 }
 
+/**
+ * Shows the label a review is checked against next to ReviewLens's own. The person's own label always
+ * shows; the stars' label only shows when it disagrees, because the rating is already on the card.
+ */
+export function LabelCheckTag({ review, source }: { review: ReviewRow; source: LabelCheckSource | null }) {
+  if (!source || !review.referenceLabel || review.status !== "labeled") return null;
+  const agrees = review.sentiment === review.referenceLabel;
+  if (source === "stars" && agrees) return null;
+  const Icon = source === "label" ? Tag : Star;
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[13px] font-semibold ${
+        agrees ? "border border-line-strong text-ink-2" : "bg-warn-soft text-warn-ink"
+      }`}
+    >
+      <Icon aria-hidden className="size-3.5" />
+      {source === "label" ? "Your label" : "Stars suggest"}: {SENTIMENT_META[review.referenceLabel].label}
+      <span className="sr-only">{agrees ? ", the same as ReviewLens" : ", different from ReviewLens"}</span>
+    </span>
+  );
+}
+
 export function TopicChips({ topics }: { topics: string[] }) {
   if (!topics.length) return null;
   return (
@@ -50,7 +73,15 @@ export function TopicChips({ topics }: { topics: string[] }) {
 }
 
 /** One review in a list. Links to the detail sheet on the Reviews page. */
-export function ReviewCard({ review, href }: { review: ReviewRow; href: string }) {
+export function ReviewCard({
+  review,
+  href,
+  checkSource = null,
+}: {
+  review: ReviewRow;
+  href: string;
+  checkSource?: LabelCheckSource | null;
+}) {
   const meta = [
     review.reviewDate ? formatDate(review.reviewDate) : null,
     review.rating !== null ? `Rating ${review.rating}` : null,
@@ -68,6 +99,7 @@ export function ReviewCard({ review, href }: { review: ReviewRow; href: string }
           <StatusBadge review={review} />
           {review.status === "labeled" && review.confidence && <ConfidenceMeter level={review.confidence} />}
           <MixedOpinionTag review={review} />
+          <LabelCheckTag review={review} source={checkSource} />
         </div>
         <p className="mt-2.5 line-clamp-3 text-[15px] leading-relaxed text-ink">{review.text}</p>
         {review.status !== "labeled" && review.statusNote && <p className="mt-1.5 text-sm text-ink-2">{review.statusNote}</p>}

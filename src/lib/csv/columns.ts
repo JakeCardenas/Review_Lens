@@ -17,9 +17,9 @@ const NAME_OK_WORDS = new Set(["product", "item", "sku", "brand", "store", "shop
 const FIELD_WORDS = new Set([
   "review", "reviews", "comment", "comments", "feedback", "text", "body", "content", "message", "opinion",
   "rating", "ratings", "stars", "star", "score", "date", "time", "created", "posted", "product", "item", "sku",
+  "label", "sentiment",
 ]);
 
-/** True for columns that look like they identify a person. These are never uploaded. */
 /**
  * Why a parsed CSV's header row can't be used, or null. One column is fine: a file that holds only
  * the review text has no comma to detect, so the parser's delimiter warning is not a problem.
@@ -30,6 +30,7 @@ export function csvColumnsProblem(headers: string[]): string | null {
     : "ReviewLens couldn't find any columns. Make sure the first line names the columns and the file is saved as CSV (comma-separated).";
 }
 
+/** True for columns that look like they identify a person. These are never uploaded. */
 export function isPersonalColumn(header: string): boolean {
   const words = normalizeHeader(header).split(" ").filter(Boolean);
   if (words.some((w) => FIELD_WORDS.has(w))) return false;
@@ -59,6 +60,13 @@ const RULES: Record<ColumnField, Rule> = {
     exact: ["product", "product name", "item", "item name", "sku", "product id", "product title", "model"],
     contains: ["product", "item"],
   },
+  label: {
+    exact: [
+      "label", "my label", "your label", "human label", "manual label", "true label", "gold label", "hand label",
+      "sentiment", "true sentiment", "polarity",
+    ],
+    contains: ["label", "sentiment"],
+  },
 };
 
 function score(header: string, rule: Rule): number {
@@ -72,8 +80,8 @@ function score(header: string, rule: Rule): number {
 export function guessColumnMapping(headers: string[]): ColumnMap {
   const available = headers.filter((h) => !isPersonalColumn(h));
   const used = new Set<string>();
-  const result: ColumnMap = { text: null, date: null, rating: null, product: null };
-  for (const field of ["text", "rating", "date", "product"] as const) {
+  const result: ColumnMap = { text: null, date: null, rating: null, product: null, label: null };
+  for (const field of ["text", "rating", "date", "product", "label"] as const) {
     let best: string | null = null;
     let bestScore = 0;
     for (const header of available) {

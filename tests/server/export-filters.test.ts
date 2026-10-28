@@ -3,7 +3,7 @@ import { MockProvider } from "@/lib/analysis/providers/mock";
 import { analyzeNextBatch, startAnalysis } from "@/lib/server/analyze";
 import { getDashboard } from "@/lib/server/dashboard";
 import type { Db } from "@/lib/server/db-types";
-import { csvCell, reviewCsvLines, summaryCsv } from "@/lib/server/export";
+import { csvCell, describeFilters, reviewCsvLines, summaryCsv } from "@/lib/server/export";
 import { buildWhere, EMPTY_FILTERS, filtersToQuery, parseFilters } from "@/lib/server/filters";
 import { ingestRows } from "@/lib/server/ingest";
 import { createUpload, type UploadRecord } from "@/lib/server/uploads";
@@ -48,6 +48,14 @@ describe("parseFilters", () => {
     expect(parseFilters(new URLSearchParams("opinion=mixed")).opinion).toBe("mixed");
     expect(parseFilters(new URLSearchParams("opinion=happy")).opinion).toBeNull();
     expect(filtersToQuery({ opinion: "mixed" })).toBe("opinion=mixed");
+  });
+
+  it("reads the label-check filter and keeps it in links", () => {
+    expect(parseFilters(new URLSearchParams("check=disagree")).check).toBe("disagree");
+    expect(parseFilters(new URLSearchParams("check=agree")).check).toBe("agree");
+    expect(parseFilters(new URLSearchParams("check=maybe")).check).toBeNull();
+    expect(filtersToQuery({ check: "disagree" })).toBe("check=disagree");
+    expect(describeFilters({ ...EMPTY_FILTERS, check: "disagree" })).toBe("Label check: disagreements");
   });
 
   it("reads plain objects from Next.js search params", () => {
@@ -102,12 +110,24 @@ describe("exports", () => {
     const lines: string[] = [];
     for await (const line of reviewCsvLines(db, upload.id, EMPTY_FILTERS)) lines.push(line);
     expect(lines[0]).toBe(
-      "row_number,review_text,review_date,rating,product,sentiment,confidence,confidence_reasons,topics,language_status,status,note\r\n",
+      "row_number,review_text,review_date,rating,product,sentiment,reference_label,confidence,confidence_reasons,topics,language_status,status,note\r\n",
     );
     expect(lines).toHaveLength(3);
     expect(lines[1]).toContain("'=HYPERLINK");
     expect(lines[1]).toContain("[email]");
-    expect(lines[2]).toMatch(/^3,"Terrible, delivery was late",/);
+    expect(lines[2]).toMatch(/^3,"Terrible, delivery was late",,1,,negative,negative,/);
+  });
+
+  it("adds the label check to the summary", async () => {
+    const dashboard = await getDashboard(db, upload, EMPTY_FILTERS);
+    const csv = summaryCsv(upload, dashboard, EMPTY_FILTERS);
+    expect(csv).toContain('Compared with,"Star ratings (4–5 stars = positive, 3 = neutral, 1–2 = negative)"\r\n');
+    expect(csv).toContain("Reviews compared,2\r\n");
+    expect(csv).toContain("Labels that match,2,100.0%\r\n");
+    expect(csv).toContain(
+      "Stars suggest,ReviewLens: Positive,ReviewLens: Neutral,ReviewLens: Negative\r\nPositive,1,0,0\r\nNeutral,0,0,0\r\nNegative,0,0,1\r\n",
+    );
+    expect(csv).toMatch(/not proof/);
   });
 
   it("writes a summary with totals, sentiment shares and topics", async () => {

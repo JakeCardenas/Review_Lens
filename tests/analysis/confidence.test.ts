@@ -1,5 +1,38 @@
 import { describe, expect, it } from "vitest";
-import { computeConfidence, hasMixedOpinion, ratingPosition } from "@/lib/analysis/confidence";
+import {
+  computeConfidence,
+  hasMixedOpinion,
+  ratingPosition,
+  sentimentFromRating,
+  STAR_RULES,
+} from "@/lib/analysis/confidence";
+
+describe("sentimentFromRating", () => {
+  it("reads 4–5 stars as positive, 3 as neutral and 1–2 as negative", () => {
+    expect([5, 4, 3, 2, 1].map((stars) => sentimentFromRating(stars, 5))).toEqual([
+      "positive",
+      "positive",
+      "neutral",
+      "negative",
+      "negative",
+    ]);
+  });
+
+  it("works on other scales and returns null without a rating", () => {
+    expect(sentimentFromRating(8, 10)).toBe("positive");
+    expect(sentimentFromRating(50, 100)).toBe("neutral");
+    expect(sentimentFromRating(null, 5)).toBeNull();
+    expect(sentimentFromRating(4, null)).toBeNull();
+  });
+
+  it("matches the star rules shown to people", () => {
+    expect(STAR_RULES[5]).toBe("4–5 stars = positive, 3 = neutral, 1–2 = negative");
+    expect([8, 7, 4, 3].map((r) => sentimentFromRating(r, 10))).toEqual(["positive", "neutral", "neutral", "negative"]);
+    expect(STAR_RULES[10]).toBe("8–10 = positive, 4–7 = neutral, 1–3 = negative");
+    expect([75, 74, 26, 25].map((r) => sentimentFromRating(r, 100))).toEqual(["positive", "neutral", "neutral", "negative"]);
+    expect(STAR_RULES[100]).toBe("75–100 = positive, 26–74 = neutral, 0–25 = negative");
+  });
+});
 
 describe("hasMixedOpinion", () => {
   it("is true when the confidence reasons say the review mixes praise and complaints", () => {

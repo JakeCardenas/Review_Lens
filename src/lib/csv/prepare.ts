@@ -1,7 +1,7 @@
 import { LIMITS } from "@/lib/limits";
-import type { DateFormat, RatingScale, RawRow, RowIssue } from "@/lib/types";
+import type { DateFormat, RatingScale, RawRow, RowIssue, Sentiment } from "@/lib/types";
 import { cleanText, maskPersonalData } from "./clean";
-import { parseDate, parseRating } from "./parse-values";
+import { parseDate, parseLabel, parseRating } from "./parse-values";
 
 export type PrepareOptions = { dateFormat: DateFormat | null; ratingScale: RatingScale | null };
 
@@ -12,6 +12,8 @@ export type PreparedRow = {
   reviewDate: string | null;
   rating: number | null;
   product: string | null;
+  /** The person's own label for the label check, when the file has one. */
+  referenceLabel: Sentiment | null;
   issues: RowIssue[];
 };
 
@@ -82,5 +84,16 @@ export function prepareRow(raw: RawRow, options: PrepareOptions): PreparedRow {
     }
   }
 
-  return { rowNumber: row, text, reviewDate, rating, product, issues };
+  let referenceLabel: Sentiment | null = null;
+  if (raw.label?.trim()) {
+    referenceLabel = parseLabel(raw.label);
+    if (!referenceLabel) {
+      warn(
+        "LABEL_UNREADABLE",
+        `Row ${row}: the label ${quote(raw.label)} isn't positive, neutral or negative, so this review is left out of the label check.`,
+      );
+    }
+  }
+
+  return { rowNumber: row, text, reviewDate, rating, product, referenceLabel, issues };
 }

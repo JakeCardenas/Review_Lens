@@ -8,6 +8,10 @@ export type ListStatus = (typeof LIST_STATUSES)[number];
 const OPINIONS = ["mixed"] as const;
 export type OpinionFilter = (typeof OPINIONS)[number];
 
+/** Whether ReviewLens's label matches the label it is checked against. */
+const CHECKS = ["agree", "disagree"] as const;
+export type CheckFilter = (typeof CHECKS)[number];
+
 export type ReviewFilters = {
   from: string | null;
   to: string | null;
@@ -19,6 +23,7 @@ export type ReviewFilters = {
   confidence: Confidence | null;
   status: ListStatus | null;
   opinion: OpinionFilter | null;
+  check: CheckFilter | null;
   q: string | null;
 };
 
@@ -33,6 +38,7 @@ export const EMPTY_FILTERS: ReviewFilters = {
   confidence: null,
   status: null,
   opinion: null,
+  check: null,
   q: null,
 };
 
@@ -78,6 +84,7 @@ export function parseFilters(source: ParamSource): ReviewFilters {
     confidence: oneOf(first(source, "confidence"), CONFIDENCE_LEVELS),
     status: oneOf(first(source, "status"), LIST_STATUSES),
     opinion: oneOf(first(source, "opinion"), OPINIONS),
+    check: oneOf(first(source, "check"), CHECKS),
     q: text(first(source, "q")),
   };
 }
@@ -105,6 +112,7 @@ const QUERY_KEYS: Record<keyof ReviewFilters, string> = {
   confidence: "confidence",
   status: "status",
   opinion: "opinion",
+  check: "check",
   q: "q",
 };
 
@@ -139,6 +147,9 @@ export function buildWhere(uploadId: string, filters: ReviewFilters): { sql: str
   if (filters.confidence) conditions.push(`r.confidence = ${add(filters.confidence)}`);
   if (filters.status) conditions.push(`r.status = ${add(filters.status)}`);
   if (filters.opinion === "mixed") conditions.push(`'mixed_opinion' = any(r.confidence_reasons)`);
+  // Reviews without a label to check against drop out of both, because comparing with null is never true.
+  if (filters.check === "agree") conditions.push(`r.status = 'labeled' and r.sentiment = r.reference_label`);
+  if (filters.check === "disagree") conditions.push(`r.status = 'labeled' and r.sentiment <> r.reference_label`);
   if (filters.q) {
     const query = add(filters.q);
     const pattern = add(`%${filters.q.replace(/[\\%_]/g, "\\$&")}%`);

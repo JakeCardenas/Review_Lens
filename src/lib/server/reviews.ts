@@ -20,6 +20,8 @@ export type ReviewRow = {
   confidenceReasons: ReasonCode[];
   topics: string[];
   modelOutput: Record<string, unknown> | null;
+  /** The label the review is checked against: the person's own, or the one its stars suggest. */
+  referenceLabel: Sentiment | null;
 };
 
 type ReviewDbRow = {
@@ -38,11 +40,12 @@ type ReviewDbRow = {
   confidence_reasons: ReasonCode[];
   topics: string[];
   model_output: Record<string, unknown> | null;
+  reference_label: Sentiment | null;
 };
 
 export const REVIEW_COLUMNS = `r.id, r.row_number, r.text, to_char(r.review_date, 'YYYY-MM-DD') as review_date,
   r.rating::float8 as rating, r.product, r.language, r.language_status, r.status, r.status_note, r.sentiment,
-  r.confidence, r.confidence_reasons, r.topics, r.model_output`;
+  r.confidence, r.confidence_reasons, r.topics, r.model_output, r.reference_label`;
 
 export function toReview(row: ReviewDbRow): ReviewRow {
   return {
@@ -61,6 +64,7 @@ export function toReview(row: ReviewDbRow): ReviewRow {
     confidenceReasons: row.confidence_reasons ?? [],
     topics: row.topics ?? [],
     modelOutput: row.model_output,
+    referenceLabel: row.reference_label,
   };
 }
 
@@ -106,6 +110,8 @@ export type FilterOptions = {
   maxDate: string | null;
   minRating: number | null;
   maxRating: number | null;
+  /** True when some reviews have a label to check against, so the label-check filter is useful. */
+  hasLabelCheck: boolean;
 };
 
 export async function getFilterOptions(db: Db, uploadId: string): Promise<FilterOptions> {
@@ -114,9 +120,11 @@ export async function getFilterOptions(db: Db, uploadId: string): Promise<Filter
     max_date: string | null;
     min_rating: number | null;
     max_rating: number | null;
+    has_label_check: boolean;
   }>(
     `select to_char(min(review_date), 'YYYY-MM-DD') as min_date, to_char(max(review_date), 'YYYY-MM-DD') as max_date,
-       min(rating)::float8 as min_rating, max(rating)::float8 as max_rating
+       min(rating)::float8 as min_rating, max(rating)::float8 as max_rating,
+       coalesce(bool_or(reference_label is not null), false) as has_label_check
      from reviews where upload_id = $1::uuid`,
     [uploadId],
   );
@@ -132,6 +140,7 @@ export async function getFilterOptions(db: Db, uploadId: string): Promise<Filter
     maxDate: range.max_date,
     minRating: range.min_rating,
     maxRating: range.max_rating,
+    hasLabelCheck: range.has_label_check,
   };
 }
 
