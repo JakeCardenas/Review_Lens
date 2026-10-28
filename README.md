@@ -32,12 +32,12 @@ Uploads made before accounts existed have no owner, so nobody sees them until th
 
 In the Supabase dashboard:
 
-1. **Authentication → Sign In / Providers → Email:**
-   - set the minimum password length to 8
-   - **Confirm email** decides whether new accounts must verify their email:
+1. **Authentication → Sign In / Providers:**
+   - In the **User Signups** box, **Confirm email** decides whether new accounts must verify their email:
      - **On:** people open an emailed link before they can sign in. This only works for everyone once step 3 (your own SMTP sender) is done.
      - **Off (class-demo mode):** people sign up and sign in right away. Their email addresses aren't verified, and password-reset emails only reach your Supabase team until step 3 is done.
-   - To switch modes, toggle **Confirm email** and click **Save**. Accounts made while it was off keep working after you turn it back on.
+   - To switch modes, toggle **Confirm email** and click **Save changes** at the bottom of that box. Accounts made while it was off keep working after you turn it back on.
+   - Under **Auth Providers**, click **Email** and set the minimum password length to 8.
 2. **Authentication → URL Configuration:**
    - set **Site URL** to your Vercel address
    - add `https://your-app.vercel.app/**` and `http://localhost:3000/**` to **Redirect URLs**
