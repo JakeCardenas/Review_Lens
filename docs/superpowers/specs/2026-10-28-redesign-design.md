@@ -1,58 +1,42 @@
-# ReviewLens redesign
+# ReviewLens redesign: Refero "Duolingo" style
 
-A visual redesign of every screen. Features, data, API behavior, auth, limits and analysis stay exactly as they are.
+A visual redesign of every screen, following the Refero "Duolingo" style board (https://styles.refero.design/style/7088d695-362b-4e09-b325-fa8136d4f350). Features, data, API behavior, auth, limits and analysis are unchanged.
 
 ## Intent
 
-The old look was dark (it followed the device's dark mode) and green everywhere. The new look is bright, calm and approachable: a warm white page, white cards, dark readable text, and green only where it means something (primary actions, links, selected states, small highlights, positive sentiment). Inspiration: the Refero "Duolingo" style board (white paper canvas, chubby rounded headings, 12px rounded controls with 2px borders that feel pressed onto the page), adapted for a professional analytics tool. ReviewLens keeps its own identity: the Philippine eagle icon, never Duolingo's owl, name or art.
+White paper canvas, chubby rounded headings, one saturated green for progress and primary actions, Spark Blue for links and secondary actions, calm gray body text, and 12px controls with 2px borders and a solid bottom lip, like stickers pressed onto the page. ReviewLens keeps its own identity: the Philippine eagle icon wherever a mascot appears, never Duolingo's name, wordmark, owl or illustrations.
 
-Anti-goals: large green backgrounds, a dark default theme, gradients, glass, decorative clutter, a children's-app feel, invented insights.
+## Colors (src/app/globals.css)
 
-## Tokens (src/app/globals.css)
-
-| Role | Value | Notes |
+| Refero token | Value | Used for |
 | --- | --- | --- |
-| Page | `#fdfbf7` | warm white canvas |
-| Surface | `#ffffff` | cards, inputs |
-| Surface 2 | `#f7f4ee` | table headers, hovers, tracks |
-| Ink / ink 2 / ink 3 | `#23211d` / `#57524a` / `#6b655b` | 15.6, 7.5, 5.6:1 on the page |
-| Line / line strong | `#ebe5db` / `#ded6c9` | card and control borders (decorative) |
-| Field | `#8f887c` | input and checkbox borders, 3.4:1 (WCAG 1.4.11) |
-| Brand / hover / edge | `#1e8443` / `#187339` / `#125a2c` | primary fill (white text 4.7:1), pressed edge |
-| Brand ink / soft | `#17703a` / `#e7f3e9` | links and selected text (6:1), selected fills |
-| Positive / neutral / negative | `#176e3c` / `#bdb5a7` / `#e5732f` | chart marks; validated with the dataviz palette script (CVD ΔE 11.6, normal-vision ΔE 17.4); neutral is a gray midpoint and is always labeled |
-| Sentiment text | `#176e3c` / `#5a554c` / `#a3461b` | on their soft fills, 5.2 to 6.4:1 |
+| Paper White | `#ffffff` | page and card surfaces |
+| Eager Green | `#58cc02` | primary button fills, progress meters, positive sentiment, footer band, wordmark |
+| Storybook Green | `#d7ffb8` | soft washes behind positive and success tags |
+| Fresh Leaf | `#a5ed6e` | outlines of green tags and success notices |
+| Spark Blue | `#1cb0f6` | selected tabs and pills (2px outline), blue accents |
+| Night Ink | `#000437` | labels on green buttons, negative sentiment, footer text |
+| Charcoal | `#4b4b4b` | headings and primary text |
+| Pencil Gray | `#777777` | body text (see below), medium confidence |
+| Faded Gray | `#afafaf` | outlined button and pill borders, neutral sentiment, low confidence |
 
-No dark theme: the app is light on every device (`color-scheme: light`).
+Readable text: where a Refero color would carry small text and fall below WCAG AA, a same-hue shade is used for the text only. Green text `#377e01` (big green headings `#49a902`, 3:1 for large text), blue links and secondary labels `#1274a2`, body gray `#717171` (Pencil Gray is 4.48:1, just under 4.5:1). Labels on Eager Green buttons are Night Ink (9.4:1; white would be 2.1:1). Input borders are `#949494` (3:1). Fills, bars, borders and washes use the exact Refero values.
 
-Type: **Nunito** (rounded, 700 to 900) for headings, numbers and buttons; **Nunito Sans** for body, forms and tables, with tabular figures for data. Both load through `next/font/google`, so nothing is fetched from Google at runtime. Sentence case everywhere; no all-caps labels.
+Charts: sentiment uses Eager Green, Faded Gray and Night Ink (validated with the dataviz palette script: color-blind ΔE 14.4, normal-vision ΔE 22.9); confidence uses Faded Gray, Pencil Gray and Charcoal as an ordered light-to-dark ramp. Every chart has text values, icons and a table view; the timeline also uses dash patterns.
 
-Shape: controls 12px radius with a 2px border and a 3px bottom edge that compresses on press; cards 20px radius, 1.5px warm border, no shadow; shadows only on floating things (menus, dialogs, toasts).
+## Type
 
-## Components
+Nunito Black for large headings (64 and 48px, -0.02em), Nunito Sans for everything else: 32px small headings, 19px subheadings, 17px body at weight 500, 15px uppercase navigation and buttons with 0.053em tracking, 13px captions. Both load through `next/font/google`. Sentence case everywhere except navigation, buttons and tags.
 
-Buttons (primary, secondary, ghost, danger; sm and md, 44px+ targets), cards, notices, status and mode badges, empty states with the eagle, skeletons, segmented tabs, account menu, footer.
+## Shapes and layout
+
+12px controls with 2px borders; primary and secondary buttons have a 4px or 3px lip that disappears on press; link cards ("stickers") have a 2px border with a 4px bottom edge; cards 16px radius with 2px `#e5e5e5` borders; thick 16px progress meters with a highlight strip. No gradients, glass or blurred shadows. Content max width 1200px. A full-width Eager Green footer band.
 
 ## Screens
 
-- **Shell:** white sticky header with the eagle tile and wordmark, the account menu, and a quiet footer with the SPUP seal and a "student project, not an official SPUP service" note.
-- **Account screens:** two columns on wide screens (a warm panel with the eagle and what ReviewLens does; the form card); one column on phones.
-- **Uploads:** list of upload cards with status, mode, row counts and a labeled sentiment bar; a friendly empty state.
-- **Upload wizard:** a numbered stepper (file, columns, preview and import), a large drop zone, clear errors.
-- **Analysis progress:** progress bar with counts, paused, failed and finished states.
-- **Overview:** filters in one row; summary tiles (reviews analyzed, how customers feel, average rating); what customers mention most; needs attention (topics with the most negative mentions, reviews to read first); how sure the labels are; sentiment over time only when the file has dates; words that stand out; label check.
-- **Reviews, issues, report:** restyled with the same parts. Report stays printable.
-
-## Charts
-
-Bars for comparisons, a stacked bar for sentiment shares (labeled, with icons and counts), a line chart only for real dates. Every chart has a title, labels, a one-line text summary and a table view. Sentiment is never color alone: every mark sits next to its word, icon and number; the timeline also uses dash patterns. Only numbers that come from the upload are shown.
-
-## Motion and accessibility
-
-Motion only for feedback: button press (100 ms), menu and dialog open (150 ms), progress. `prefers-reduced-motion` turns it off. Visible 2px focus rings, skip link, labeled controls, 44px touch targets, no horizontal scrolling at 320px, WCAG 2.2 AA contrast.
+Header (eagle, green wordmark, New upload, account pill), account screens (eagle beside the form), uploads list (sticker cards), upload wizard, analysis progress, overview, reviews and review details, data issues, report, and the empty, loading, error and not-found states.
 
 ## Brand assets
 
-- `public/brand/reviewlens-eagle.png`, `src/app/icon.png`, `src/app/apple-icon.png`, `src/app/favicon.ico`, `public/icons/*`: resized copies of the provided eagle artwork, unaltered.
-- `src/app/manifest.ts`: name, colors and icons so the app can be added to a phone's home screen.
-- `public/brand/spup-seal.png`: the official seal from spup.edu.ph, unaltered, shown small.
+- `public/brand/reviewlens-eagle.png`, `src/app/icon.png`, `src/app/apple-icon.png`, `src/app/favicon.ico`, `public/icons/*`, `src/app/manifest.ts`: the provided eagle artwork, resized only.
+- `public/brand/spup-seal.png`: the official seal from spup.edu.ph, unaltered, on a white badge in the footer band.

@@ -22,7 +22,7 @@ function TrendTooltip({ active, payload }: { active?: boolean; payload?: Readonl
   if (!active || !payload?.length) return null;
   const row = payload[0].payload as Row;
   return (
-    <div className="rounded-xl border-[1.5px] border-line bg-surface px-3 py-2 text-sm shadow-float">
+    <div className="rounded-xl border-2 border-line bg-surface px-3 py-2 text-sm shadow-float">
       <p className="font-bold">{row.label}</p>
       <ul className="mt-1 grid gap-0.5">
         {LINES.map((line) => (
@@ -105,7 +105,7 @@ export function TrendChart({ points, grain }: { points: TrendPoint[]; grain: "da
         ))}
       </ul>
       <details className="mt-3 text-sm">
-        <summary className="w-fit cursor-pointer rounded-lg py-1 font-bold text-brand-ink">View as table</summary>
+        <summary className="w-fit cursor-pointer rounded-lg py-1 font-extrabold text-accent-ink">View as table</summary>
         <div className="mt-2 overflow-x-auto">
           <table className="w-full min-w-[420px] text-left">
             <thead className="text-ink-2">

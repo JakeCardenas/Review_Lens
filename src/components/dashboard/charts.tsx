@@ -26,14 +26,14 @@ export function SentimentBars({ sentiment, labeled }: { sentiment: Record<Sentim
                   {formatNumber(sentiment[s])} reviews
                 </span>
               </div>
-              <div className="h-3 rounded-full bg-surface-2" aria-hidden>
+              <div className="h-4 rounded-full bg-surface-3" aria-hidden>
                 <div className={`h-full rounded-full ${meta.swatch}`} style={{ width: `${width}%`, minWidth: sentiment[s] ? 6 : 0 }} />
               </div>
             </li>
           );
         })}
       </ul>
-      <p className="mt-4 text-xs text-ink-2">Shares of {formatNumber(labeled)} labeled reviews.</p>
+      <p className="mt-4 text-[13px] text-ink-2">Shares of {formatNumber(labeled)} labeled reviews.</p>
     </div>
   );
 }
@@ -70,11 +70,11 @@ export function TopicBars({ topics, reviewsHref }: { topics: TopicBreakdown[]; r
               className="group -mx-2 grid gap-2 rounded-xl px-2 py-2.5 hover:bg-surface-2 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:items-center sm:gap-4"
             >
               <span className="flex items-baseline justify-between gap-2 sm:block">
-                <span className="block font-bold leading-tight group-hover:text-brand-ink">{t.label}</span>
+                <span className="block font-extrabold leading-tight text-ink group-hover:text-accent-ink">{t.label}</span>
                 <span className="block text-[13px] text-ink-2 tabular">{plural(t.total, "mention")}</span>
               </span>
               <span className="grid gap-1.5">
-                <span aria-hidden className="flex h-3.5 gap-[2px]" style={{ width: `${Math.max(4, (t.total / max) * 100)}%` }}>
+                <span aria-hidden className="flex h-4 gap-[3px]" style={{ width: `${Math.max(4, (t.total / max) * 100)}%` }}>
                   {SENTIMENTS.filter((s) => t[s] > 0).map((s) => (
                     <span
                       key={s}
@@ -94,7 +94,7 @@ export function TopicBars({ topics, reviewsHref }: { topics: TopicBreakdown[]; r
         ))}
       </ul>
       <details className="text-sm">
-        <summary className="w-fit cursor-pointer rounded-lg py-1 font-bold text-brand-ink">View as table</summary>
+        <summary className="w-fit cursor-pointer rounded-lg py-1 font-extrabold text-accent-ink">View as table</summary>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[420px] text-left">
             <caption className="sr-only">Reviews mentioning each topic, by sentiment</caption>
@@ -132,18 +132,18 @@ export function AttentionTopics({ topics, href }: { topics: TopicBreakdown[]; hr
         <li key={t.id}>
           <Link
             href={href(t.id)}
-            className="group flex items-center gap-3 rounded-xl border-[1.5px] border-line px-3.5 py-3 hover:border-[#f2c9ad] hover:bg-neg-soft"
+            className="sticker group flex items-center gap-3 rounded-card bg-surface px-4 py-3.5"
           >
-            <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-lg bg-neg-soft font-display text-sm font-black text-neg-ink">
+            <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-control bg-neg-soft font-display text-base font-black text-neg-ink">
               {i + 1}
             </span>
             <span className="min-w-0 flex-1">
-              <span className="block font-bold">{t.label}</span>
-              <span className="block text-[13px] text-ink-2 tabular">
+              <span className="block font-extrabold text-ink">{t.label}</span>
+              <span className="block text-[15px] text-ink-2 tabular">
                 {formatNumber(t.negative)} negative of {plural(t.total, "mention")} ({formatPercent(t.negative, t.total)})
               </span>
             </span>
-            <ChevronRight aria-hidden className="size-4 shrink-0 text-ink-3 transition-transform group-hover:translate-x-0.5" />
+            <ChevronRight aria-hidden className="size-5 shrink-0 text-line-strong transition-transform group-hover:translate-x-0.5 group-hover:text-accent-ink" strokeWidth={3} />
           </Link>
         </li>
       ))}
@@ -177,7 +177,7 @@ export function ConfidenceBreakdown({ confidence }: { confidence: Record<Confide
                 {formatNumber(confidence[level])}
               </span>
             </div>
-            <div className="h-2.5 rounded-full bg-surface-2" aria-hidden>
+            <div className="h-4 rounded-full bg-surface-3" aria-hidden>
               <div className={`h-full rounded-full ${meta.swatch}`} style={{ width: `${share}%`, minWidth: confidence[level] ? 6 : 0 }} />
             </div>
           </li>
@@ -205,7 +205,7 @@ export function KeywordColumns({
         const max = Math.max(1, ...list.map((k) => k.count));
         return (
           <div key={s} className="min-w-0">
-            <h3 className="flex flex-wrap items-center gap-x-1.5 border-b border-line pb-2 text-sm font-bold">
+            <h3 className="flex flex-wrap items-center gap-x-1.5 border-b-2 border-line pb-2 text-[15px] font-extrabold">
               <SentimentIcon sentiment={s} className={`size-4 ${meta.ink}`} />
               {meta.label}
               <span className="font-normal text-ink-2">in {formatNumber(totals[s])} reviews</span>
@@ -218,9 +218,9 @@ export function KeywordColumns({
                       href={searchHref(k.term, s)}
                       className="grid grid-cols-[1fr_auto] items-center gap-x-2 rounded-lg px-2 py-1.5 text-sm hover:bg-surface-2"
                     >
-                      <span title={k.term} className="truncate font-semibold">{k.term}</span>
-                      <span className="text-xs text-ink-2 tabular">{k.count}</span>
-                      <span className="col-span-2 mt-1 h-1.5 rounded-full bg-surface-2" aria-hidden>
+                      <span title={k.term} className="truncate font-bold text-ink">{k.term}</span>
+                      <span className="text-[13px] text-ink-2 tabular">{k.count}</span>
+                      <span className="col-span-2 mt-1 h-2 rounded-full bg-surface-3" aria-hidden>
                         <span className={`block h-full rounded-full ${meta.swatch}`} style={{ width: `${(k.count / max) * 100}%` }} />
                       </span>
                     </Link>

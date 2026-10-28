@@ -118,23 +118,24 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
             </h2>
             <StatTile
               className="lg:col-span-3"
+              emphasis
               label="Reviews analyzed"
               value={formatNumber(totals.labeled)}
               note={`of ${formatNumber(totals.all)} imported${filtered ? " that match the filters" : ""}`}
             />
-            <div className="min-w-0 rounded-card border-[1.5px] border-line bg-surface p-5 sm:order-last sm:col-span-2 sm:p-6 lg:order-none lg:col-span-6">
-              <h3 className="text-sm font-bold text-ink-2">How customers feel</h3>
+            <div className="min-w-0 rounded-card border-2 border-line bg-surface p-5 sm:order-last sm:col-span-2 sm:p-6 lg:order-none lg:col-span-6">
+              <h3 className="nav-label text-[13px] text-ink-2">How customers feel</h3>
               {totals.labeled ? (
                 <>
-                  <p className="mt-3 font-display text-xl font-extrabold leading-snug tracking-[-0.01em]">
+                  <p className="mt-4 text-heading-sm font-extrabold text-ink">
                     {formatPercent(sentiment.positive, totals.labeled)} positive, {formatPercent(sentiment.negative, totals.labeled)} negative
                   </p>
-                  <SentimentStackedBar counts={sentiment} className="mt-4 h-4" />
+                  <SentimentStackedBar counts={sentiment} className="mt-5 h-5" />
                   <div className="mt-3">
                     <SentimentLegend counts={sentiment} />
                   </div>
                   {totals.mixedOpinion > 0 && (
-                    <p className="mt-4 flex items-start gap-2 border-t border-line pt-3 text-sm text-ink-2">
+                    <p className="mt-5 flex items-start gap-2 border-t-2 border-line pt-4 text-[15px] text-ink-2">
                       <Scale aria-hidden className="mt-0.5 size-4 shrink-0" />
                       <span>
                         {formatNumber(totals.mixedOpinion)} of {formatNumber(totals.labeled)} labeled reviews mix praise and complaints.{" "}
@@ -228,15 +229,15 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
               }
             >
               {sentiment.negative === 0 ? (
-                <p className="flex items-start gap-2 text-sm text-ink-2">
-                  <CheckCircle2 aria-hidden className="mt-0.5 size-4 shrink-0 text-brand-ink" />
+                <p className="flex items-start gap-2 text-[15px] text-ink-2">
+                  <CheckCircle2 aria-hidden className="mt-0.5 size-5 shrink-0 text-brand-ink" strokeWidth={2.5} />
                   No reviews in {selection} are labeled negative.
                 </p>
               ) : (
                 <div className="grid gap-6">
                   {attention.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-bold text-ink-2">Topics with the most negative mentions</h3>
+                      <h3 className="nav-label text-[13px] text-ink-2">Topics with the most negative mentions</h3>
                       <div className="mt-2.5">
                         <AttentionTopics topics={attention} href={(topic) => linkTo({ topic, sentiment: "negative" })} />
                       </div>
@@ -244,8 +245,8 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
                   )}
                   {readFirst.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-bold text-ink-2">Reviews to read first</h3>
-                      <p className="mt-0.5 text-[13px] text-ink-3">Negative reviews, most confident and newest first.</p>
+                      <h3 className="nav-label text-[13px] text-ink-2">Reviews to read first</h3>
+                      <p className="mt-1 text-[15px] text-ink-2">Negative reviews, most confident and newest first.</p>
                       <ul className="mt-2.5 grid gap-2">
                         {readFirst.map((review) => (
                           <ReviewSnippet key={review.id} review={review} href={linkTo({ review: String(review.id) })} />
@@ -289,7 +290,7 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
             >
               <ConfidenceBreakdown confidence={confidence} />
               {upload.provider === "basic" && (
-                <p className="mt-4 text-[13px] text-ink-2">Basic mode never marks a label High confidence.</p>
+                <p className="mt-5 text-[15px] text-ink-2">Basic mode never marks a label High confidence.</p>
               )}
               {confidence.low > 0 && (
                 <Link href={linkTo({ confidence: "low" })} className={`${linkClasses} mt-3 inline-block py-1 text-sm`}>
@@ -307,8 +308,8 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
           </div>
 
           {dashboard.trend.status !== "ok" && (
-            <p className="flex items-start gap-2 text-sm text-ink-2">
-              <CalendarX2 aria-hidden className="mt-0.5 size-4 shrink-0 text-ink-3" />
+            <p className="flex items-start gap-2.5 text-[15px] text-ink-2">
+              <CalendarX2 aria-hidden className="mt-0.5 size-5 shrink-0 text-ink-2" strokeWidth={2.5} />
               <span>
                 <span className="font-bold text-ink">No timeline for this upload.</span> {dashboard.trend.reason}
               </span>

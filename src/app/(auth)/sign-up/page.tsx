@@ -17,7 +17,7 @@ export default function SignUpPage() {
         </p>
       }
     >
-      <p className="flex gap-2.5 rounded-xl border-[1.5px] border-brand-soft bg-brand-tint p-3.5 text-sm text-ink">
+      <p className="flex gap-2.5 rounded-control border-2 border-fresh-leaf bg-brand-tint p-4 text-[15px] text-ink">
         <KeyRound aria-hidden className="mt-0.5 size-4 shrink-0 text-brand-ink" />
         <span>
           Create a new password just for ReviewLens. Don&apos;t use your Gmail or school (SIAS) password. ReviewLens

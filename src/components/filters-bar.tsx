@@ -28,7 +28,7 @@ function ratingSteps(scale: RatingScale | null): number[] {
 }
 
 const selectClass =
-  "min-h-11 w-full rounded-control border-2 border-field bg-surface px-2.5 text-[15px] font-normal text-ink hover:border-ink-3 focus-visible:border-brand-ink";
+  "min-h-11 w-full rounded-control border-2 border-field bg-surface-2 px-2.5 text-[15px] font-semibold text-ink hover:border-ink-3 focus-visible:border-accent focus-visible:bg-surface";
 
 /** Filters live in the URL so reload, Back and shared links keep them. */
 export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mode: "dashboard" | "reviews" }) {
@@ -66,7 +66,7 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
   }
 
   const steps = ratingSteps(options.ratingScale);
-  const field = "grid min-w-0 gap-1.5 text-[13px] font-bold text-ink-2";
+  const field = "grid min-w-0 gap-1.5 text-[15px] font-extrabold text-ink";
 
   return (
     <div className="no-print grid gap-3" aria-busy={pending}>
@@ -84,7 +84,7 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search words in reviews, like refund or late"
-              className="min-h-12 w-full rounded-control border-2 border-field bg-surface pl-10 pr-3 text-ink hover:border-ink-3 focus-visible:border-brand-ink"
+              className="min-h-12 w-full rounded-control border-2 border-field bg-surface-2 pl-10 pr-3 font-semibold text-ink hover:border-ink-3 focus-visible:border-accent focus-visible:bg-surface"
             />
           </div>
           <Button type="submit">Search</Button>
@@ -105,7 +105,7 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
 
       <div
         id="filter-panel"
-        className={`${open ? "grid" : "hidden"} gap-3 rounded-card border-[1.5px] border-line bg-surface p-4 sm:grid sm:p-5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end`}
+        className={`${open ? "grid" : "hidden"} gap-3 rounded-card border-2 border-line bg-surface p-4 sm:grid sm:p-5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end`}
       >
         {options.hasDate && (
           <>

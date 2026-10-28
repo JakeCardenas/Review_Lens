@@ -11,7 +11,7 @@ const TABS = [
   { href: "/report", label: "Report", icon: FileText },
 ];
 
-/** Upload sections: tabs under the title on wider screens, a tab bar at the bottom on phones. */
+/** Upload sections: uppercase pills under the title on wider screens, a tab bar at the bottom on phones. */
 export function UploadNav({ uploadId }: { uploadId: string }) {
   const pathname = usePathname();
   const base = `/uploads/${uploadId}`;
@@ -20,7 +20,7 @@ export function UploadNav({ uploadId }: { uploadId: string }) {
   return (
     <>
       <nav aria-label="Upload sections" className="no-print hidden sm:block">
-        <ul className="inline-flex gap-1 rounded-2xl border-[1.5px] border-line bg-surface p-1">
+        <ul className="flex flex-wrap gap-2">
           {TABS.map((tab) => {
             const active = isActive(tab.href);
             return (
@@ -28,11 +28,11 @@ export function UploadNav({ uploadId }: { uploadId: string }) {
                 <Link
                   href={base + tab.href}
                   aria-current={active ? "page" : undefined}
-                  className={`press flex min-h-10 items-center gap-2 rounded-xl px-4 text-sm font-bold ${
-                    active ? "bg-brand-soft text-brand-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
+                  className={`press nav-label flex min-h-12 items-center gap-2.5 rounded-control border-2 px-4 ${
+                    active ? "border-accent bg-accent-soft text-accent-ink" : "border-transparent text-ink-2 hover:bg-surface-2"
                   }`}
                 >
-                  <tab.icon aria-hidden className="size-4" />
+                  <tab.icon aria-hidden className="size-5" strokeWidth={2.5} />
                   {tab.label}
                 </Link>
               </li>
@@ -44,10 +44,10 @@ export function UploadNav({ uploadId }: { uploadId: string }) {
       <nav
         aria-label="Upload sections"
         data-bottom-tabs
-        className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface sm:hidden"
+        className="no-print fixed inset-x-0 bottom-0 z-30 border-t-2 border-line bg-surface sm:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <ul className="gutter grid grid-cols-4">
+        <ul className="gutter grid grid-cols-4 gap-1 py-1.5">
           {TABS.map((tab) => {
             const active = isActive(tab.href);
             return (
@@ -55,12 +55,16 @@ export function UploadNav({ uploadId }: { uploadId: string }) {
                 <Link
                   href={base + tab.href}
                   aria-current={active ? "page" : undefined}
-                  className={`press flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-bold ${
-                    active ? "text-brand-ink" : "text-ink-2"
+                  className={`press flex min-h-14 flex-col items-center justify-center gap-1 text-[12px] font-extrabold uppercase tracking-[0.04em] ${
+                    active ? "text-accent-ink" : "text-ink-2"
                   }`}
                 >
-                  <span className={`grid h-7 w-12 place-items-center rounded-full ${active ? "bg-brand-soft" : ""}`}>
-                    <tab.icon aria-hidden className="size-5" />
+                  <span
+                    className={`grid h-8 w-14 place-items-center rounded-control border-2 ${
+                      active ? "border-accent bg-accent-soft" : "border-transparent"
+                    }`}
+                  >
+                    <tab.icon aria-hidden className="size-5" strokeWidth={2.5} />
                   </span>
                   {tab.short ?? tab.label}
                 </Link>

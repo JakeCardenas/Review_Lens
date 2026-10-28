@@ -45,7 +45,7 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
   return (
     <div className="grid gap-5">
       <div className="max-w-3xl">
-        <h2 className="font-display text-xl font-extrabold tracking-[-0.01em]">Data issues</h2>
+        <h2 className="text-subheading font-extrabold text-ink">Data issues</h2>
         <p className="mt-1.5 text-sm text-ink-2">
           Errors are rows that weren&apos;t analyzed, for example rows with no review text. Warnings are rows that were kept but changed,
           for example a date that couldn&apos;t be read, or reviews in other languages that weren&apos;t labeled.
@@ -64,8 +64,8 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
             key={label}
             href={tabHref(value)}
             aria-current={severity === value ? "page" : undefined}
-            className={`press inline-flex min-h-10 items-center rounded-xl border-2 px-4 text-sm font-bold ${
-              severity === value ? "border-transparent bg-brand-soft text-brand-ink" : "border-line-strong bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink"
+            className={`press nav-label inline-flex min-h-11 items-center rounded-control border-2 px-4 text-[13px] ${
+              severity === value ? "border-accent bg-accent-soft text-accent-ink" : "border-line-strong bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink"
             }`}
           >
             {label} ({formatNumber(count)})
@@ -78,7 +78,7 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
           Every row in the file was read without changes.
         </EmptyState>
       ) : (
-        <div className="min-w-0 overflow-hidden rounded-card border-[1.5px] border-line bg-surface">
+        <div className="min-w-0 overflow-hidden rounded-card border-2 border-line bg-surface">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-left text-sm">
               <thead className="border-b border-line bg-surface-2 text-ink-2">

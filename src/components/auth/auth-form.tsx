@@ -14,7 +14,7 @@ export type AuthField = {
 };
 
 export const fieldClasses =
-  "min-h-12 w-full rounded-control border-2 border-field bg-surface px-3.5 text-[16px] text-ink placeholder:text-ink-3 hover:border-ink-3 focus-visible:border-brand-ink";
+  "min-h-12 w-full rounded-control border-2 border-field bg-surface-2 px-4 text-[17px] font-semibold text-ink placeholder:text-ink-3 hover:border-ink-3 focus-visible:border-accent focus-visible:bg-surface";
 
 /** A small account form posted to a Server Action, showing its error or confirmation message. */
 export function AuthForm({
@@ -53,7 +53,7 @@ export function AuthForm({
                   type="button"
                   aria-pressed={showPasswords}
                   onClick={() => setShowPasswords((value) => !value)}
-                  className="press -mr-1 inline-flex min-h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-sm font-bold text-brand-ink hover:bg-brand-soft"
+                  className="press -mr-1 inline-flex min-h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-[15px] font-extrabold text-accent-ink hover:bg-accent-soft"
                 >
                   {showPasswords ? <EyeOff aria-hidden className="size-4" /> : <Eye aria-hidden className="size-4" />}
                   {showPasswords ? "Hide" : "Show"}

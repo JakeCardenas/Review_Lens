@@ -21,7 +21,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   interactiveWidget: "resizes-content",
-  themeColor: "#fdfbf7",
+  themeColor: "#ffffff",
   colorScheme: "light",
 };
 
@@ -33,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
         <SiteHeader />
-        <main id="main" className="gutter mx-auto w-full max-w-6xl flex-1 pb-16 pt-6 sm:pt-10">
+        <main id="main" className="gutter mx-auto w-full max-w-[75rem] flex-1 pb-20 pt-8 sm:pt-12">
           {children}
         </main>
         <SiteFooter />
@@ -42,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           theme="light"
           closeButton
           offset={{ top: "calc(env(safe-area-inset-top, 0px) + 72px)" }}
-          toastOptions={{ classNames: { toast: "rounded-2xl! border-[1.5px]! border-line! font-sans! text-ink! shadow-float!" } }}
+          toastOptions={{ classNames: { toast: "rounded-card! border-2! border-line! font-sans! font-bold! text-ink! shadow-float!" } }}
         />
       </body>
     </html>

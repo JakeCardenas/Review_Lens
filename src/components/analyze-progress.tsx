@@ -117,11 +117,11 @@ export function AnalyzeProgress({
 
   return (
     <div className="grid gap-4">
-      <section className="rounded-card border-[1.5px] border-line bg-surface p-5 sm:p-7" aria-labelledby="progress-title">
+      <section className="rounded-card border-2 border-line bg-surface p-5 sm:p-7" aria-labelledby="progress-title">
         <div className="flex items-center gap-4">
-          <EagleMark size={52} />
+          <EagleMark size={72} />
           <div className="min-w-0">
-            <h2 id="progress-title" className="flex items-center gap-2 font-display text-xl font-extrabold tracking-[-0.01em]">
+            <h2 id="progress-title" className="flex items-center gap-2 text-subheading font-extrabold text-ink">
               {progress.done && <CheckCircle2 aria-hidden className="size-5 text-brand-ink" />}
               {progress.done ? "Analysis complete" : running ? "Analyzing reviews" : "Analysis paused"}
             </h2>
@@ -130,7 +130,7 @@ export function AnalyzeProgress({
         </div>
 
         <div className="mt-6 flex flex-wrap items-end gap-x-3 gap-y-1">
-          <span className="font-display text-5xl font-black leading-none tracking-[-0.02em] tabular">{percent}%</span>
+          <span className="font-display text-heading font-black leading-none text-brand-display tabular sm:text-display">{percent}%</span>
           <span className="pb-1 text-sm text-ink-2 tabular" aria-live="polite">
             {formatNumber(processed)} of {formatNumber(progress.imported)} reviews processed
           </span>
@@ -141,10 +141,10 @@ export function AnalyzeProgress({
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={percent}
-          className="mt-4 h-3.5 overflow-hidden rounded-full bg-surface-3"
+          className="meter mt-5"
         >
           <div
-            className="h-full origin-left rounded-full bg-brand transition-transform duration-500 ease-out"
+            className="meter-fill"
             style={{ transform: `scaleX(${percent / 100})` }}
           />
         </div>
@@ -156,9 +156,9 @@ export function AnalyzeProgress({
             ["Failed", progress.failed],
             ["Waiting", waiting],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-xl bg-surface-2 px-3.5 py-3">
-              <dt className="text-[13px] text-ink-2">{label}</dt>
-              <dd className="mt-0.5 font-display text-2xl font-black tabular">{formatNumber(Number(value))}</dd>
+            <div key={label} className="rounded-control border-2 border-line px-4 py-3">
+              <dt className="nav-label text-[12px] text-ink-2">{label}</dt>
+              <dd className="mt-1 font-display text-heading-sm font-black text-ink tabular">{formatNumber(Number(value))}</dd>
             </div>
           ))}
         </dl>

@@ -29,7 +29,7 @@ const NAMES = { positive: "Positive", neutral: "Neutral", negative: "Negative" }
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="break-inside-avoid border-t border-line pt-5">
-      <h2 className="font-display text-xl font-extrabold tracking-[-0.01em]">{title}</h2>
+      <h2 className="text-subheading font-extrabold text-ink">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
   );
@@ -46,7 +46,7 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
   const query = filtersToQuery(filters);
 
   return (
-    <article className="grid max-w-4xl grid-cols-[minmax(0,1fr)] gap-7 rounded-card border-[1.5px] border-line bg-surface p-5 sm:p-9 print:border-0 print:p-0">
+    <article className="grid max-w-4xl grid-cols-[minmax(0,1fr)] gap-7 rounded-card border-2 border-line bg-surface p-5 sm:p-9 print:border-0 print:p-0">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="font-display text-[1.75rem] font-black tracking-[-0.02em]">Summary report</h2>

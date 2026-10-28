@@ -84,13 +84,13 @@ function ReviewDetail({ review, checkSource }: { review: ReviewRow; checkSource:
         <MixedOpinionTag review={review} />
         <LabelCheckTag review={review} source={checkSource} />
       </div>
-      <blockquote className="whitespace-pre-wrap rounded-2xl bg-surface-2 p-4 text-[16px] leading-relaxed [overflow-wrap:anywhere] sm:p-5">
+      <blockquote className="whitespace-pre-wrap rounded-card bg-surface-2 p-4 text-[16px] leading-relaxed [overflow-wrap:anywhere] sm:p-5">
         {highlightTopics(review.text, review.topics)}
       </blockquote>
       {review.statusNote && <p className="text-sm text-ink-2">{review.statusNote}</p>}
       {review.status === "labeled" && review.confidenceReasons.length > 0 && (
         <section>
-          <h3 className="font-display font-extrabold">Why this confidence</h3>
+          <h3 className="font-extrabold text-ink">Why this confidence</h3>
           <ul className="mt-1.5 grid list-disc gap-1 pl-5 text-sm text-ink-2">
             {review.confidenceReasons.map((code) => (
               <li key={code}>{REASON_TEXT[code] ?? code}</li>
@@ -101,7 +101,7 @@ function ReviewDetail({ review, checkSource }: { review: ReviewRow; checkSource:
       )}
       {review.topics.length > 0 && (
         <section>
-          <h3 className="mb-2 font-display font-extrabold">Topics</h3>
+          <h3 className="mb-2 font-extrabold text-ink">Topics</h3>
           <TopicChips topics={review.topics} />
         </section>
       )}

@@ -11,12 +11,12 @@ export function StatusBadge({ review }: { review: ReviewRow }) {
   if (review.status === "labeled" && review.sentiment) return <SentimentBadge sentiment={review.sentiment} />;
   const meta =
     review.status === "failed"
-      ? { label: "Failed", icon: XCircle, tone: "bg-danger-soft text-danger" }
+      ? { label: "Failed", icon: XCircle, tone: "border-danger-line bg-danger-soft text-danger" }
       : review.status === "not_labeled"
-        ? { label: "Not labeled", icon: Ban, tone: "bg-warn-soft text-warn-ink" }
-        : { label: "Waiting", icon: Clock3, tone: "bg-neu-soft text-neu-ink" };
+        ? { label: "Not labeled", icon: Ban, tone: "border-warn-line bg-warn-soft text-warn-ink" }
+        : { label: "Waiting", icon: Clock3, tone: "border-line bg-neu-soft text-neu-ink" };
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[13px] font-bold ${meta.tone}`}>
+    <span className={`inline-flex items-center gap-1 rounded-control border-2 px-2 py-0.5 text-[12px] font-extrabold uppercase tracking-[0.053em] ${meta.tone}`}>
       <meta.icon aria-hidden className="size-3.5" />
       {meta.label}
     </span>
@@ -28,7 +28,7 @@ export function MixedOpinionTag({ review }: { review: ReviewRow }) {
   if (review.status !== "labeled" || !hasMixedOpinion(review.confidenceReasons)) return null;
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[13px] font-bold text-ink-2 ring-1 ring-inset ring-line-strong"
+      className="inline-flex items-center gap-1 rounded-control border-2 border-line-strong px-2 py-0.5 text-[12px] font-extrabold uppercase tracking-[0.053em] text-ink-2"
       title="This review has both praise and complaints."
     >
       <Scale aria-hidden className="size-3.5" />
@@ -49,8 +49,8 @@ export function LabelCheckTag({ review, source }: { review: ReviewRow; source: L
   const Icon = source === "label" ? Tag : Star;
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[13px] font-bold ${
-        agrees ? "text-ink-2 ring-1 ring-inset ring-line-strong" : "bg-warn-soft text-warn-ink"
+      className={`inline-flex items-center gap-1 rounded-control border-2 px-2 py-0.5 text-[12px] font-extrabold uppercase tracking-[0.053em] ${
+        agrees ? "border-line-strong text-ink-2" : "border-warn-line bg-warn-soft text-warn-ink"
       }`}
     >
       <Icon aria-hidden className="size-3.5" />
@@ -65,7 +65,7 @@ export function TopicChips({ topics }: { topics: string[] }) {
   return (
     <ul className="flex flex-wrap gap-1.5" aria-label="Topics">
       {topics.map((t) => (
-        <li key={t} className="rounded-md bg-surface-2 px-2 py-0.5 text-xs font-semibold text-ink-2">
+        <li key={t} className="rounded-control border-2 border-line px-2 py-0.5 text-[13px] font-bold text-ink-2">
           {topicLabel(t)}
         </li>
       ))}
@@ -80,11 +80,11 @@ export function ReviewSnippet({ review, href }: { review: ReviewRow; href: strin
     .join(", ");
   return (
     <li>
-      <Link href={href} scroll={false} className="block rounded-xl bg-surface-2 px-3.5 py-3 transition-colors hover:bg-surface-3">
+      <Link href={href} scroll={false} className="sticker block rounded-card bg-surface px-4 py-3">
         <p className="line-clamp-2 text-sm leading-relaxed text-ink [overflow-wrap:anywhere]">{review.text}</p>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
           {review.confidence && <ConfidenceMeter level={review.confidence} />}
-          {meta && <span className="text-xs text-ink-2">{meta}</span>}
+          {meta && <span className="text-[13px] text-ink-2">{meta}</span>}
         </div>
       </Link>
     </li>
@@ -112,7 +112,7 @@ export function ReviewCard({
       <Link
         href={href}
         scroll={false}
-        className="block rounded-card border-[1.5px] border-line bg-surface p-4 transition-colors hover:border-line-strong hover:bg-[#fffefb] sm:p-5"
+        className="sticker block rounded-card bg-surface p-4 sm:p-5"
       >
         <div className="flex flex-wrap items-center gap-2">
           <StatusBadge review={review} />
@@ -120,11 +120,11 @@ export function ReviewCard({
           <MixedOpinionTag review={review} />
           <LabelCheckTag review={review} source={checkSource} />
         </div>
-        <p className="mt-2.5 line-clamp-3 text-[15px] leading-relaxed text-ink [overflow-wrap:anywhere]">{review.text}</p>
+        <p className="mt-3 line-clamp-3 text-body leading-relaxed text-ink [overflow-wrap:anywhere]">{review.text}</p>
         {review.status !== "labeled" && review.statusNote && <p className="mt-1.5 text-sm text-ink-2">{review.statusNote}</p>}
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2">
           <TopicChips topics={review.topics} />
-          <p className="text-xs text-ink-2">{meta.join(", ")}</p>
+          <p className="text-[13px] text-ink-2">{meta.join(", ")}</p>
         </div>
       </Link>
     </li>

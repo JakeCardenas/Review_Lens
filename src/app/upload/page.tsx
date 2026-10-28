@@ -16,8 +16,8 @@ export default async function UploadPage() {
   return (
     <div className="mx-auto grid max-w-3xl gap-8">
       <div className="grid gap-5">
-        <Link href="/" className="press inline-flex w-fit items-center gap-1.5 rounded-lg py-1 pr-2 text-sm font-bold text-ink-2 hover:text-ink">
-          <ArrowLeft aria-hidden className="size-4" />
+        <Link href="/" className="press nav-label inline-flex w-fit items-center gap-1.5 rounded-control py-1 pr-2 text-[13px] text-accent-ink">
+          <ArrowLeft aria-hidden className="size-4" strokeWidth={3} />
           All uploads
         </Link>
         <PageHeader

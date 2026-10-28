@@ -38,16 +38,16 @@ export function LabelCheckTable({ check }: { check: LabelCheck }) {
           <thead className="text-ink-2">
             <tr>
               <td />
-              <th scope="colgroup" colSpan={3} className="pb-1 text-center text-xs font-bold">
+              <th scope="colgroup" colSpan={3} className="pb-1 text-center text-[13px] font-bold">
                 ReviewLens said
               </th>
             </tr>
             <tr>
-              <th scope="col" className="py-1.5 pr-2 text-left text-xs font-bold">
+              <th scope="col" className="py-1.5 pr-2 text-left text-[13px] font-bold">
                 {reference}
               </th>
               {SENTIMENTS.map((s) => (
-                <th key={s} scope="col" className="px-1 py-1.5 text-center text-xs font-bold">
+                <th key={s} scope="col" className="px-1 py-1.5 text-center text-[13px] font-bold">
                   <span className="inline-flex items-center gap-1">
                     <SentimentIcon sentiment={s} className="size-3.5" />
                     {SENTIMENT_META[s].label}
@@ -82,7 +82,7 @@ export function LabelCheckTable({ check }: { check: LabelCheck }) {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-xs text-ink-2">
+      <p className="mt-2 text-[13px] text-ink-2">
         Each number counts reviews by {yours ? "your label" : "what the stars suggest"} (left) and ReviewLens&apos;s label (top).
         The diagonal is where they match.
       </p>
@@ -107,9 +107,9 @@ export function ClassScoresTable({ check }: { check: LabelCheck }) {
   return (
     <div className="min-w-0">
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs sm:text-sm">
+        <table className="w-full text-left text-[13px] sm:text-sm">
           <caption className="sr-only">Precision, recall and F1 for each label, with how many reviews each side gave it.</caption>
-          <thead className="text-xs text-ink-2">
+          <thead className="text-[13px] text-ink-2">
             <tr>
               <th scope="col" className="py-1.5 pr-2 font-bold sm:pr-3">Label</th>
               <th scope="col" className="py-1.5 pr-2 font-bold sm:pr-3">You</th>
@@ -135,7 +135,7 @@ export function ClassScoresTable({ check }: { check: LabelCheck }) {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-xs text-ink-2">
+      <p className="mt-2 text-[13px] text-ink-2">
         Precision: of the reviews ReviewLens gave a label, the share you gave it too. Recall: of the reviews you gave a
         label, the share ReviewLens found. F1 combines the two. A dash means there was nothing to work it out from.
       </p>

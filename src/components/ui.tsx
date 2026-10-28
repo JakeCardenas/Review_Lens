@@ -7,22 +7,22 @@ import type { UploadStatus } from "@/lib/types";
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md";
 
-// Primary, secondary and danger buttons sit on a solid bottom edge that compresses on press (.edge).
+// Primary: Eager Green with a darker lip. Secondary: white with a 2px Faded Gray outline and blue text.
 const VARIANTS: Record<Variant, string> = {
-  primary: "edge border-transparent bg-brand text-on-brand hover:bg-brand-hover [--edge:var(--brand-edge)]",
-  secondary: "edge border-line-strong bg-surface text-ink hover:bg-surface-2 [--edge:var(--line-strong)]",
-  ghost: "press border-transparent bg-transparent text-brand-ink hover:bg-brand-soft",
-  danger: "edge border-line-strong bg-surface text-danger hover:border-danger/40 hover:bg-danger-soft [--edge:var(--line-strong)]",
+  primary: "lip border-transparent bg-brand text-on-brand hover:bg-brand-hover [--edge:var(--brand-edge)]",
+  secondary: "lip border-line-strong bg-surface text-accent-ink hover:bg-surface-2 [--edge:var(--line-strong)] [--lip:3px]",
+  ghost: "press border-transparent bg-transparent text-accent-ink hover:bg-accent-soft",
+  danger: "lip border-line-strong bg-surface text-danger hover:border-danger-line hover:bg-danger-soft [--edge:var(--line-strong)] [--lip:3px]",
 };
 
 const SIZES: Record<Size, string> = {
-  sm: "min-h-10 px-3.5 text-sm gap-1.5",
-  md: "min-h-12 px-5 text-[15px] gap-2",
+  sm: "min-h-10 px-4 text-[13px] gap-1.5",
+  md: "min-h-12 px-6 text-[15px] gap-2",
 };
 
 export function buttonClasses(variant: Variant = "primary", size: Size = "md", extra = ""): string {
   return [
-    "inline-flex items-center justify-center rounded-control border-2 font-display font-extrabold whitespace-nowrap",
+    "inline-flex items-center justify-center rounded-control border-2 font-extrabold uppercase tracking-[0.053em] whitespace-nowrap",
     "disabled:pointer-events-none disabled:opacity-50",
     VARIANTS[variant],
     SIZES[size],
@@ -42,18 +42,31 @@ export function ButtonLink({ variant, size, className = "", ...props }: ButtonLi
   return <Link className={buttonClasses(variant, size, className)} {...props} />;
 }
 
-/** Inline text link in the brand color. */
-export const linkClasses = "font-bold text-brand-ink underline decoration-brand-ink/30 decoration-2 underline-offset-[3px] hover:decoration-brand-ink";
+/** Inline text link in Spark Blue (darkened for readability). */
+export const linkClasses = "font-bold text-accent-ink underline decoration-accent/50 decoration-2 underline-offset-[3px] hover:decoration-accent-ink";
 
-/** Page title with an optional line of context and actions on the right. */
-export function PageHeader({ title, description, actions }: { title: ReactNode; description?: ReactNode; actions?: ReactNode }) {
+/** Big rounded green page title with a line of context, actions, and optionally the eagle beside it. */
+export function PageHeader({
+  title,
+  description,
+  actions,
+  art,
+}: {
+  title: ReactNode;
+  description?: ReactNode;
+  actions?: ReactNode;
+  art?: boolean;
+}) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
-      <div className="min-w-0 max-w-2xl">
-        <h1 className="font-display text-[1.75rem] font-black leading-tight tracking-[-0.02em] sm:text-4xl">{title}</h1>
-        {description && <p className="mt-2 text-[15px] text-ink-2 sm:text-base">{description}</p>}
+    <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-5">
+      <div className="flex min-w-0 items-center gap-6">
+        {art && <EagleMark size={104} className="hidden md:block" />}
+        <div className="min-w-0 max-w-2xl">
+          <h1 className="font-display text-heading-sm font-black text-brand-display sm:text-heading">{title}</h1>
+          {description && <p className="mt-3 text-body text-ink-2">{description}</p>}
+        </div>
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-3">{actions}</div>}
     </div>
   );
 }
@@ -74,12 +87,12 @@ export function Card({
   id?: string;
 }) {
   return (
-    <section id={id} className={`min-w-0 rounded-card border-[1.5px] border-line bg-surface p-5 sm:p-6 ${className}`}>
+    <section id={id} className={`min-w-0 rounded-card border-2 border-line bg-surface p-5 sm:p-6 ${className}`}>
       {(title || actions) && (
         <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
           <div className="min-w-0 max-w-prose">
-            {title && <h2 className="font-display text-lg font-extrabold leading-snug tracking-[-0.01em]">{title}</h2>}
-            {description && <p className="mt-1 text-sm text-ink-2">{description}</p>}
+            {title && <h2 className="text-subheading font-extrabold text-ink">{title}</h2>}
+            {description && <p className="mt-1 text-[15px] text-ink-2">{description}</p>}
           </div>
           {actions}
         </div>
@@ -89,24 +102,27 @@ export function Card({
   );
 }
 
+/** Small uppercase sticker tag with a 2px outline. */
+export const tagClasses = "inline-flex items-center gap-1 rounded-control border-2 px-2 py-0.5 text-[12px] font-extrabold uppercase tracking-[0.053em]";
+
 const STATUS: Record<UploadStatus, { label: string; tone: string }> = {
-  importing: { label: "Importing", tone: "bg-warn-soft text-warn-ink" },
-  analyzing: { label: "Analyzing", tone: "bg-warn-soft text-warn-ink" },
-  done: { label: "Ready", tone: "bg-brand-soft text-brand-ink" },
-  done_with_issues: { label: "Ready, with issues", tone: "bg-brand-soft text-brand-ink" },
-  failed: { label: "Failed", tone: "bg-danger-soft text-danger" },
+  importing: { label: "Importing", tone: "border-warn-line bg-warn-soft text-warn-ink" },
+  analyzing: { label: "Analyzing", tone: "border-warn-line bg-warn-soft text-warn-ink" },
+  done: { label: "Ready", tone: "border-fresh-leaf bg-brand-soft text-brand-ink" },
+  done_with_issues: { label: "Ready, with issues", tone: "border-fresh-leaf bg-brand-soft text-brand-ink" },
+  failed: { label: "Failed", tone: "border-danger-line bg-danger-soft text-danger" },
 };
 
 export function StatusPill({ status, paused = false }: { status: UploadStatus; paused?: boolean }) {
-  const { label, tone } = paused ? { label: "Paused", tone: "bg-warn-soft text-warn-ink" } : STATUS[status];
-  return <span className={`inline-flex items-center rounded-lg px-2 py-0.5 text-xs font-bold ${tone}`}>{label}</span>;
+  const { label, tone } = paused ? { label: "Paused", tone: "border-warn-line bg-warn-soft text-warn-ink" } : STATUS[status];
+  return <span className={`${tagClasses} ${tone}`}>{label}</span>;
 }
 
 const NOTICE = {
-  info: { icon: Info, tone: "border-line bg-surface", iconTone: "text-brand-ink" },
-  success: { icon: CheckCircle2, tone: "border-brand-soft bg-brand-tint", iconTone: "text-brand-ink" },
-  warning: { icon: AlertTriangle, tone: "border-[#f5e2b0] bg-warn-soft", iconTone: "text-warn-ink" },
-  error: { icon: XCircle, tone: "border-[#f6d1cd] bg-danger-soft", iconTone: "text-danger" },
+  info: { icon: Info, tone: "border-line bg-surface", iconTone: "text-accent-ink" },
+  success: { icon: CheckCircle2, tone: "border-fresh-leaf bg-brand-tint", iconTone: "text-brand-ink" },
+  warning: { icon: AlertTriangle, tone: "border-warn-line bg-warn-soft", iconTone: "text-warn-ink" },
+  error: { icon: XCircle, tone: "border-danger-line bg-danger-soft", iconTone: "text-danger" },
 } as const;
 
 export function Notice({
@@ -126,19 +142,19 @@ export function Notice({
   return (
     <div
       role={tone === "error" ? "alert" : live ? "status" : undefined}
-      className={`flex flex-wrap items-start gap-3 rounded-2xl border-[1.5px] px-4 py-3.5 sm:px-5 ${toneClass}`}
+      className={`flex flex-wrap items-start gap-3 rounded-card border-2 px-4 py-4 sm:px-5 ${toneClass}`}
     >
-      <Icon aria-hidden className={`mt-0.5 size-5 shrink-0 ${iconTone}`} />
+      <Icon aria-hidden className={`mt-0.5 size-6 shrink-0 ${iconTone}`} strokeWidth={2.5} />
       <div className="min-w-0 flex-1 basis-56">
-        <p className="font-bold text-ink">{title}</p>
-        {children && <div className="mt-0.5 text-sm text-ink-2">{children}</div>}
+        <p className="font-extrabold text-ink">{title}</p>
+        {children && <div className="mt-1 text-[15px] text-ink">{children}</div>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 }
 
-/** A friendly "nothing here yet" panel. The eagle appears where a person is about to get started. */
+/** A friendly "nothing here yet" moment: the eagle beside a short headline, like a storybook page. */
 export function EmptyState({
   icon,
   mascot = false,
@@ -153,15 +169,15 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center rounded-card border-[1.5px] border-line bg-surface px-6 py-12 text-center sm:py-14">
+    <div className="flex flex-col items-center rounded-card border-2 border-line bg-surface px-6 py-12 text-center sm:py-16">
       {mascot ? (
-        <EagleMark size={72} className="mb-4" />
+        <EagleMark size={120} className="mb-6" />
       ) : (
-        icon && <div className="mb-4 grid size-12 place-items-center rounded-2xl bg-surface-2 text-ink-2">{icon}</div>
+        icon && <div className="mb-5 grid size-14 place-items-center rounded-control border-2 border-line text-ink-2">{icon}</div>
       )}
-      <h2 className="font-display text-xl font-extrabold tracking-[-0.01em]">{title}</h2>
-      {children && <div className="mt-2 max-w-md text-[15px] text-ink-2">{children}</div>}
-      {action && <div className="mt-6 flex flex-wrap justify-center gap-3">{action}</div>}
+      <h2 className="text-heading-sm font-extrabold text-ink">{title}</h2>
+      {children && <div className="mt-3 max-w-md text-body text-ink-2">{children}</div>}
+      {action && <div className="mt-8 flex flex-wrap justify-center gap-3">{action}</div>}
     </div>
   );
 }

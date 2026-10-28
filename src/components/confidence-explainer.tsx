@@ -3,9 +3,9 @@ import { ChevronDown, CircleHelp } from "lucide-react";
 /** Plain-language explanation of the confidence levels. */
 export function ConfidenceExplainer({ basicMode }: { basicMode: boolean }) {
   return (
-    <details className="group rounded-card border-[1.5px] border-line bg-surface text-sm">
-      <summary className="flex cursor-pointer list-none items-center gap-2.5 rounded-card px-5 py-4 font-bold text-ink hover:bg-surface-2 [&::-webkit-details-marker]:hidden">
-        <CircleHelp aria-hidden className="size-5 text-brand-ink" />
+    <details className="group rounded-card border-2 border-line bg-surface text-sm">
+      <summary className="flex cursor-pointer list-none items-center gap-2.5 rounded-card px-5 py-4 text-accent-ink hover:bg-accent-soft nav-label text-[13px] [&::-webkit-details-marker]:hidden">
+        <CircleHelp aria-hidden className="size-5" strokeWidth={2.5} />
         <span className="flex-1">What does confidence mean?</span>
         <ChevronDown aria-hidden className="size-4 text-ink-2 transition-transform duration-150 group-open:rotate-180" />
       </summary>

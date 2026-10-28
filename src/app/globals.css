@@ -1,48 +1,70 @@
 @import "tailwindcss";
 
 /*
-  ReviewLens design tokens. A warm white page, white cards and dark warm ink; green only for
-  actions, links, selected states and positive sentiment. The sentiment trio is a diverging set
-  (green, gray midpoint, orange) checked for color-blind separation. Sentiment is always shown with
-  an icon and a word as well as color. Contrast notes are against the page color.
+  ReviewLens design tokens, following the Refero "Duolingo" style board: white paper canvas,
+  chubby rounded headings, one saturated green for progress and primary actions, Spark Blue for
+  links and secondary actions, calm gray body text, and 12px controls with 2px borders and a solid
+  bottom lip, like stickers pressed onto the page.
+
+  Exact Refero values are used for fills, bars, borders and washes. Where a Refero color would carry
+  small text, a same-hue shade that meets WCAG AA is used instead (noted below; ratios vs white).
   See docs/superpowers/specs/2026-10-28-redesign-design.md.
 */
 :root {
-  --page: #fdfbf7;
+  /* Refero palette */
+  --eager-green: #58cc02;
+  --storybook-green: #d7ffb8;
+  --spark-blue: #1cb0f6;
+  --fresh-leaf: #a5ed6e;
+  --night-ink: #000437;
+  --charcoal: #4b4b4b;
+  --pencil-gray: #777777;
+  --faded-gray: #afafaf;
+
+  /* Roles */
+  --page: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f7f4ee;
-  --surface-3: #efeae1;
-  --ink: #23211d; /* 15.6:1 */
-  --ink-2: #57524a; /* 7.5:1 */
-  --ink-3: #6b655b; /* 5.6:1 */
-  --line: #ebe5db;
-  --line-strong: #ded6c9;
-  --field: #8f887c; /* input borders, 3.4:1 */
-  --brand: #1e8443; /* white text 4.7:1 */
-  --brand-hover: #187339;
-  --brand-edge: #125a2c;
-  --brand-ink: #17703a; /* 6:1 */
-  --brand-soft: #e7f3e9;
-  --brand-tint: #f3f9f3;
-  --on-brand: #ffffff;
-  --pos: #176e3c;
-  --neu: #bdb5a7;
-  --neg: #e5732f;
-  --pos-ink: #176e3c;
-  --neu-ink: #5a554c;
-  --neg-ink: #a3461b;
-  --pos-soft: #e6f2e8;
-  --neu-soft: #f1eee8;
-  --neg-soft: #fcebe1;
-  --warn-ink: #7a4d00;
-  --warn-soft: #fff3d4;
-  --danger: #b42318;
-  --danger-soft: #fdeceb;
-  --star: #e0a100;
-  --conf-high: #3b3832; /* ordinal ramp, validated: monotone lightness, light end above 2:1 */
-  --conf-medium: #7d766b;
-  --conf-low: #b5ad9f;
-  --shadow-float: 0 12px 32px rgba(58, 46, 26, 0.12), 0 2px 6px rgba(58, 46, 26, 0.08);
+  --surface-2: #f7f7f7;
+  --surface-3: #e5e5e5;
+  --ink: var(--charcoal); /* headings and primary text, 8.7:1 */
+  --ink-2: #717171; /* body text: Pencil Gray nudged from #777 (4.48:1) to 4.8:1 */
+  --ink-3: #717171;
+  --line: #e5e5e5; /* card and divider borders */
+  --line-strong: var(--faded-gray); /* outlined buttons and pills */
+  --field: #949494; /* input borders, 3:1 (WCAG 1.4.11) */
+  --brand: var(--eager-green); /* primary fills, progress, positive */
+  --brand-hover: #61e002;
+  --brand-edge: #58a700; /* the lip under green buttons */
+  --brand-ink: #377e01; /* green text, 4.5:1 on white and Storybook Green */
+  --brand-display: #49a902; /* green headings 24px and up, 3:1 */
+  --brand-soft: var(--storybook-green);
+  --brand-tint: #f1ffe7;
+  --on-brand: var(--night-ink); /* labels on Eager Green, 9.4:1 (white would be 2.1:1) */
+  --accent: var(--spark-blue); /* selected outlines, icons */
+  --accent-edge: #1899d6;
+  --accent-ink: #1274a2; /* links and secondary button text, 4.5:1 */
+  --accent-soft: #ddf4ff;
+  --focus: #199edd; /* focus ring, 3:1 */
+  --pos: var(--eager-green);
+  --neu: var(--faded-gray);
+  --neg: var(--night-ink);
+  --pos-ink: var(--brand-ink);
+  --neu-ink: var(--charcoal);
+  --neg-ink: var(--night-ink);
+  --pos-soft: var(--storybook-green);
+  --neu-soft: #f0f0f0;
+  --neg-soft: #e6e7f1;
+  --warn-ink: #916a00;
+  --warn-soft: #fff5d3;
+  --warn-line: #ffe08a;
+  --danger: #bb3737;
+  --danger-soft: #ffdfe0;
+  --danger-line: #ffc1c4;
+  --star: #ffc800;
+  --conf-high: var(--charcoal); /* ordinal ramp, validated */
+  --conf-medium: var(--pencil-gray);
+  --conf-low: var(--faded-gray);
+  --shadow-float: 0 4px 0 var(--line);
   color-scheme: light;
 }
 
@@ -61,9 +83,16 @@
   --color-brand-hover: var(--brand-hover);
   --color-brand-edge: var(--brand-edge);
   --color-brand-ink: var(--brand-ink);
+  --color-brand-display: var(--brand-display);
   --color-brand-soft: var(--brand-soft);
   --color-brand-tint: var(--brand-tint);
   --color-on-brand: var(--on-brand);
+  --color-accent: var(--accent);
+  --color-accent-edge: var(--accent-edge);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-fresh-leaf: var(--fresh-leaf);
+  --color-night: var(--night-ink);
   --color-pos: var(--pos);
   --color-neu: var(--neu);
   --color-neg: var(--neg);
@@ -75,71 +104,99 @@
   --color-neg-soft: var(--neg-soft);
   --color-warn-ink: var(--warn-ink);
   --color-warn-soft: var(--warn-soft);
+  --color-warn-line: var(--warn-line);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --color-danger-line: var(--danger-line);
   --color-star: var(--star);
   --color-conf-high: var(--conf-high);
   --color-conf-medium: var(--conf-medium);
   --color-conf-low: var(--conf-low);
   --font-sans: var(--font-nunito-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: var(--font-nunito), ui-rounded, "SF Pro Rounded", ui-sans-serif, system-ui, sans-serif;
+
+  /* Refero type scale */
+  --text-display: 64px;
+  --text-display--line-height: 1.2;
+  --text-display--letter-spacing: -0.02em;
+  --text-heading: 48px;
+  --text-heading--line-height: 1.2;
+  --text-heading--letter-spacing: -0.02em;
+  --text-heading-sm: 32px;
+  --text-heading-sm--line-height: 1.2;
+  --text-subheading: 19px;
+  --text-subheading--line-height: 1.4;
+  --text-body: 17px;
+  --text-body--line-height: 1.41;
+  --text-nav: 15px;
+  --text-nav--line-height: 1.33;
+  --text-nav--letter-spacing: 0.053em;
+  --text-caption: 13px;
+  --text-caption--line-height: 1.35;
+
   --radius-control: 12px;
-  --radius-card: 20px;
-  --radius-sheet: 24px;
+  --radius-card: 16px;
+  --radius-sheet: 20px;
   --shadow-float: var(--shadow-float);
 }
 
-html {
-  -webkit-tap-highlight-color: transparent;
-  -webkit-text-size-adjust: 100%;
-}
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
 
-body {
-  background: var(--page);
-  color: var(--ink);
-  font-family: var(--font-sans);
-  line-height: 1.55;
-}
+  body {
+    background: var(--page);
+    color: var(--ink-2);
+    font-family: var(--font-sans);
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.41;
+  }
 
-h1,
-h2,
-h3 {
-  text-wrap: balance;
-}
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--ink);
+    text-wrap: balance;
+  }
 
-p {
-  text-wrap: pretty;
-}
+  p {
+    text-wrap: pretty;
+  }
 
-::selection {
-  background: var(--brand-soft);
-  color: var(--ink);
-}
+  ::selection {
+    background: var(--storybook-green);
+    color: var(--night-ink);
+  }
 
-input,
-textarea,
-select {
-  font-size: 16px;
-}
+  input,
+  textarea,
+  select {
+    font-size: 17px;
+  }
 
-button,
-a,
-[role="button"],
-summary {
-  touch-action: manipulation;
-}
+  button,
+  a,
+  [role="button"],
+  summary {
+    touch-action: manipulation;
+  }
 
-button,
-[role="button"],
-summary,
-.control-label {
-  user-select: none;
-  -webkit-user-select: none;
-}
+  button,
+  [role="button"],
+  summary,
+  .control-label {
+    user-select: none;
+    -webkit-user-select: none;
+  }
 
-:focus-visible {
-  outline: 2px solid var(--brand-ink);
-  outline-offset: 2px;
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+  }
 }
 
 /* Side gutter that also clears a phone's rounded corners and side system bars. */
@@ -155,36 +212,96 @@ summary,
   }
 }
 
-/* Press feedback on touch-down, not on release. */
-.press {
-  transition:
-    transform 100ms cubic-bezier(0.2, 0, 0, 1),
-    background-color 120ms ease-out,
-    border-color 120ms ease-out,
-    color 120ms ease-out;
-}
+@layer components {
+  /* Uppercase, tracked labels for navigation, buttons and tags (Refero nav-label). */
+  .nav-label {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.053em;
+    line-height: 1.33;
+    text-transform: uppercase;
+  }
 
-.press:active {
-  transform: scale(0.98);
-}
+  /* Press feedback on touch-down, not on release. */
+  .press {
+    transition:
+      transform 100ms cubic-bezier(0.2, 0, 0, 1),
+      background-color 120ms ease-out,
+      border-color 120ms ease-out,
+      color 120ms ease-out;
+  }
 
-/*
-  Chunky controls: a solid bottom edge (set with --edge) that compresses when pressed,
-  so a button feels pressed onto the page rather than floating.
-*/
-.edge {
-  box-shadow: 0 3px 0 var(--edge, var(--line-strong));
-  transition:
-    transform 100ms cubic-bezier(0.2, 0, 0, 1),
-    box-shadow 100ms cubic-bezier(0.2, 0, 0, 1),
-    background-color 120ms ease-out,
-    border-color 120ms ease-out,
-    color 120ms ease-out;
-}
+  .press:active {
+    transform: scale(0.98);
+  }
 
-.edge:active {
-  transform: translateY(2px);
-  box-shadow: 0 1px 0 var(--edge, var(--line-strong));
+  /*
+    Sticker controls: a solid lip under the control (color in --edge, depth in --lip) that
+    disappears as the control is pressed down onto the page.
+  */
+  .lip {
+    box-shadow: 0 var(--lip, 4px) 0 var(--edge, var(--line-strong));
+    transition:
+      transform 90ms cubic-bezier(0.2, 0, 0, 1),
+      box-shadow 90ms cubic-bezier(0.2, 0, 0, 1),
+      background-color 120ms ease-out,
+      border-color 120ms ease-out,
+      color 120ms ease-out;
+  }
+
+  .lip:active {
+    transform: translateY(var(--lip, 4px));
+    box-shadow: 0 0 0 var(--edge, var(--line-strong));
+  }
+
+  /* A card that is itself a link: 2px border with a thicker bottom edge. */
+  .sticker {
+    border: 2px solid var(--line);
+    border-bottom-width: 4px;
+    transition:
+      transform 90ms cubic-bezier(0.2, 0, 0, 1),
+      border-color 120ms ease-out,
+      background-color 120ms ease-out;
+  }
+
+  .sticker:hover {
+    background: var(--surface-2);
+  }
+
+  .sticker:active {
+    transform: translateY(2px);
+    border-bottom-width: 2px;
+    margin-bottom: 2px;
+  }
+
+  /* Thick rounded progress bar with a highlight strip, the Duolingo-style meter. */
+  .meter {
+    position: relative;
+    height: 16px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--surface-3);
+  }
+
+  .meter-fill {
+    position: relative;
+    height: 100%;
+    border-radius: 999px;
+    background: var(--eager-green);
+    transform-origin: left;
+    transition: transform 500ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .meter-fill::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 8px;
+    right: 8px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.35);
+  }
 }
 
 .tabular {
@@ -194,7 +311,7 @@ summary,
 /* On phones, leave room under the page for the fixed section tabs of an upload. */
 @media (max-width: 639px) {
   body:has([data-bottom-tabs]) {
-    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -205,8 +322,9 @@ summary,
   z-index: 50;
   border-radius: var(--radius-control);
   background: var(--surface);
-  border: 2px solid var(--brand-ink);
-  font-weight: 700;
+  border: 2px solid var(--accent-ink);
+  color: var(--accent-ink);
+  font-weight: 800;
   padding: 0.5rem 1rem;
 }
 
@@ -215,7 +333,7 @@ summary,
 }
 
 dialog::backdrop {
-  background: rgba(35, 33, 29, 0.42);
+  background: rgba(0, 4, 55, 0.4);
 }
 
 /* A quick fade and lift for menus and dialogs as they open. */
@@ -247,7 +365,7 @@ dialog::backdrop {
 }
 
 @media (forced-colors: active) {
-  .edge {
+  .lip {
     box-shadow: none;
   }
 }

@@ -17,7 +17,7 @@ function UploadSentiment({ upload }: { upload: UploadListItem }) {
     <div className="grid gap-2">
       <SentimentStackedBar counts={upload.sentiment} className="h-2.5" />
       <SentimentLegend counts={upload.sentiment} compact />
-      <p className="text-xs text-ink-3 tabular">Shares of {formatNumber(upload.labeled)} labeled reviews</p>
+      <p className="text-[13px] text-ink-3 tabular">Shares of {formatNumber(upload.labeled)} labeled reviews</p>
     </div>
   );
 }
@@ -38,6 +38,7 @@ export default async function HomePage() {
   return (
     <div className="grid gap-8">
       <PageHeader
+        art
         title="Your uploads"
         description="Upload a CSV of customer reviews to see how customers feel and what they talk about, without reading every review."
         actions={
@@ -61,8 +62,8 @@ export default async function HomePage() {
         </Notice>
       )}
       {!provider.problem && (
-        <p className="-mt-3 flex items-start gap-2 text-sm text-ink-2">
-          <Info aria-hidden className="mt-0.5 size-4 shrink-0 text-ink-3" />
+        <p className="flex items-start gap-3 rounded-card border-2 border-line px-4 py-3 text-[15px] text-ink-2">
+          <Info aria-hidden className="mt-0.5 size-5 shrink-0 text-accent-ink" strokeWidth={2.5} />
           <span>
             New uploads use {provider.label}.{" "}
             {provider.external
@@ -98,7 +99,7 @@ export default async function HomePage() {
           <h2 id="uploads-heading" className="sr-only">
             Uploads
           </h2>
-          <ul className="grid gap-3">
+          <ul className="grid gap-4">
             {uploads.map((upload) => {
               const inProgress = upload.status === "analyzing" || upload.status === "importing";
               const href = inProgress ? `/uploads/${upload.id}/analyze` : `/uploads/${upload.id}`;
@@ -106,17 +107,17 @@ export default async function HomePage() {
                 <li key={upload.id}>
                   <Link
                     href={href}
-                    className="group grid gap-4 rounded-card border-[1.5px] border-line bg-surface px-5 py-4 transition-colors hover:border-line-strong hover:bg-[#fffefb] sm:grid-cols-[minmax(0,1fr)_minmax(15rem,22rem)_auto] sm:items-center sm:gap-6 sm:px-6 sm:py-5"
+                    className="sticker group grid gap-4 rounded-card bg-surface px-5 py-5 sm:grid-cols-[minmax(0,1fr)_minmax(15rem,22rem)_auto] sm:items-center sm:gap-6 sm:px-6 sm:py-5"
                   >
                     <div className="min-w-0">
-                      <p title={upload.name} className="truncate font-display text-[17px] font-extrabold tracking-[-0.01em] group-hover:text-brand-ink">
+                      <p title={upload.name} className="truncate text-subheading font-extrabold text-ink group-hover:text-accent-ink">
                         {upload.name}
                       </p>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
                         <StatusPill status={upload.status} />
                         <ModeBadge provider={upload.provider} />
                       </div>
-                      <p title={upload.fileName} className="mt-2 truncate text-sm text-ink-2">
+                      <p title={upload.fileName} className="mt-2 truncate text-[15px] text-ink-2">
                         {upload.fileName}, {formatNumber(upload.totalRows)} rows, {formatDateTime(upload.createdAt)}
                       </p>
                       {(upload.notLabeled > 0 || upload.failed > 0) && (
@@ -135,7 +136,7 @@ export default async function HomePage() {
                     ) : (
                       <UploadSentiment upload={upload} />
                     )}
-                    <ChevronRight aria-hidden className="hidden size-5 text-ink-3 transition-transform group-hover:translate-x-0.5 sm:block" />
+                    <ChevronRight aria-hidden className="hidden size-6 text-line-strong transition-transform group-hover:translate-x-0.5 group-hover:text-accent-ink sm:block" strokeWidth={3} />
                   </Link>
                 </li>
               );

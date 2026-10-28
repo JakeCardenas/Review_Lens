@@ -5,9 +5,9 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { ChevronDown, LayoutList } from "lucide-react";
 
 export const menuItemClasses =
-  "flex min-h-11 w-full items-center gap-2.5 rounded-xl px-3 text-left text-[15px] font-semibold text-ink hover:bg-surface-2";
+  "nav-label flex min-h-12 w-full items-center gap-3 rounded-control px-3 text-left text-ink-2 hover:bg-accent-soft hover:text-accent-ink";
 
-/** Account disclosure menu: the signed-in email, a link home and the sign-out form (passed in as children). */
+/** Account pill and its menu: the signed-in email, a link home and the sign-out form (passed in as children). */
 export function AccountMenu({ email, children }: { email: string; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
@@ -43,31 +43,35 @@ export function AccountMenu({ email, children }: { email: string; children: Reac
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((value) => !value)}
-        className="press flex min-h-11 items-center gap-2 rounded-control px-1.5 hover:bg-surface-2"
+        className={`lip flex min-h-10 items-center gap-2 rounded-control border-2 px-2 [--lip:3px] ${
+          open
+            ? "border-accent bg-accent-soft [--edge:var(--accent)]"
+            : "border-line-strong bg-surface hover:bg-surface-2 [--edge:var(--line-strong)]"
+        }`}
       >
-        <span aria-hidden className="grid size-8 place-items-center rounded-full bg-brand-soft font-display text-sm font-black text-brand-ink">
+        <span aria-hidden className="grid size-7 place-items-center rounded-full bg-brand-soft font-display text-sm font-black text-night">
           {initial}
         </span>
         <span className="sr-only">Account menu for {email}</span>
-        <span aria-hidden className="hidden max-w-52 truncate text-sm font-semibold text-ink-2 md:inline">
-          {email}
+        <span aria-hidden className="nav-label hidden text-[13px] text-ink-2 md:inline">
+          Account
         </span>
-        <ChevronDown aria-hidden className={`size-4 text-ink-2 transition-transform duration-150 ${open ? "rotate-180" : ""}`} />
+        <ChevronDown aria-hidden className={`size-4 text-ink-2 transition-transform duration-150 ${open ? "rotate-180" : ""}`} strokeWidth={3} />
       </button>
       {open && (
         <div
           id={panelId}
-          className="pop-in absolute right-0 top-full z-40 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border-[1.5px] border-line bg-surface p-2 shadow-float"
+          className="pop-in absolute right-0 top-full z-40 mt-3 w-72 max-w-[calc(100vw-2rem)] rounded-card border-2 border-line bg-surface p-2 shadow-float"
         >
-          <p className="px-3 pb-2.5 pt-1.5 text-sm text-ink-2">
+          <p className="px-3 pb-3 pt-2 text-[15px] text-ink-2">
             Signed in as
-            <span className="block truncate font-bold text-ink" title={email}>
+            <span className="block truncate font-extrabold text-ink" title={email}>
               {email}
             </span>
           </p>
-          <div className="grid gap-0.5 border-t border-line pt-1.5">
+          <div className="grid gap-1 border-t-2 border-line pt-2">
             <Link href="/" onClick={() => setOpen(false)} className={menuItemClasses}>
-              <LayoutList aria-hidden className="size-4 text-ink-2" />
+              <LayoutList aria-hidden className="size-5" strokeWidth={2.5} />
               Your uploads
             </Link>
             {children}
