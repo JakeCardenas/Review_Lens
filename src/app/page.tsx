@@ -1,29 +1,23 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { FileSpreadsheet, Plus } from "lucide-react";
+import { ChevronRight, Download, FileSpreadsheet, Info, Plus } from "lucide-react";
 import { ModeBadge } from "@/components/mode-badge";
-import { ButtonLink, EmptyState, Notice, StatusPill } from "@/components/ui";
+import { SentimentLegend, SentimentStackedBar } from "@/components/sentiment";
+import { ButtonLink, EmptyState, Notice, PageHeader, StatusPill, buttonClasses } from "@/components/ui";
 import { getProviderInfo } from "@/lib/analysis/providers";
-import { formatDateTime, formatNumber, formatPercent } from "@/lib/format";
+import { formatDateTime, formatNumber } from "@/lib/format";
 import { requireUser } from "@/lib/server/auth";
 import { getDb } from "@/lib/server/db";
 import { AppError } from "@/lib/server/errors";
 import { listUploads, type UploadListItem } from "@/lib/server/uploads";
 
-function SentimentStrip({ upload }: { upload: UploadListItem }) {
-  const { positive, neutral, negative } = upload.sentiment;
+function UploadSentiment({ upload }: { upload: UploadListItem }) {
   if (!upload.labeled) return <p className="text-sm text-ink-2">Not analyzed yet</p>;
   return (
-    <div className="grid gap-1.5">
-      <div className="flex h-2 gap-0.5 overflow-hidden rounded-full" aria-hidden>
-        <span className="bg-pos" style={{ flex: positive }} />
-        <span className="bg-neu" style={{ flex: neutral }} />
-        <span className="bg-neg" style={{ flex: negative }} />
-      </div>
-      <p className="text-sm text-ink-2 tabular">
-        {formatPercent(positive, upload.labeled)} positive, {formatPercent(negative, upload.labeled)} negative, of{" "}
-        {formatNumber(upload.labeled)} labeled
-      </p>
+    <div className="grid gap-2">
+      <SentimentStackedBar counts={upload.sentiment} className="h-2.5" />
+      <SentimentLegend counts={upload.sentiment} compact />
+      <p className="text-xs text-ink-3 tabular">Shares of {formatNumber(upload.labeled)} labeled reviews</p>
     </div>
   );
 }
@@ -42,21 +36,19 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="grid gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="max-w-2xl">
-          <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">Your uploads</h1>
-          <p className="mt-2 text-ink-2">
-            Upload a CSV of customer reviews to see how customers feel and what they talk about, without reading every review.
-          </p>
-        </div>
-        {uploads.length > 0 && (
-          <ButtonLink href="/upload">
-            <Plus aria-hidden className="size-4" />
-            New upload
-          </ButtonLink>
-        )}
-      </div>
+    <div className="grid gap-8">
+      <PageHeader
+        title="Your uploads"
+        description="Upload a CSV of customer reviews to see how customers feel and what they talk about, without reading every review."
+        actions={
+          uploads.length > 0 && (
+            <ButtonLink href="/upload">
+              <Plus aria-hidden className="size-4" strokeWidth={2.75} />
+              New upload
+            </ButtonLink>
+          )
+        }
+      />
 
       {setupProblem && (
         <Notice tone="error" title="ReviewLens isn't connected to a database">
@@ -69,26 +61,29 @@ export default async function HomePage() {
         </Notice>
       )}
       {!provider.problem && (
-        <p className="text-sm text-ink-2">
-          Analysis method: {provider.label}.{" "}
-          {provider.external
-            ? "Masked review text is sent to Google's Gemini free tier, where Google may use it to improve its products. Use only public, non-sensitive reviews."
-            : "Nothing is sent to an AI service."}
+        <p className="-mt-3 flex items-start gap-2 text-sm text-ink-2">
+          <Info aria-hidden className="mt-0.5 size-4 shrink-0 text-ink-3" />
+          <span>
+            New uploads use {provider.label}.{" "}
+            {provider.external
+              ? "Masked review text is sent to Google's Gemini free tier, where Google may use it to improve its products. Use only public, non-sensitive reviews."
+              : "Nothing is sent to an AI service."}
+          </span>
         </p>
       )}
 
       {!setupProblem && uploads.length === 0 && (
         <EmptyState
-          icon={<FileSpreadsheet aria-hidden className="size-6" />}
+          mascot
           title="No uploads yet"
           action={
             <>
-              <ButtonLink href="/upload">Upload a CSV</ButtonLink>
-              <a
-                href="/sample-reviews.csv"
-                download
-                className="press inline-flex min-h-11 items-center rounded-control px-4 font-semibold text-brand-ink hover:bg-brand-soft"
-              >
+              <ButtonLink href="/upload">
+                <FileSpreadsheet aria-hidden className="size-4" />
+                Upload a CSV
+              </ButtonLink>
+              <a href="/sample-reviews.csv" download className={buttonClasses("secondary")}>
+                <Download aria-hidden className="size-4" />
                 Download a sample CSV
               </a>
             </>
@@ -99,39 +94,54 @@ export default async function HomePage() {
       )}
 
       {uploads.length > 0 && (
-        <ul className="overflow-hidden rounded-card border border-line bg-surface">
-          {uploads.map((upload) => {
-            const href =
-              upload.status === "analyzing" || upload.status === "importing" ? `/uploads/${upload.id}/analyze` : `/uploads/${upload.id}`;
-            return (
-              <li key={upload.id} className="border-b border-line last:border-0">
-                <Link href={href} className="press grid gap-3 px-5 py-4 hover:bg-surface-2 sm:grid-cols-[1fr_minmax(220px,320px)] sm:items-center">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="truncate font-semibold">{upload.name}</span>
-                      <StatusPill status={upload.status} />
-                      <ModeBadge provider={upload.provider} />
-                    </div>
-                    <p className="mt-0.5 truncate text-sm text-ink-2">
-                      {upload.fileName}, {formatNumber(upload.totalRows)} rows, {formatDateTime(upload.createdAt)}
-                    </p>
-                    {(upload.notLabeled > 0 || upload.failed > 0) && (
-                      <p className="mt-0.5 text-sm text-warn-ink">
-                        {[
-                          upload.notLabeled > 0 && `${formatNumber(upload.notLabeled)} not labeled (language)`,
-                          upload.failed > 0 && `${formatNumber(upload.failed)} failed`,
-                        ]
-                          .filter(Boolean)
-                          .join(", ")}
+        <section aria-labelledby="uploads-heading" className="grid gap-3">
+          <h2 id="uploads-heading" className="sr-only">
+            Uploads
+          </h2>
+          <ul className="grid gap-3">
+            {uploads.map((upload) => {
+              const inProgress = upload.status === "analyzing" || upload.status === "importing";
+              const href = inProgress ? `/uploads/${upload.id}/analyze` : `/uploads/${upload.id}`;
+              return (
+                <li key={upload.id}>
+                  <Link
+                    href={href}
+                    className="group grid gap-4 rounded-card border-[1.5px] border-line bg-surface px-5 py-4 transition-colors hover:border-line-strong hover:bg-[#fffefb] sm:grid-cols-[minmax(0,1fr)_minmax(15rem,22rem)_auto] sm:items-center sm:gap-6 sm:px-6 sm:py-5"
+                  >
+                    <div className="min-w-0">
+                      <p title={upload.name} className="truncate font-display text-[17px] font-extrabold tracking-[-0.01em] group-hover:text-brand-ink">
+                        {upload.name}
                       </p>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        <StatusPill status={upload.status} />
+                        <ModeBadge provider={upload.provider} />
+                      </div>
+                      <p title={upload.fileName} className="mt-2 truncate text-sm text-ink-2">
+                        {upload.fileName}, {formatNumber(upload.totalRows)} rows, {formatDateTime(upload.createdAt)}
+                      </p>
+                      {(upload.notLabeled > 0 || upload.failed > 0) && (
+                        <p className="mt-1 text-sm font-semibold text-warn-ink">
+                          {[
+                            upload.notLabeled > 0 && `${formatNumber(upload.notLabeled)} not labeled (language)`,
+                            upload.failed > 0 && `${formatNumber(upload.failed)} failed`,
+                          ]
+                            .filter(Boolean)
+                            .join(", ")}
+                        </p>
+                      )}
+                    </div>
+                    {inProgress ? (
+                      <p className="text-sm font-semibold text-warn-ink">Analysis in progress. Open to see how far along it is.</p>
+                    ) : (
+                      <UploadSentiment upload={upload} />
                     )}
-                  </div>
-                  <SentimentStrip upload={upload} />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+                    <ChevronRight aria-hidden className="hidden size-5 text-ink-3 transition-transform group-hover:translate-x-0.5 sm:block" />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
       )}
     </div>
   );

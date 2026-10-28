@@ -1,3 +1,4 @@
+import { Check } from "lucide-react";
 import { SentimentIcon, SENTIMENT_META } from "@/components/sentiment";
 import { Card } from "@/components/ui";
 import { CHECK_NOTES, classScores, describeExclusions } from "@/lib/analysis/agreement";
@@ -37,16 +38,16 @@ export function LabelCheckTable({ check }: { check: LabelCheck }) {
           <thead className="text-ink-2">
             <tr>
               <td />
-              <th scope="colgroup" colSpan={3} className="pb-1 text-center text-xs font-semibold">
+              <th scope="colgroup" colSpan={3} className="pb-1 text-center text-xs font-bold">
                 ReviewLens said
               </th>
             </tr>
             <tr>
-              <th scope="col" className="py-1.5 pr-2 text-left text-xs font-semibold">
+              <th scope="col" className="py-1.5 pr-2 text-left text-xs font-bold">
                 {reference}
               </th>
               {SENTIMENTS.map((s) => (
-                <th key={s} scope="col" className="px-1 py-1.5 text-center text-xs font-semibold">
+                <th key={s} scope="col" className="px-1 py-1.5 text-center text-xs font-bold">
                   <span className="inline-flex items-center gap-1">
                     <SentimentIcon sentiment={s} className="size-3.5" />
                     {SENTIMENT_META[s].label}
@@ -58,7 +59,7 @@ export function LabelCheckTable({ check }: { check: LabelCheck }) {
           <tbody>
             {SENTIMENTS.map((row) => (
               <tr key={row}>
-                <th scope="row" className="py-1 pr-2 text-left font-semibold">
+                <th scope="row" className="py-1 pr-2 text-left font-bold">
                   {SENTIMENT_META[row].label}
                 </th>
                 {SENTIMENTS.map((col) => {
@@ -66,10 +67,11 @@ export function LabelCheckTable({ check }: { check: LabelCheck }) {
                   return (
                     <td key={col} className="p-1 text-center">
                       <span
-                        className={`block rounded-control py-2 tabular ${
-                          row === col ? "bg-brand-soft font-semibold text-ink" : n ? "bg-warn-soft text-warn-ink" : "text-ink-3"
+                        className={`block rounded-lg py-2.5 tabular ${
+                          row === col ? "bg-brand-soft font-bold text-brand-ink" : n ? "bg-warn-soft text-warn-ink" : "text-ink-3"
                         }`}
                       >
+                        {row === col && n > 0 && <Check aria-hidden className="mr-0.5 inline size-3.5 align-[-2px]" strokeWidth={3} />}
                         {formatNumber(n)}
                       </span>
                     </td>
@@ -109,18 +111,18 @@ export function ClassScoresTable({ check }: { check: LabelCheck }) {
           <caption className="sr-only">Precision, recall and F1 for each label, with how many reviews each side gave it.</caption>
           <thead className="text-xs text-ink-2">
             <tr>
-              <th scope="col" className="py-1.5 pr-2 font-semibold sm:pr-3">Label</th>
-              <th scope="col" className="py-1.5 pr-2 font-semibold sm:pr-3">You</th>
-              <th scope="col" className="py-1.5 pr-2 font-semibold sm:pr-3">ReviewLens</th>
-              <th scope="col" className="py-1.5 pr-2 font-semibold sm:pr-3">Precision</th>
-              <th scope="col" className="py-1.5 pr-2 font-semibold sm:pr-3">Recall</th>
-              <th scope="col" className="py-1.5 font-semibold">F1</th>
+              <th scope="col" className="py-1.5 pr-2 font-bold sm:pr-3">Label</th>
+              <th scope="col" className="py-1.5 pr-2 font-bold sm:pr-3">You</th>
+              <th scope="col" className="py-1.5 pr-2 font-bold sm:pr-3">ReviewLens</th>
+              <th scope="col" className="py-1.5 pr-2 font-bold sm:pr-3">Precision</th>
+              <th scope="col" className="py-1.5 pr-2 font-bold sm:pr-3">Recall</th>
+              <th scope="col" className="py-1.5 font-bold">F1</th>
             </tr>
           </thead>
           <tbody className="tabular">
             {classScores(check.matrix).map((c) => (
               <tr key={c.sentiment} className="border-t border-line">
-                <th scope="row" className="py-1.5 pr-2 font-semibold sm:pr-3">
+                <th scope="row" className="py-1.5 pr-2 font-bold sm:pr-3">
                   {SENTIMENT_META[c.sentiment].label}
                 </th>
                 <td className="py-1.5 pr-2 sm:pr-3">{formatNumber(c.support)}</td>
@@ -152,9 +154,9 @@ export function LabelCheckCard({ check, ratingScale }: { check: LabelCheck; rati
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         <div className="grid content-start gap-5">
           <div>
-            <p className="font-display text-4xl font-semibold tracking-tight tabular">
+            <p className="font-display text-[2.5rem] font-black leading-none tracking-[-0.02em] tabular">
               {formatNumber(check.agree)}
-              <span className="text-xl text-ink-2"> of {formatNumber(check.eligible)}</span>
+              <span className="text-xl font-extrabold text-ink-3"> of {formatNumber(check.eligible)}</span>
             </p>
             <p className="text-sm text-ink-2">
               eligible reviews {yours ? "match your label" : "match the stars"} ({formatPercent(check.agree, check.eligible)})
@@ -180,7 +182,7 @@ export function LabelCheckCard({ check, ratingScale }: { check: LabelCheck; rati
           {yours && check.eligible > 0 && <ClassScoresTable check={check} />}
         </div>
       </div>
-      <p className="mt-5 rounded-control bg-surface-2 p-3 text-sm text-ink-2">{CHECK_NOTES[check.source]}</p>
+      <p className="mt-6 rounded-xl bg-surface-2 p-3.5 text-sm text-ink-2">{CHECK_NOTES[check.source]}</p>
     </Card>
   );
 }

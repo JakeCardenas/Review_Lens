@@ -36,7 +36,7 @@ function highlightTopics(text: string, topics: string[]): ReactNode {
     if (!match[0]) continue;
     if (start > last) parts.push(text.slice(last, start));
     parts.push(
-      <mark key={start} className="rounded bg-brand-soft px-0.5 text-ink">
+      <mark key={start} className="rounded-md bg-brand-soft px-0.5 font-semibold text-ink">
         {match[0]}
       </mark>,
     );
@@ -84,13 +84,13 @@ function ReviewDetail({ review, checkSource }: { review: ReviewRow; checkSource:
         <MixedOpinionTag review={review} />
         <LabelCheckTag review={review} source={checkSource} />
       </div>
-      <blockquote className="whitespace-pre-wrap rounded-card bg-surface-2 p-4 text-[16px] leading-relaxed">
+      <blockquote className="whitespace-pre-wrap rounded-2xl bg-surface-2 p-4 text-[16px] leading-relaxed [overflow-wrap:anywhere] sm:p-5">
         {highlightTopics(review.text, review.topics)}
       </blockquote>
       {review.statusNote && <p className="text-sm text-ink-2">{review.statusNote}</p>}
       {review.status === "labeled" && review.confidenceReasons.length > 0 && (
         <section>
-          <h3 className="font-semibold">Why this confidence</h3>
+          <h3 className="font-display font-extrabold">Why this confidence</h3>
           <ul className="mt-1.5 grid list-disc gap-1 pl-5 text-sm text-ink-2">
             {review.confidenceReasons.map((code) => (
               <li key={code}>{REASON_TEXT[code] ?? code}</li>
@@ -101,15 +101,15 @@ function ReviewDetail({ review, checkSource }: { review: ReviewRow; checkSource:
       )}
       {review.topics.length > 0 && (
         <section>
-          <h3 className="mb-1.5 font-semibold">Topics</h3>
+          <h3 className="mb-2 font-display font-extrabold">Topics</h3>
           <TopicChips topics={review.topics} />
         </section>
       )}
-      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-2 border-t border-line pt-4 text-sm">
         {facts.map(([label, value]) => (
           <div key={label} className="contents">
             <dt className="text-ink-2">{label}</dt>
-            <dd>{value}</dd>
+            <dd className="font-semibold">{value}</dd>
           </div>
         ))}
       </dl>
@@ -169,7 +169,7 @@ export default async function ReviewsPage({ params, searchParams }: PageProps<"/
       </Suspense>
 
       <p className="text-sm text-ink-2" role="status">
-        {plural(result.total, "review")}
+        <span className="font-bold text-ink">{plural(result.total, "review")}</span>
         {hasActiveFilters(filters) ? " match the filters" : " in this upload"}
         {result.pageCount > 1 ? `, showing ${(result.page - 1) * result.pageSize + 1}–${Math.min(result.page * result.pageSize, result.total)}` : ""}
       </p>

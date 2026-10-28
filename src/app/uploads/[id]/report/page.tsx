@@ -29,7 +29,7 @@ const NAMES = { positive: "Positive", neutral: "Neutral", negative: "Negative" }
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="break-inside-avoid border-t border-line pt-5">
-      <h2 className="font-display text-xl font-semibold tracking-tight">{title}</h2>
+      <h2 className="font-display text-xl font-extrabold tracking-[-0.01em]">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
   );
@@ -46,10 +46,10 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
   const query = filtersToQuery(filters);
 
   return (
-    <article className="grid max-w-4xl gap-6 rounded-card border border-line bg-surface p-5 sm:p-8 print:border-0 print:p-0">
+    <article className="grid max-w-4xl grid-cols-[minmax(0,1fr)] gap-7 rounded-card border-[1.5px] border-line bg-surface p-5 sm:p-9 print:border-0 print:p-0">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="font-display text-2xl font-semibold tracking-tight">Summary report</h2>
+          <h2 className="font-display text-[1.75rem] font-black tracking-[-0.02em]">Summary report</h2>
           <p className="mt-1 text-sm text-ink-2">
             {upload.name} ({upload.fileName}). Prepared {formatDateTime(new Date())}. Labeled with{" "}
             {providerLabel(upload.provider, upload.model)}. Filters: {describeFilters(filters)}.
@@ -105,11 +105,11 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
             <table className="w-full min-w-[480px] text-left text-sm">
               <thead className="text-ink-2">
                 <tr>
-                  <th scope="col" className="py-2 pr-4 font-semibold">Topic</th>
-                  <th scope="col" className="py-2 pr-4 font-semibold">Mentions</th>
-                  <th scope="col" className="py-2 pr-4 font-semibold">Positive</th>
-                  <th scope="col" className="py-2 pr-4 font-semibold">Neutral</th>
-                  <th scope="col" className="py-2 font-semibold">Negative</th>
+                  <th scope="col" className="py-2 pr-4 font-bold">Topic</th>
+                  <th scope="col" className="py-2 pr-4 font-bold">Mentions</th>
+                  <th scope="col" className="py-2 pr-4 font-bold">Positive</th>
+                  <th scope="col" className="py-2 pr-4 font-bold">Neutral</th>
+                  <th scope="col" className="py-2 font-bold">Negative</th>
                 </tr>
               </thead>
               <tbody className="tabular">
@@ -134,7 +134,7 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
         <div className="grid gap-4 sm:grid-cols-3">
           {SENTIMENTS.map((s) => (
             <div key={s}>
-              <h3 className="text-sm font-semibold">{NAMES[s]}</h3>
+              <h3 className="text-sm font-bold">{NAMES[s]}</h3>
               <p className="mt-1 text-sm text-ink-2">
                 {dashboard.keywords[s].length
                   ? dashboard.keywords[s].map((k) => `${k.term} (${k.count})`).join(", ")
@@ -151,11 +151,11 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
             <table className="w-full min-w-[480px] text-left text-sm">
               <thead className="text-ink-2">
                 <tr>
-                  <th scope="col" className="py-2 pr-4 font-semibold">Period</th>
-                  <th scope="col" className="py-2 pr-4 font-semibold">Positive</th>
-                  <th scope="col" className="py-2 pr-4 font-semibold">Neutral</th>
-                  <th scope="col" className="py-2 pr-4 font-semibold">Negative</th>
-                  <th scope="col" className="py-2 font-semibold">Reviews</th>
+                  <th scope="col" className="py-2 pr-4 font-bold">Period</th>
+                  <th scope="col" className="py-2 pr-4 font-bold">Positive</th>
+                  <th scope="col" className="py-2 pr-4 font-bold">Neutral</th>
+                  <th scope="col" className="py-2 pr-4 font-bold">Negative</th>
+                  <th scope="col" className="py-2 font-bold">Reviews</th>
                 </tr>
               </thead>
               <tbody className="tabular">

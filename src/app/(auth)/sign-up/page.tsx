@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { KeyRound } from "lucide-react";
 import { AuthForm } from "@/components/auth/auth-form";
 import { AuthLink, AuthShell } from "@/components/auth/auth-shell";
 import { signUp } from "../actions";
@@ -16,9 +17,12 @@ export default function SignUpPage() {
         </p>
       }
     >
-      <p className="rounded-control bg-brand-soft p-3 text-sm text-ink">
-        Create a new password just for ReviewLens. Don&apos;t use your Gmail or school (SIAS) password. ReviewLens
-        never asks for those.
+      <p className="flex gap-2.5 rounded-xl border-[1.5px] border-brand-soft bg-brand-tint p-3.5 text-sm text-ink">
+        <KeyRound aria-hidden className="mt-0.5 size-4 shrink-0 text-brand-ink" />
+        <span>
+          Create a new password just for ReviewLens. Don&apos;t use your Gmail or school (SIAS) password. ReviewLens
+          never asks for those.
+        </span>
       </p>
       <AuthForm
         action={signUp}

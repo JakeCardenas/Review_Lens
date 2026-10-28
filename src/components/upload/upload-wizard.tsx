@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Papa from "papaparse";
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, FileSpreadsheet, Lock, UploadCloud } from "lucide-react";
+import { Check, CheckCircle2, FileSpreadsheet, Lock, UploadCloud } from "lucide-react";
 import { SENTIMENT_META } from "@/components/sentiment";
 import { Button, Notice } from "@/components/ui";
 import { api, ApiRequestError, withRetry } from "@/lib/client-api";
@@ -308,16 +308,31 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
 
   return (
     <div className="grid gap-6">
-      <ol className="grid grid-cols-4 gap-1.5" aria-label="Upload steps">
-        {STEPS.map((s, i) => (
-          <li key={s.id} aria-current={i === stepIndex ? "step" : undefined} className="min-w-0">
-            <div className={`h-1.5 rounded-full ${i <= stepIndex ? "bg-brand" : "bg-line"}`} />
-            <p className={`mt-2 truncate text-xs sm:text-sm ${i === stepIndex ? "font-semibold text-ink" : "text-ink-2"}`}>
-              <span className="sr-only">Step {i + 1} of 4: </span>
-              {s.label}
-            </p>
-          </li>
-        ))}
+      <ol className="grid grid-cols-4 gap-2" aria-label="Upload steps">
+        {STEPS.map((s, i) => {
+          const done = i < stepIndex;
+          const current = i === stepIndex;
+          return (
+            <li key={s.id} aria-current={current ? "step" : undefined} className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`grid size-8 shrink-0 place-items-center rounded-full font-display text-sm font-black ${
+                    done ? "bg-brand text-on-brand" : current ? "bg-brand-soft text-brand-ink ring-2 ring-brand-ink" : "bg-surface-2 text-ink-3"
+                  }`}
+                >
+                  {done ? <Check aria-hidden className="size-4" strokeWidth={3} /> : <span aria-hidden>{i + 1}</span>}
+                </span>
+                {i < STEPS.length - 1 && <span aria-hidden className={`h-[3px] flex-1 rounded-full ${done ? "bg-brand" : "bg-line"}`} />}
+              </div>
+              <p className={`mt-2 truncate text-xs sm:text-sm ${current ? "font-bold text-ink" : "text-ink-2"}`}>
+                <span className="sr-only">
+                  Step {i + 1} of 4{done ? ", done" : ""}:{" "}
+                </span>
+                {s.label}
+              </p>
+            </li>
+          );
+        })}
       </ol>
 
       {provider.problem && (
@@ -340,15 +355,20 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
               setDragging(false);
               void chooseFile(e.dataTransfer.files[0]);
             }}
-            className={`press flex cursor-pointer flex-col items-center rounded-card border-2 border-dashed px-6 py-12 text-center focus-within:outline-2 focus-within:outline-brand-ink ${
-              dragging ? "border-brand bg-brand-soft" : "border-line-strong bg-surface"
+            className={`group flex cursor-pointer flex-col items-center rounded-card border-2 border-dashed px-6 py-14 text-center transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-ink ${
+              dragging ? "border-brand bg-brand-soft" : "border-line-strong bg-surface hover:border-brand hover:bg-brand-tint"
             }`}
           >
-            <span className="grid size-14 place-items-center rounded-2xl bg-brand-soft text-brand-ink">
-              <UploadCloud aria-hidden className="size-7" />
+            <span className="grid size-16 place-items-center rounded-2xl bg-brand-soft text-brand-ink">
+              <UploadCloud aria-hidden className="size-8" />
             </span>
-            <span className="mt-4 font-display text-lg font-semibold">{reading ? "Reading your file…" : "Choose a CSV file"}</span>
-            <span className="mt-1 text-sm text-ink-2">or drag it here. Up to 5 MB and 5,000 reviews.</span>
+            <span className="mt-5 font-display text-xl font-extrabold tracking-[-0.01em]">
+              {reading ? "Reading your file…" : dragging ? "Drop the file to use it" : "Choose a CSV file"}
+            </span>
+            <span className="mt-1 text-[15px] text-ink-2">or drag it here. Up to 5 MB and 5,000 reviews.</span>
+            <span aria-hidden className="edge mt-6 inline-flex min-h-11 items-center rounded-control border-2 border-transparent bg-brand px-5 font-display text-[15px] font-extrabold text-on-brand [--edge:var(--brand-edge)] group-hover:bg-brand-hover">
+              Browse files
+            </span>
             <input
               id="csv-file"
               type="file"
@@ -362,14 +382,14 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
             />
           </label>
           {fileError && <Notice tone="error" title="This file can't be used">{fileError}</Notice>}
-          <div className="rounded-card border border-line bg-surface p-5 text-sm text-ink-2">
+          <div className="rounded-card border-[1.5px] border-line bg-surface p-5 text-sm text-ink-2">
             <p className="font-semibold text-ink">What the file needs</p>
             <ul className="mt-2 grid gap-1.5">
               <li>A header row naming the columns, and one review per row.</li>
               <li>A column with the review text. Date, rating and product columns are optional.</li>
               <li>Columns with names, emails or customer IDs are left out automatically.</li>
             </ul>
-            <a href="/sample-reviews.csv" download className="mt-3 inline-flex font-semibold text-brand-ink underline-offset-2 hover:underline">
+            <a href="/sample-reviews.csv" download className="mt-2 inline-flex py-1 font-bold text-brand-ink underline decoration-brand-ink/30 decoration-2 underline-offset-[3px] hover:decoration-brand-ink">
               Download a sample CSV
             </a>
           </div>
@@ -378,7 +398,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
 
       {step === "map" && parsed && (
         <section className="grid gap-4">
-          <div className="flex items-center gap-3 rounded-card border border-line bg-surface p-4">
+          <div className="flex items-center gap-3 rounded-card border-[1.5px] border-line bg-surface p-4">
             <FileSpreadsheet aria-hidden className="size-6 shrink-0 text-brand-ink" />
             <div className="min-w-0">
               <p className="truncate font-semibold">{parsed.fileName}</p>
@@ -393,9 +413,9 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
             </Notice>
           ))}
 
-          <div className="grid gap-5 rounded-card border border-line bg-surface p-5 sm:p-6">
+          <div className="grid gap-5 rounded-card border-[1.5px] border-line bg-surface p-5 sm:p-6">
             <div>
-              <h2 className="font-display text-lg font-semibold tracking-tight">Match your columns</h2>
+              <h2 className="font-display text-lg font-extrabold tracking-[-0.01em]">Match your columns</h2>
               <p className="mt-1 text-sm text-ink-2">Suggestions are filled in. Only the columns you match are sent to the server.</p>
             </div>
             {FIELDS.map((field) => {
@@ -403,7 +423,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
               const current = mapping[field.id];
               return (
                 <div key={field.id} className="grid gap-1.5 sm:grid-cols-[180px_1fr] sm:items-start sm:gap-4">
-                  <label htmlFor={id} className="pt-2.5 font-semibold">
+                  <label htmlFor={id} className="pt-3 font-bold">
                     {field.label}
                     {!field.required && <span className="font-normal text-ink-2"> (optional)</span>}
                   </label>
@@ -412,7 +432,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                       id={id}
                       value={current ?? ""}
                       onChange={(e) => updateField(field.id, e.target.value)}
-                      className="min-h-11 w-full rounded-control border border-line-strong bg-surface px-3 text-ink"
+                      className="min-h-12 w-full rounded-control border-2 border-field bg-surface px-3.5 text-ink hover:border-ink-3 focus-visible:border-brand-ink"
                       aria-describedby={`${id}-help`}
                     >
                       <option value="">{field.required ? "Choose a column" : "Not in this file"}</option>
@@ -462,7 +482,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                     )}
 
                     {field.id === "text" && textProblem && (
-                      <p className="mt-2 text-sm font-semibold text-neg-ink" role="alert">
+                      <p className="mt-2 text-sm font-bold text-danger" role="alert">
                         {textProblem}
                       </p>
                     )}
@@ -488,7 +508,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                         <select
                           value={ratingScale}
                           onChange={(e) => setRatingScale(Number(e.target.value) as RatingScale)}
-                          className="min-h-10 rounded-control border border-line-strong bg-surface px-2 text-ink"
+                          className="min-h-11 rounded-control border-2 border-field bg-surface px-2.5 text-ink hover:border-ink-3 focus-visible:border-brand-ink"
                         >
                           <option value={5}>5</option>
                           <option value={10}>10</option>
@@ -502,7 +522,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
             })}
 
             <div className="grid gap-1.5 sm:grid-cols-[180px_1fr] sm:items-center sm:gap-4">
-              <label htmlFor="upload-name" className="font-semibold">
+              <label htmlFor="upload-name" className="font-bold">
                 Upload name
               </label>
               <input
@@ -510,12 +530,12 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                 value={name}
                 maxLength={120}
                 onChange={(e) => setName(e.target.value)}
-                className="min-h-11 w-full rounded-control border border-line-strong bg-surface px-3 text-ink"
+                className="min-h-12 w-full rounded-control border-2 border-field bg-surface px-3.5 text-ink hover:border-ink-3 focus-visible:border-brand-ink"
               />
             </div>
           </div>
 
-          <div className="grid gap-3 rounded-card border border-line bg-surface-2 p-5 text-sm">
+          <div className="grid gap-3 rounded-card border-[1.5px] border-line bg-surface-2 p-5 text-sm">
             <p className="flex items-center gap-2 font-semibold">
               <Lock aria-hidden className="size-4 text-brand-ink" />
               Stays on this device
@@ -545,17 +565,17 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
       {(step === "preview" || step === "import") && parsed && preview && (
         <section className="grid gap-4">
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-card border border-line bg-surface p-4">
+            <div className="rounded-card border-[1.5px] border-line bg-surface p-4">
               <p className="text-sm text-ink-2">Ready to analyze</p>
-              <p className="font-display text-2xl font-semibold tabular">{formatNumber(preview.ready)}</p>
+              <p className="mt-1 font-display text-[1.75rem] font-black leading-none tabular">{formatNumber(preview.ready)}</p>
             </div>
-            <div className="rounded-card border border-line bg-surface p-4">
+            <div className="rounded-card border-[1.5px] border-line bg-surface p-4">
               <p className="text-sm text-ink-2">Skipped, no review text</p>
-              <p className="font-display text-2xl font-semibold tabular">{formatNumber(preview.skipped)}</p>
+              <p className="mt-1 font-display text-[1.75rem] font-black leading-none tabular">{formatNumber(preview.skipped)}</p>
             </div>
-            <div className="rounded-card border border-line bg-surface p-4">
+            <div className="rounded-card border-[1.5px] border-line bg-surface p-4">
               <p className="text-sm text-ink-2">Kept with a warning</p>
-              <p className="font-display text-2xl font-semibold tabular">{formatNumber(preview.warnings.length)}</p>
+              <p className="mt-1 font-display text-[1.75rem] font-black leading-none tabular">{formatNumber(preview.warnings.length)}</p>
             </div>
           </div>
 
@@ -567,7 +587,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                 ))}
               </ul>
               {preview.skipped + preview.warnings.length > preview.sampleIssues.length && (
-                <p className="mt-1">{"You'll see the full list on the Issues tab after import."}</p>
+                <p className="mt-1">{"You'll see the full list on the Data issues tab after import."}</p>
               )}
             </Notice>
           )}
@@ -590,9 +610,9 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
             </Notice>
           )}
 
-          <div className="min-w-0 rounded-card border border-line bg-surface">
+          <div className="min-w-0 rounded-card border-[1.5px] border-line bg-surface">
             <div className="flex flex-wrap items-baseline justify-between gap-2 px-5 pt-5">
-              <h2 className="font-display text-lg font-semibold tracking-tight">Preview of the first 10 rows</h2>
+              <h2 className="font-display text-lg font-extrabold tracking-[-0.01em]">Preview of the first 10 rows</h2>
               <p className="text-sm text-ink-2">This is exactly what will be saved.</p>
             </div>
             <div className="mt-3 overflow-x-auto">
@@ -615,7 +635,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                         {row.text ? (
                           <span className="line-clamp-3">{row.text}</span>
                         ) : (
-                          <span className="text-neg-ink">Skipped: no review text</span>
+                          <span className="font-semibold text-danger">Skipped: no review text</span>
                         )}
                       </td>
                       {mapping.date && <td className="px-4 py-2.5 whitespace-nowrap">{row.reviewDate ? formatDate(row.reviewDate) : "—"}</td>}
@@ -680,11 +700,11 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
           )}
 
           {step === "import" && (
-            <div className="grid gap-3 rounded-card border border-line bg-surface p-5" aria-live="polite">
+            <div className="grid gap-3 rounded-card border-[1.5px] border-line bg-surface p-5" aria-live="polite">
               {importState.phase === "running" && (
                 <>
                   <p className="font-semibold">{importState.label}…</p>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-line" aria-hidden>
+                  <div className="h-3 overflow-hidden rounded-full bg-surface-3" aria-hidden>
                     <div
                       className="h-full rounded-full bg-brand transition-[width] duration-300"
                       style={{ width: `${Math.round((importState.sent / Math.max(1, importState.total)) * 100)}%` }}

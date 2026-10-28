@@ -27,7 +27,8 @@ function ratingSteps(scale: RatingScale | null): number[] {
   return Array.from({ length: scale ?? 5 }, (_, i) => i + 1);
 }
 
-const selectClass = "min-h-10 w-full rounded-control border border-line-strong bg-surface px-2.5 text-[15px] text-ink";
+const selectClass =
+  "min-h-11 w-full rounded-control border-2 border-field bg-surface px-2.5 text-[15px] font-normal text-ink hover:border-ink-3 focus-visible:border-brand-ink";
 
 /** Filters live in the URL so reload, Back and shared links keep them. */
 export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mode: "dashboard" | "reviews" }) {
@@ -65,7 +66,7 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
   }
 
   const steps = ratingSteps(options.ratingScale);
-  const field = "grid min-w-0 gap-1 text-sm font-semibold text-ink-2";
+  const field = "grid min-w-0 gap-1.5 text-[13px] font-bold text-ink-2";
 
   return (
     <div className="no-print grid gap-3" aria-busy={pending}>
@@ -75,7 +76,7 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
             Search reviews
           </label>
           <div className="relative min-w-0 flex-1">
-            <Search aria-hidden className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-3" />
+            <Search aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-ink-3" />
             <input
               id="review-search"
               type="search"
@@ -83,7 +84,7 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search words in reviews, like refund or late"
-              className="min-h-11 w-full rounded-control border border-line-strong bg-surface pl-9 pr-3 text-ink"
+              className="min-h-12 w-full rounded-control border-2 border-field bg-surface pl-10 pr-3 text-ink hover:border-ink-3 focus-visible:border-brand-ink"
             />
           </div>
           <Button type="submit">Search</Button>
@@ -104,7 +105,7 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
 
       <div
         id="filter-panel"
-        className={`${open ? "grid" : "hidden"} glass gap-3 rounded-card border p-4 shadow-float sm:grid sm:grid-cols-2 lg:grid-cols-4 lg:items-end`}
+        className={`${open ? "grid" : "hidden"} gap-3 rounded-card border-[1.5px] border-line bg-surface p-4 sm:grid sm:p-5 sm:grid-cols-2 lg:grid-cols-4 lg:items-end`}
       >
         {options.hasDate && (
           <>

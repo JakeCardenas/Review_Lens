@@ -18,7 +18,7 @@ vi.mock("@supabase/ssr", () => ({
 
 process.env.NEXT_PUBLIC_SUPABASE_URL = "https://synthetic.supabase.co";
 process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_synthetic";
-const { proxy } = await import("@/proxy");
+const { proxy, config } = await import("@/proxy");
 
 const signedOut = () => getClaims.mockResolvedValue({ data: null, error: null });
 const signedIn = () =>
@@ -49,6 +49,16 @@ describe("proxy", () => {
   it("lets anyone open the account pages", async () => {
     signedOut();
     expect((await visit("/sign-up")).headers.get("x-middleware-next")).toBe("1");
+  });
+
+  it("leaves the app icons and web app manifest alone, since browsers fetch them without a session", () => {
+    const runsOn = (path: string) => new RegExp(`^${config.matcher[0]}$`).test(path);
+    for (const path of ["/manifest.webmanifest", "/favicon.ico", "/icon.png", "/apple-icon.png", "/icons/icon-512.png", "/brand/spup-seal.png"]) {
+      expect(runsOn(path), path).toBe(false);
+    }
+    for (const path of ["/", "/uploads/abc", "/api/uploads", "/sign-in"]) {
+      expect(runsOn(path), path).toBe(true);
+    }
   });
 
   it("lets signed-in people through, and skips the sign-in page for them", async () => {

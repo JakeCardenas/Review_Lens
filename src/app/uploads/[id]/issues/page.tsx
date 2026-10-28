@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
-import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { AlertTriangle, XCircle } from "lucide-react";
 import { Pagination } from "@/components/pagination";
 import { RetryFailedButton } from "@/components/retry-failed-button";
 import { EmptyState, Notice } from "@/components/ui";
@@ -12,7 +12,7 @@ import { listIssues } from "@/lib/server/reviews";
 import { getProgress } from "@/lib/server/uploads";
 import type { IssueSeverity } from "@/lib/types";
 
-export const metadata: Metadata = { title: "Issues" };
+export const metadata: Metadata = { title: "Data issues" };
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
 
@@ -44,8 +44,9 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
 
   return (
     <div className="grid gap-5">
-      <div className="max-w-3xl text-sm text-ink-2">
-        <p>
+      <div className="max-w-3xl">
+        <h2 className="font-display text-xl font-extrabold tracking-[-0.01em]">Data issues</h2>
+        <p className="mt-1.5 text-sm text-ink-2">
           Errors are rows that weren&apos;t analyzed, for example rows with no review text. Warnings are rows that were kept but changed,
           for example a date that couldn&apos;t be read, or reviews in other languages that weren&apos;t labeled.
         </p>
@@ -63,8 +64,8 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
             key={label}
             href={tabHref(value)}
             aria-current={severity === value ? "page" : undefined}
-            className={`press inline-flex min-h-10 items-center rounded-full border px-4 text-sm font-semibold ${
-              severity === value ? "border-transparent bg-ink text-surface" : "border-line-strong bg-surface text-ink-2 hover:text-ink"
+            className={`press inline-flex min-h-10 items-center rounded-xl border-2 px-4 text-sm font-bold ${
+              severity === value ? "border-transparent bg-brand-soft text-brand-ink" : "border-line-strong bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink"
             }`}
           >
             {label} ({formatNumber(count)})
@@ -73,18 +74,18 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
       </nav>
 
       {issues.rows.length === 0 ? (
-        <EmptyState icon={<CheckCircle2 aria-hidden className="size-6" />} title={severity ? `No ${severity}s` : "No problems found"}>
+        <EmptyState mascot title={severity ? `No ${severity}s` : "No problems found"}>
           Every row in the file was read without changes.
         </EmptyState>
       ) : (
-        <div className="min-w-0 overflow-hidden rounded-card border border-line bg-surface">
+        <div className="min-w-0 overflow-hidden rounded-card border-[1.5px] border-line bg-surface">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-left text-sm">
               <thead className="border-b border-line bg-surface-2 text-ink-2">
                 <tr>
-                  <th scope="col" className="w-20 px-4 py-2.5 font-semibold">Row</th>
-                  <th scope="col" className="w-28 px-4 py-2.5 font-semibold">Type</th>
-                  <th scope="col" className="px-4 py-2.5 font-semibold">What happened</th>
+                  <th scope="col" className="w-20 px-4 py-2.5 font-bold">Row</th>
+                  <th scope="col" className="w-28 px-4 py-2.5 font-bold">Type</th>
+                  <th scope="col" className="px-4 py-2.5 font-bold">What happened</th>
                 </tr>
               </thead>
               <tbody>
@@ -93,11 +94,11 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
                     <td className="px-4 py-3 tabular">{issue.rowNumber ?? "—"}</td>
                     <td className="px-4 py-3">
                       {issue.severity === "error" ? (
-                        <span className="inline-flex items-center gap-1.5 font-semibold text-neg-ink">
+                        <span className="inline-flex items-center gap-1.5 font-bold text-danger">
                           <XCircle aria-hidden className="size-4" /> Error
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 font-semibold text-warn-ink">
+                        <span className="inline-flex items-center gap-1.5 font-bold text-warn-ink">
                           <AlertTriangle aria-hidden className="size-4" /> Warning
                         </span>
                       )}

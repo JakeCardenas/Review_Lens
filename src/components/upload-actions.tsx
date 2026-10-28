@@ -20,10 +20,13 @@ export function ExportLinks({ uploadId }: { uploadId: string }) {
   const query = filters.toString();
   const base = `/api/uploads/${uploadId}/export`;
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2" role="group" aria-label={query ? "Download CSV files of the filtered reviews" : "Download CSV files"}>
       <a href={`${base}?type=reviews${query ? `&${query}` : ""}`} className={buttonClasses("secondary", "sm")}>
         <Download aria-hidden className="size-4" />
-        Labeled reviews CSV
+        <span>
+          <span className="sm:hidden">Reviews</span>
+          <span className="hidden sm:inline">Labeled reviews</span> CSV
+        </span>
       </a>
       <a href={`${base}?type=summary${query ? `&${query}` : ""}`} className={buttonClasses("secondary", "sm")}>
         <Download aria-hidden className="size-4" />
@@ -54,15 +57,19 @@ export function DeleteUploadButton({ uploadId, name }: { uploadId: string; name:
 
   if (!confirming) {
     return (
-      <Button variant="ghost" size="sm" onClick={() => setConfirming(true)}>
+      <Button variant="ghost" size="sm" onClick={() => setConfirming(true)} className="text-ink-2! hover:bg-danger-soft! hover:text-danger!">
         <Trash2 aria-hidden className="size-4" />
         Delete
       </Button>
     );
   }
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-control bg-neg-soft px-3 py-1.5" role="group" aria-label="Confirm delete">
-      <span className="text-sm font-semibold">Delete this upload and all its reviews?</span>
+    <div
+      className="pop-in flex flex-wrap items-center gap-2 rounded-2xl border-[1.5px] border-[#f6d1cd] bg-danger-soft px-3 py-2"
+      role="group"
+      aria-label="Confirm delete"
+    >
+      <span className="text-sm font-bold">Delete this upload and all its reviews?</span>
       <Button variant="danger" size="sm" onClick={() => void remove()} disabled={busy}>
         {busy ? "Deleting…" : "Delete permanently"}
       </Button>

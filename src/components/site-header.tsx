@@ -1,8 +1,10 @@
 import Link from "next/link";
 import { LogOut, Plus } from "lucide-react";
 import { signOut } from "@/app/(auth)/actions";
+import { AccountMenu, menuItemClasses } from "@/components/account-menu";
+import { EagleMark } from "@/components/brand";
 import { getCurrentUser, type SessionUser } from "@/lib/server/auth";
-import { Button, ButtonLink } from "./ui";
+import { ButtonLink } from "./ui";
 
 /** The signed-in account, or null, including when sign-in isn't set up yet (the pages explain that). */
 async function signedInUser(): Promise<SessionUser | null> {
@@ -13,53 +15,34 @@ async function signedInUser(): Promise<SessionUser | null> {
   }
 }
 
-export function LogoMark({ className = "size-8" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden className={className}>
-      <rect width="64" height="64" rx="16" fill="var(--brand)" />
-      <circle cx="28" cy="28" r="13" fill="none" stroke="var(--on-brand)" strokeWidth="5" />
-      <path d="M38 38 L49 49" stroke="var(--on-brand)" strokeWidth="6" strokeLinecap="round" />
-      <path
-        d="M22.5 30c1.6 2.4 3.4 3.5 5.5 3.5s3.9-1.1 5.5-3.5"
-        fill="none"
-        stroke="var(--on-brand)"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-/** Sticky translucent top bar. The page scrolls underneath it. */
+/** Sticky white top bar: the eagle and wordmark, then New upload and the account menu when signed in. */
 export async function SiteHeader() {
   const user = await signedInUser();
   return (
-    <header className="glass no-print sticky top-0 z-30 border-b" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
-      <div className="gutter mx-auto flex h-14 max-w-6xl items-center justify-between gap-3">
-        <Link href="/" className="press flex items-center gap-2 rounded-control font-display text-[19px] font-semibold tracking-tight">
-          <LogoMark />
+    <header className="no-print sticky top-0 z-30 border-b border-line bg-surface" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
+      <div className="gutter mx-auto flex h-16 max-w-6xl items-center justify-between gap-3">
+        <Link
+          href="/"
+          className="press -ml-1 flex items-center gap-2.5 rounded-control px-1 py-1 font-display text-xl font-black tracking-[-0.02em]"
+        >
+          <EagleMark size={36} />
           ReviewLens
         </Link>
-        {user ? (
-          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
-            <span className="hidden max-w-64 truncate text-sm text-ink-2 md:inline" title={user.email}>
-              {user.email}
-            </span>
+        {user && (
+          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2.5">
             <ButtonLink href="/upload" size="sm">
-              <Plus aria-hidden className="size-4" />
-              New upload
+              <Plus aria-hidden className="size-4" strokeWidth={2.75} />
+              <span className="max-[420px]:sr-only">New upload</span>
             </ButtonLink>
-            <form action={signOut}>
-              <Button type="submit" variant="ghost" size="sm" aria-label="Sign out" title="Sign out">
-                <LogOut aria-hidden className="size-4" />
-                <span className="hidden sm:inline">Sign out</span>
-              </Button>
-            </form>
+            <AccountMenu email={user.email}>
+              <form action={signOut}>
+                <button type="submit" className={menuItemClasses}>
+                  <LogOut aria-hidden className="size-4 text-ink-2" />
+                  Sign out
+                </button>
+              </form>
+            </AccountMenu>
           </div>
-        ) : (
-          <ButtonLink href="/sign-in" variant="secondary" size="sm">
-            Sign in
-          </ButtonLink>
         )}
       </div>
     </header>

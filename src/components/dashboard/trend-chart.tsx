@@ -22,8 +22,8 @@ function TrendTooltip({ active, payload }: { active?: boolean; payload?: Readonl
   if (!active || !payload?.length) return null;
   const row = payload[0].payload as Row;
   return (
-    <div className="rounded-control border border-line bg-surface px-3 py-2 text-sm shadow-float">
-      <p className="font-semibold">{row.label}</p>
+    <div className="rounded-xl border-[1.5px] border-line bg-surface px-3 py-2 text-sm shadow-float">
+      <p className="font-bold">{row.label}</p>
       <ul className="mt-1 grid gap-0.5">
         {LINES.map((line) => (
           <li key={line.key} className="flex items-center gap-1.5 tabular">
@@ -105,16 +105,16 @@ export function TrendChart({ points, grain }: { points: TrendPoint[]; grain: "da
         ))}
       </ul>
       <details className="mt-3 text-sm">
-        <summary className="cursor-pointer font-semibold text-brand-ink">View as table</summary>
+        <summary className="w-fit cursor-pointer rounded-lg py-1 font-bold text-brand-ink">View as table</summary>
         <div className="mt-2 overflow-x-auto">
           <table className="w-full min-w-[420px] text-left">
             <thead className="text-ink-2">
               <tr>
-                <th scope="col" className="py-1.5 pr-3 font-semibold">Period</th>
-                <th scope="col" className="py-1.5 pr-3 font-semibold">Positive</th>
-                <th scope="col" className="py-1.5 pr-3 font-semibold">Neutral</th>
-                <th scope="col" className="py-1.5 pr-3 font-semibold">Negative</th>
-                <th scope="col" className="py-1.5 font-semibold">Reviews</th>
+                <th scope="col" className="py-2 pr-3 font-bold">Period</th>
+                <th scope="col" className="py-2 pr-3 font-bold">Positive</th>
+                <th scope="col" className="py-2 pr-3 font-bold">Neutral</th>
+                <th scope="col" className="py-2 pr-3 font-bold">Negative</th>
+                <th scope="col" className="py-2 font-bold">Reviews</th>
               </tr>
             </thead>
             <tbody className="tabular">

@@ -7,8 +7,8 @@ export function ModeBadge({ provider }: { provider: string }) {
   const Icon = ai ? Sparkles : Languages;
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-        ai ? "bg-brand-soft text-brand-ink" : "border border-line-strong text-ink-2"
+      className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-bold ${
+        ai ? "bg-brand-soft text-brand-ink" : "bg-surface-2 text-ink-2 ring-1 ring-inset ring-line-strong"
       }`}
     >
       <Icon aria-hidden className="size-3.5" />

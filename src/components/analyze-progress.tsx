@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { CheckCircle2 } from "lucide-react";
+import { EagleMark } from "@/components/brand";
 import { Button, ButtonLink, Notice } from "@/components/ui";
 import { api, ApiRequestError, sleep } from "@/lib/client-api";
 import { formatNumber, plural } from "@/lib/format";
@@ -115,15 +117,21 @@ export function AnalyzeProgress({
 
   return (
     <div className="grid gap-4">
-      <section className="rounded-card border border-line bg-surface p-5 sm:p-6" aria-labelledby="progress-title">
-        <h2 id="progress-title" className="font-display text-lg font-semibold tracking-tight">
-          {progress.done ? "Analysis complete" : running ? "Analyzing reviews" : "Analysis paused"}
-        </h2>
-        <p className="mt-1 text-sm text-ink-2">Method: {methodLabel}</p>
+      <section className="rounded-card border-[1.5px] border-line bg-surface p-5 sm:p-7" aria-labelledby="progress-title">
+        <div className="flex items-center gap-4">
+          <EagleMark size={52} />
+          <div className="min-w-0">
+            <h2 id="progress-title" className="flex items-center gap-2 font-display text-xl font-extrabold tracking-[-0.01em]">
+              {progress.done && <CheckCircle2 aria-hidden className="size-5 text-brand-ink" />}
+              {progress.done ? "Analysis complete" : running ? "Analyzing reviews" : "Analysis paused"}
+            </h2>
+            <p className="mt-0.5 text-sm text-ink-2">Method: {methodLabel}</p>
+          </div>
+        </div>
 
-        <div className="mt-5 flex items-end gap-3">
-          <span className="font-display text-5xl font-semibold tracking-tight tabular">{percent}%</span>
-          <span className="pb-1.5 text-sm text-ink-2 tabular" aria-live="polite">
+        <div className="mt-6 flex flex-wrap items-end gap-x-3 gap-y-1">
+          <span className="font-display text-5xl font-black leading-none tracking-[-0.02em] tabular">{percent}%</span>
+          <span className="pb-1 text-sm text-ink-2 tabular" aria-live="polite">
             {formatNumber(processed)} of {formatNumber(progress.imported)} reviews processed
           </span>
         </div>
@@ -133,21 +141,24 @@ export function AnalyzeProgress({
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={percent}
-          className="mt-3 h-3 overflow-hidden rounded-full bg-line"
+          className="mt-4 h-3.5 overflow-hidden rounded-full bg-surface-3"
         >
-          <div className="h-full rounded-full bg-brand transition-[width] duration-500" style={{ width: `${percent}%` }} />
+          <div
+            className="h-full origin-left rounded-full bg-brand transition-transform duration-500 ease-out"
+            style={{ transform: `scaleX(${percent / 100})` }}
+          />
         </div>
 
-        <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <dl className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             ["Labeled", progress.labeled],
             ["Not labeled", progress.notLabeled],
             ["Failed", progress.failed],
             ["Waiting", waiting],
           ].map(([label, value]) => (
-            <div key={label} className="rounded-control bg-surface-2 px-3 py-2.5">
-              <dt className="text-xs text-ink-2">{label}</dt>
-              <dd className="font-display text-xl font-semibold tabular">{formatNumber(Number(value))}</dd>
+            <div key={label} className="rounded-xl bg-surface-2 px-3.5 py-3">
+              <dt className="text-[13px] text-ink-2">{label}</dt>
+              <dd className="mt-0.5 font-display text-2xl font-black tabular">{formatNumber(Number(value))}</dd>
             </div>
           ))}
         </dl>
@@ -193,7 +204,7 @@ export function AnalyzeProgress({
           <ButtonLink href={`/uploads/${uploadId}`}>Open dashboard</ButtonLink>
           {hasIssues && (
             <ButtonLink href={`/uploads/${uploadId}/issues`} variant="secondary">
-              Review issues
+              See data issues
             </ButtonLink>
           )}
           {progress.failed > 0 && (

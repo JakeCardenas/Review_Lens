@@ -1,16 +1,22 @@
 "use client";
 
-import { Button, ButtonLink, Notice } from "@/components/ui";
+import { EagleMark } from "@/components/brand";
+import { Button, ButtonLink } from "@/components/ui";
 
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
-    <div className="mx-auto grid max-w-2xl gap-4">
-      <Notice tone="error" title="This page couldn't load">
-        ReviewLens couldn&apos;t reach its data. If you&apos;re running it yourself, check that DATABASE_URL is set and the database
-        is running, then try again.
-        {error.digest && <span className="mt-1 block text-xs">Reference: {error.digest}</span>}
-      </Notice>
-      <div className="flex flex-wrap gap-2">
+    <div
+      role="alert"
+      className="mx-auto flex max-w-xl flex-col items-center rounded-card border-[1.5px] border-line bg-surface px-6 py-12 text-center"
+    >
+      <EagleMark size={64} className="mb-4" />
+      <h1 className="font-display text-2xl font-black tracking-[-0.02em]">This page couldn&apos;t load</h1>
+      <p className="mt-2 text-[15px] text-ink-2">
+        ReviewLens couldn&apos;t reach its data. Try again in a moment. If you&apos;re running it yourself, check that DATABASE_URL is
+        set and the database is running.
+      </p>
+      {error.digest && <p className="mt-2 text-xs text-ink-3">Reference: {error.digest}</p>}
+      <div className="mt-6 flex flex-wrap justify-center gap-3">
         <Button onClick={reset}>Try again</Button>
         <ButtonLink href="/" variant="secondary">
           Go to your uploads
