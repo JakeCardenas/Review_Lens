@@ -7,7 +7,7 @@ import { UploadWizard } from "@/components/upload/upload-wizard";
 import { getProviderInfo } from "@/lib/analysis/providers";
 import { requireUser } from "@/lib/server/auth";
 
-export const metadata: Metadata = { title: "New upload" };
+export const metadata: Metadata = { title: "Upload reviews" };
 
 export default async function UploadPage() {
   await connection(); // read the analysis settings per request, not at build time
@@ -21,7 +21,7 @@ export default async function UploadPage() {
           All uploads
         </Link>
         <PageHeader
-          title="New upload"
+          title="Upload reviews"
           description="Add a CSV of customer reviews. ReviewLens labels each review and finds what customers talk about."
         />
       </div>

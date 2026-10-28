@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import Papa from "papaparse";
 import { useEffect, useMemo, useState } from "react";
-import { Check, CheckCircle2, FileSpreadsheet, Lock, UploadCloud } from "lucide-react";
+import { CheckCircle2, FileSpreadsheet, Lock, UploadCloud } from "lucide-react";
+import { JourneyPath } from "@/components/journey-path";
 import { SENTIMENT_META } from "@/components/sentiment";
 import { Button, Notice } from "@/components/ui";
 import { api, ApiRequestError, withRetry } from "@/lib/client-api";
@@ -12,6 +13,7 @@ import { cleanText, looksMisencoded, maskPersonalData } from "@/lib/csv/clean";
 import { detectDateFormat, detectRatingScale, labelColumnLooksValid, type DateFormatGuess } from "@/lib/csv/parse-values";
 import { prepareRow } from "@/lib/csv/prepare";
 import { formatDate, formatNumber, plural } from "@/lib/format";
+import { wizardJourneyStep } from "@/lib/journey";
 import { LIMITS } from "@/lib/limits";
 import type { ColumnField, ColumnMap, DateFormat, RatingScale, RawRow } from "@/lib/types";
 
@@ -25,13 +27,6 @@ type ParsedFile = {
 };
 
 type Step = "choose" | "map" | "preview" | "import";
-
-const STEPS: { id: Step; label: string }[] = [
-  { id: "choose", label: "Choose file" },
-  { id: "map", label: "Match columns" },
-  { id: "preview", label: "Check preview" },
-  { id: "import", label: "Import" },
-];
 
 const FIELDS: { id: ColumnField; label: string; help: string; required?: boolean }[] = [
   { id: "text", label: "Review text", help: "What the customer wrote. Required.", required: true },
@@ -304,36 +299,9 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
     }
   }
 
-  const stepIndex = STEPS.findIndex((s) => s.id === step);
-
   return (
     <div className="grid gap-6">
-      <ol className="grid grid-cols-4 gap-2" aria-label="Upload steps">
-        {STEPS.map((s, i) => {
-          const done = i < stepIndex;
-          const current = i === stepIndex;
-          return (
-            <li key={s.id} aria-current={current ? "step" : undefined} className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`grid size-9 shrink-0 place-items-center rounded-full font-display text-base font-black ${
-                    done ? "bg-brand text-on-brand" : current ? "bg-brand-soft text-brand-ink ring-[3px] ring-brand" : "bg-surface text-ink-2 ring-2 ring-line"
-                  }`}
-                >
-                  {done ? <Check aria-hidden className="size-4" strokeWidth={3} /> : <span aria-hidden>{i + 1}</span>}
-                </span>
-                {i < STEPS.length - 1 && <span aria-hidden className={`h-1.5 flex-1 rounded-full ${done ? "bg-brand" : "bg-surface-3"}`} />}
-              </div>
-              <p className={`nav-label mt-2.5 truncate text-[11px] sm:text-[13px] ${current ? "text-ink" : "text-ink-2"}`}>
-                <span className="sr-only">
-                  Step {i + 1} of 4{done ? ", done" : ""}:{" "}
-                </span>
-                {s.label}
-              </p>
-            </li>
-          );
-        })}
-      </ol>
+      <JourneyPath current={wizardJourneyStep(step)} />
 
       {provider.problem && (
         <Notice tone="error" title="Analysis isn't configured correctly">

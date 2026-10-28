@@ -6,6 +6,7 @@ import { ConfidenceExplainer } from "@/components/confidence-explainer";
 import { FiltersBar } from "@/components/filters-bar";
 import { Pagination } from "@/components/pagination";
 import { LabelCheckTag, MixedOpinionTag, ReviewCard, StatusBadge, TopicChips } from "@/components/review-card";
+import { ExportLinks } from "@/components/upload-actions";
 import { ReviewDialog } from "@/components/review-dialog";
 import { ConfidenceMeter, SENTIMENT_META } from "@/components/sentiment";
 import { ButtonLink, EmptyState } from "@/components/ui";
@@ -152,6 +153,10 @@ export default async function ReviewsPage({ params, searchParams }: PageProps<"/
 
   return (
     <div className="grid gap-5">
+      <div className="max-w-2xl">
+        <h2 className="text-heading-sm font-extrabold text-ink">Reviews</h2>
+        <p className="mt-2 text-body text-ink-2">Search, filter and read every review. Select one to see why it got its label.</p>
+      </div>
       <Suspense fallback={null}>
         <FiltersBar
           mode="reviews"
@@ -168,11 +173,16 @@ export default async function ReviewsPage({ params, searchParams }: PageProps<"/
         />
       </Suspense>
 
-      <p className="text-sm text-ink-2" role="status">
-        <span className="font-bold text-ink">{plural(result.total, "review")}</span>
-        {hasActiveFilters(filters) ? " match the filters" : " in this upload"}
-        {result.pageCount > 1 ? `, showing ${(result.page - 1) * result.pageSize + 1}–${Math.min(result.page * result.pageSize, result.total)}` : ""}
-      </p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-ink-2" role="status">
+          <span className="font-bold text-ink">{plural(result.total, "review")}</span>
+          {hasActiveFilters(filters) ? " match the filters" : " in this upload"}
+          {result.pageCount > 1 ? `, showing ${(result.page - 1) * result.pageSize + 1}–${Math.min(result.page * result.pageSize, result.total)}` : ""}
+        </p>
+        <Suspense fallback={null}>
+          <ExportLinks uploadId={id} />
+        </Suspense>
+      </div>
 
       {result.rows.length ? (
         <ul className="grid gap-3">

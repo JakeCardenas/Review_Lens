@@ -18,12 +18,12 @@ export default async function ResetPasswordPage() {
         fields={[
           {
             name: "password",
-            label: "New ReviewLens password",
+            label: "New password",
             type: "password",
             autoComplete: "new-password",
             help: "At least 8 characters.",
           },
-          { name: "confirm", label: "Type the password again", type: "password", autoComplete: "new-password" },
+          { name: "confirm", label: "Confirm password", type: "password", autoComplete: "new-password" },
         ]}
       />
     </AuthShell>

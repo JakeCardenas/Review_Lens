@@ -37,7 +37,7 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
         pendingLabel="Signing in…"
         fields={[
           { name: "email", label: "Email", type: "email", autoComplete: "email" },
-          { name: "password", label: "ReviewLens password", type: "password", autoComplete: "current-password" },
+          { name: "password", label: "Password", type: "password", autoComplete: "current-password" },
         ]}
       />
     </AuthShell>

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { connection } from "next/server";
+import { Suspense } from "react";
 import type { ReactNode } from "react";
 import { SentimentBars } from "@/components/dashboard/charts";
 import {
@@ -11,7 +13,8 @@ import {
   LabelCheckTable,
 } from "@/components/dashboard/label-check";
 import { PrintButton } from "@/components/print-button";
-import { buttonClasses } from "@/components/ui";
+import { linkClasses } from "@/components/ui";
+import { ExportLinks } from "@/components/upload-actions";
 import { CHECK_NOTES } from "@/lib/analysis/agreement";
 import { formatDateTime, formatNumber, formatPercent, periodLabel } from "@/lib/format";
 import { providerLabel } from "@/lib/provider-label";
@@ -19,7 +22,7 @@ import { getDashboard } from "@/lib/server/dashboard";
 import { requireOwnedUpload } from "@/lib/server/auth";
 import { getDb } from "@/lib/server/db";
 import { describeFilters } from "@/lib/server/export";
-import { dashboardFilters, filtersToQuery, parseFilters } from "@/lib/server/filters";
+import { dashboardFilters, parseFilters } from "@/lib/server/filters";
 import { SENTIMENTS } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Summary report" };
@@ -43,23 +46,38 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
   const filters = dashboardFilters(parseFilters(await searchParams));
   const dashboard = await getDashboard(db, upload, filters);
   const { totals, sentiment, check } = dashboard;
-  const query = filtersToQuery(filters);
 
   return (
+    <div className="grid gap-6">
+      <section aria-labelledby="exports-title" className="no-print rounded-card border-2 border-line p-6 sm:p-8">
+        <h2 id="exports-title" className="text-subheading font-extrabold text-ink">
+          Exports
+        </h2>
+        <p className="mt-1 max-w-prose text-[15px] text-ink-2">
+          Download every review with its label, or the summary below as a spreadsheet. Downloads follow any filters you set.
+        </p>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          <Suspense fallback={null}>
+            <ExportLinks uploadId={id} />
+          </Suspense>
+          <PrintButton />
+        </div>
+        <p className="mt-5 text-[15px] text-ink-2">
+          Rows that were skipped or changed during import are listed on the{" "}
+          <Link href={`/uploads/${id}/issues`} className={linkClasses}>
+            data issues
+          </Link>{" "}
+          page.
+        </p>
+      </section>
     <article className="grid max-w-4xl grid-cols-[minmax(0,1fr)] gap-7 rounded-card border-2 border-line bg-surface p-5 sm:p-9 print:border-0 print:p-0">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="font-display text-[1.75rem] font-black tracking-[-0.02em]">Summary report</h2>
+          <h2 className="text-heading-sm font-extrabold text-ink">Summary report</h2>
           <p className="mt-1 text-sm text-ink-2">
             {upload.name} ({upload.fileName}). Prepared {formatDateTime(new Date())}. Labeled with{" "}
             {providerLabel(upload.provider, upload.model)}. Filters: {describeFilters(filters)}.
           </p>
-        </div>
-        <div className="no-print flex flex-wrap gap-2">
-          <PrintButton />
-          <a href={`/api/uploads/${id}/export?type=summary${query ? `&${query}` : ""}`} className={buttonClasses("secondary", "sm")}>
-            Download summary CSV
-          </a>
         </div>
       </header>
 
@@ -186,5 +204,6 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
         <p className="mt-2 text-sm text-ink-2">Labels: {SENTIMENTS.map((s) => `${NAMES[s]} ${formatNumber(sentiment[s])}`).join(", ")}.</p>
       </Section>
     </article>
+    </div>
   );
 }

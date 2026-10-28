@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Check } from "lucide-react";
-import { EagleMark } from "@/components/brand";
+import { BrandMark } from "@/components/brand";
 import { linkClasses } from "@/components/ui";
 
 const POINTS = [
@@ -25,7 +25,7 @@ export function AuthShell({
   return (
     <div className="mx-auto grid w-full max-w-5xl items-center gap-10 lg:grid-cols-2 lg:gap-20 lg:pt-4">
       <aside className="hidden lg:block" aria-label="About ReviewLens">
-        <EagleMark size={200} label="ReviewLens logo: a Philippine eagle looking through a green magnifying glass" />
+        <BrandMark height={220} label="ReviewLens eagle mark" className="-ml-10" />
         <p className="mt-10 text-heading-sm font-extrabold text-ink">See what your customers are saying, without reading every review.</p>
         <ul className="mt-8 grid gap-4">
           {POINTS.map((point) => (
@@ -41,7 +41,7 @@ export function AuthShell({
 
       <div className="mx-auto grid w-full max-w-md gap-8 lg:max-w-none">
         <div className="grid justify-items-center gap-4 text-center lg:justify-items-start lg:text-left">
-          <EagleMark size={88} className="lg:hidden" />
+          <BrandMark height={110} className="lg:hidden" />
           <h1 className="font-display text-heading-sm font-black text-brand-display sm:text-heading">{title}</h1>
           {intro && <div className="text-body text-ink-2">{intro}</div>}
         </div>

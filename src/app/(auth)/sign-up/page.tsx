@@ -32,12 +32,12 @@ export default function SignUpPage() {
           { name: "email", label: "Email", type: "email", autoComplete: "email" },
           {
             name: "password",
-            label: "New ReviewLens password",
+            label: "Password",
             type: "password",
             autoComplete: "new-password",
             help: "At least 8 characters.",
           },
-          { name: "confirm", label: "Type the password again", type: "password", autoComplete: "new-password" },
+          { name: "confirm", label: "Confirm password", type: "password", autoComplete: "new-password" },
         ]}
       />
     </AuthShell>

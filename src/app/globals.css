@@ -385,3 +385,8 @@ dialog::backdrop {
     max-width: none !important;
   }
 }
+
+/* The home screen has its own big "Upload reviews" button, so the header's copy stays out of the way there. */
+body:has([data-home-upload]) [data-header-upload] {
+  display: none;
+}

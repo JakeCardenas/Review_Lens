@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
-import { EagleMark } from "@/components/brand";
+import { BrandMark } from "@/components/brand";
 import type { UploadStatus } from "@/lib/types";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
@@ -60,7 +60,7 @@ export function PageHeader({
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-5">
       <div className="flex min-w-0 items-center gap-6">
-        {art && <EagleMark size={104} className="hidden md:block" />}
+        {art && <BrandMark height={112} className="hidden md:block" />}
         <div className="min-w-0 max-w-2xl">
           <h1 className="font-display text-heading-sm font-black text-brand-display sm:text-heading">{title}</h1>
           {description && <p className="mt-3 text-body text-ink-2">{description}</p>}
@@ -171,7 +171,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center rounded-card border-2 border-line bg-surface px-6 py-12 text-center sm:py-16">
       {mascot ? (
-        <EagleMark size={120} className="mb-6" />
+        <BrandMark height={150} className="mb-4" />
       ) : (
         icon && <div className="mb-5 grid size-14 place-items-center rounded-control border-2 border-line text-ink-2">{icon}</div>
       )}

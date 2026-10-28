@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { Suspense } from "react";
 import { ArrowLeft } from "lucide-react";
-import { DeleteUploadButton, ExportLinks } from "@/components/upload-actions";
+import { DeleteUploadButton } from "@/components/upload-actions";
 import { UploadNav } from "@/components/upload-nav";
 import { ModeBadge } from "@/components/mode-badge";
 import { StatusPill } from "@/components/ui";
@@ -39,9 +38,6 @@ export default async function UploadLayout({ children, params }: LayoutProps<"/u
             </p>
           </div>
           <div className="no-print flex flex-wrap items-center gap-3">
-            <Suspense fallback={null}>
-              <ExportLinks uploadId={upload.id} />
-            </Suspense>
             <DeleteUploadButton uploadId={upload.id} name={upload.name} />
           </div>
         </div>

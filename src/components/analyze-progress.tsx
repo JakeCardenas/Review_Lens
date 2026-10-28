@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2 } from "lucide-react";
-import { EagleMark } from "@/components/brand";
+import { BrandMark } from "@/components/brand";
+import { JourneyPath } from "@/components/journey-path";
 import { Button, ButtonLink, Notice } from "@/components/ui";
 import { api, ApiRequestError, sleep } from "@/lib/client-api";
 import { formatNumber, plural } from "@/lib/format";
@@ -117,9 +118,10 @@ export function AnalyzeProgress({
 
   return (
     <div className="grid gap-4">
+      <JourneyPath current={progress.done ? 3 : 2} />
       <section className="rounded-card border-2 border-line bg-surface p-5 sm:p-7" aria-labelledby="progress-title">
         <div className="flex items-center gap-4">
-          <EagleMark size={72} />
+          <BrandMark height={84} />
           <div className="min-w-0">
             <h2 id="progress-title" className="flex items-center gap-2 text-subheading font-extrabold text-ink">
               {progress.done && <CheckCircle2 aria-hidden className="size-5 text-brand-ink" />}
@@ -201,7 +203,7 @@ export function AnalyzeProgress({
 
       {progress.done && (
         <div className="flex flex-wrap gap-2">
-          <ButtonLink href={`/uploads/${uploadId}`}>Open dashboard</ButtonLink>
+          <ButtonLink href={`/uploads/${uploadId}`}>See insights</ButtonLink>
           {hasIssues && (
             <ButtonLink href={`/uploads/${uploadId}/issues`} variant="secondary">
               See data issues

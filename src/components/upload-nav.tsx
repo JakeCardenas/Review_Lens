@@ -2,16 +2,17 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, LayoutDashboard, MessageSquareText, TriangleAlert } from "lucide-react";
+import { BadgeCheck, FileText, LayoutDashboard, MessageSquareText, Tags } from "lucide-react";
 
 const TABS = [
   { href: "", label: "Overview", icon: LayoutDashboard },
   { href: "/reviews", label: "Reviews", icon: MessageSquareText },
-  { href: "/issues", label: "Data issues", short: "Issues", icon: TriangleAlert },
+  { href: "/topics", label: "Topics", icon: Tags },
+  { href: "/accuracy", label: "Accuracy", icon: BadgeCheck },
   { href: "/report", label: "Report", icon: FileText },
 ];
 
-/** Upload sections: uppercase pills under the title on wider screens, a tab bar at the bottom on phones. */
+/** Upload sections: uppercase pills under the title on wider screens, a compact tab bar at the bottom on phones. */
 export function UploadNav({ uploadId }: { uploadId: string }) {
   const pathname = usePathname();
   const base = `/uploads/${uploadId}`;
@@ -47,7 +48,7 @@ export function UploadNav({ uploadId }: { uploadId: string }) {
         className="no-print fixed inset-x-0 bottom-0 z-30 border-t-2 border-line bg-surface sm:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <ul className="gutter grid grid-cols-4 gap-1 py-1.5">
+        <ul className="grid grid-cols-5 px-1 py-1.5">
           {TABS.map((tab) => {
             const active = isActive(tab.href);
             return (
@@ -55,18 +56,18 @@ export function UploadNav({ uploadId }: { uploadId: string }) {
                 <Link
                   href={base + tab.href}
                   aria-current={active ? "page" : undefined}
-                  className={`press flex min-h-14 flex-col items-center justify-center gap-1 text-[12px] font-extrabold uppercase tracking-[0.04em] ${
+                  className={`press flex min-h-14 flex-col items-center justify-center gap-1 text-[11px] font-extrabold uppercase tracking-[0.03em] ${
                     active ? "text-accent-ink" : "text-ink-2"
                   }`}
                 >
                   <span
-                    className={`grid h-8 w-14 place-items-center rounded-control border-2 ${
+                    className={`grid h-8 w-12 place-items-center rounded-control border-2 ${
                       active ? "border-accent bg-accent-soft" : "border-transparent"
                     }`}
                   >
                     <tab.icon aria-hidden className="size-5" strokeWidth={2.5} />
                   </span>
-                  {tab.short ?? tab.label}
+                  {tab.label}
                 </Link>
               </li>
             );
