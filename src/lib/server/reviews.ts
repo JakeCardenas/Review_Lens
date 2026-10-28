@@ -3,7 +3,7 @@ import type { Confidence, IssueSeverity, LanguageStatus, ReviewStatus, Sentiment
 import type { Db } from "./db-types";
 import { buildWhere, type ReviewFilters } from "./filters";
 import { RATING_LABEL_SQL } from "./label-check-sql";
-import { isUploadId } from "./uploads";
+import { isUploadId, type UploadScope } from "./uploads";
 
 export type ReviewRow = {
   id: number;
@@ -77,16 +77,22 @@ export async function queryReviews(db: Db, sql: string, params: unknown[]): Prom
   return (await db.query<ReviewDbRow>(sql, params)).map(toReview);
 }
 
+/** The scope's upload, looked up with its owner so another account's id finds nothing. Uses $1 and $2. */
+const OWNED_UPLOAD = "(select o.id from uploads o where o.id = $1::uuid and o.owner_id = $2::uuid)";
+
+const validScope = (scope: UploadScope) => isUploadId(scope.uploadId) && isUploadId(scope.ownerId);
+
 export type ReviewPage = { rows: ReviewRow[]; total: number; page: number; pageCount: number; pageSize: number };
 
 export async function searchReviews(
   db: Db,
-  uploadId: string,
+  scope: UploadScope,
   filters: ReviewFilters,
   page: number,
   pageSize = 25,
 ): Promise<ReviewPage> {
-  const { sql, params } = buildWhere(uploadId, filters);
+  if (!validScope(scope)) return { rows: [], total: 0, page: 1, pageCount: 1, pageSize };
+  const { sql, params } = buildWhere(scope, filters);
   const [{ n: total }] = await db.query<{ n: number }>(`select count(*)::int as n from reviews r where ${sql}`, params);
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const current = Math.min(Math.max(1, Math.floor(page) || 1), pageCount);
@@ -99,12 +105,12 @@ export async function searchReviews(
   return { rows, total, page: current, pageCount, pageSize };
 }
 
-export async function getReview(db: Db, uploadId: string, reviewId: number): Promise<ReviewRow | null> {
-  if (!isUploadId(uploadId) || !Number.isInteger(reviewId)) return null;
+export async function getReview(db: Db, scope: UploadScope, reviewId: number): Promise<ReviewRow | null> {
+  if (!validScope(scope) || !Number.isInteger(reviewId)) return null;
   const [row] = await queryReviews(
     db,
-    `select ${REVIEW_COLUMNS} from reviews r where r.upload_id = $1::uuid and r.id = $2`,
-    [uploadId, reviewId],
+    `select ${REVIEW_COLUMNS} from reviews r where r.upload_id = ${OWNED_UPLOAD} and r.id = $3`,
+    [scope.uploadId, scope.ownerId, reviewId],
   );
   return row ?? null;
 }
@@ -117,7 +123,9 @@ export type FilterOptions = {
   maxRating: number | null;
 };
 
-export async function getFilterOptions(db: Db, uploadId: string): Promise<FilterOptions> {
+export async function getFilterOptions(db: Db, scope: UploadScope): Promise<FilterOptions> {
+  if (!validScope(scope)) return { products: [], minDate: null, maxDate: null, minRating: null, maxRating: null };
+  const params = [scope.uploadId, scope.ownerId];
   const [range] = await db.query<{
     min_date: string | null;
     max_date: string | null;
@@ -126,14 +134,14 @@ export async function getFilterOptions(db: Db, uploadId: string): Promise<Filter
   }>(
     `select to_char(min(review_date), 'YYYY-MM-DD') as min_date, to_char(max(review_date), 'YYYY-MM-DD') as max_date,
        min(rating)::float8 as min_rating, max(rating)::float8 as max_rating
-     from reviews where upload_id = $1::uuid`,
-    [uploadId],
+     from reviews where upload_id = ${OWNED_UPLOAD}`,
+    params,
   );
   const products = await db.query<{ name: string; count: number }>(
     `select product as name, count(*)::int as count from reviews
-     where upload_id = $1::uuid and product is not null
+     where upload_id = ${OWNED_UPLOAD} and product is not null
      group by product order by count(*) desc, product limit 200`,
-    [uploadId],
+    params,
   );
   return {
     products,
@@ -164,16 +172,17 @@ export type IssuePage = {
 
 export async function listIssues(
   db: Db,
-  uploadId: string,
+  scope: UploadScope,
   page: number,
   severity: IssueSeverity | null = null,
   pageSize = 50,
 ): Promise<IssuePage> {
+  if (!validScope(scope)) return { rows: [], total: 0, page: 1, pageCount: 1, errors: 0, warnings: 0 };
   const [counts] = await db.query<{ errors: number; warnings: number }>(
     `select count(*) filter (where severity = 'error')::int as errors,
        count(*) filter (where severity = 'warning')::int as warnings
-     from upload_issues where upload_id = $1::uuid`,
-    [uploadId],
+     from upload_issues where upload_id = ${OWNED_UPLOAD}`,
+    [scope.uploadId, scope.ownerId],
   );
   const total = severity === "error" ? counts.errors : severity === "warning" ? counts.warnings : counts.errors + counts.warnings;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
@@ -187,10 +196,10 @@ export async function listIssues(
     message: string;
   }>(
     `select id, row_number, stage, severity, code, message from upload_issues
-     where upload_id = $1::uuid and ($2::text is null or severity = $2::text)
+     where upload_id = ${OWNED_UPLOAD} and ($3::text is null or severity = $3::text)
      order by severity, row_number nulls last, id
-     limit $3 offset $4`,
-    [uploadId, severity, pageSize, (current - 1) * pageSize],
+     limit $4 offset $5`,
+    [scope.uploadId, scope.ownerId, severity, pageSize, (current - 1) * pageSize],
   );
   return {
     rows: rows.map((r) => ({ id: r.id, rowNumber: r.row_number, stage: r.stage, severity: r.severity, code: r.code, message: r.message })),

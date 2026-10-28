@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import type { ReactNode } from "react";
 import { SentimentBars } from "@/components/dashboard/charts";
@@ -17,10 +16,10 @@ import { CHECK_NOTES } from "@/lib/analysis/agreement";
 import { formatDateTime, formatNumber, formatPercent, periodLabel } from "@/lib/format";
 import { providerLabel } from "@/lib/provider-label";
 import { getDashboard } from "@/lib/server/dashboard";
+import { requireOwnedUpload } from "@/lib/server/auth";
 import { getDb } from "@/lib/server/db";
 import { describeFilters } from "@/lib/server/export";
 import { dashboardFilters, filtersToQuery, parseFilters } from "@/lib/server/filters";
-import { getUpload } from "@/lib/server/uploads";
 import { SENTIMENTS } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Summary report" };
@@ -40,8 +39,7 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
   await connection();
   const { id } = await params;
   const db = getDb();
-  const upload = await getUpload(db, id);
-  if (!upload) notFound();
+  const { upload } = await requireOwnedUpload(id, `/uploads/${id}/report`);
   const filters = dashboardFilters(parseFilters(await searchParams));
   const dashboard = await getDashboard(db, upload, filters);
   const { totals, sentiment, check } = dashboard;

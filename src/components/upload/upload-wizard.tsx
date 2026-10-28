@@ -7,7 +7,7 @@ import { CheckCircle2, FileSpreadsheet, Lock, UploadCloud } from "lucide-react";
 import { SENTIMENT_META } from "@/components/sentiment";
 import { Button, Notice } from "@/components/ui";
 import { api, ApiRequestError, withRetry } from "@/lib/client-api";
-import { csvColumnsProblem, guessColumnMapping, isPersonalColumn } from "@/lib/csv/columns";
+import { csvColumnsProblem, guessColumnMapping, isPersonalColumn, textColumnProblem } from "@/lib/csv/columns";
 import { cleanText, looksMisencoded, maskPersonalData } from "@/lib/csv/clean";
 import { detectDateFormat, detectRatingScale, labelColumnLooksValid, type DateFormatGuess } from "@/lib/csv/parse-values";
 import { prepareRow } from "@/lib/csv/prepare";
@@ -191,6 +191,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
       warnings: issues.filter((i) => i.severity === "warning"),
       sampleIssues: issues.slice(0, 5),
       duplicates: texts.length - new Set(texts).size,
+      labels: prepared.filter((row) => row.text && row.referenceLabel).length,
     };
   }, [step, rawRows, mapping.date, mapping.rating, dateFormat, ratingScale]);
 
@@ -240,13 +241,19 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
     if (field === "rating" && parsed && value) setRatingScale(detectRatingScale(columnValues(parsed.rows, value)) ?? 5);
   }
 
+  const textProblem = useMemo(
+    () => (parsed && mapping.text ? textColumnProblem(columnValues(parsed.rows, mapping.text)) : null),
+    [parsed, mapping.text],
+  );
   const mappingProblem = !mapping.text
     ? "Choose the column that holds the review text."
-    : mapping.date && detectedDate === "ambiguous" && !dateChoice
-      ? "Tell ReviewLens whether the dates are month first or day first."
-      : !name.trim()
-        ? "Give this upload a name."
-        : null;
+    : textProblem
+      ? textProblem
+      : mapping.date && detectedDate === "ambiguous" && !dateChoice
+        ? "Tell ReviewLens whether the dates are month first or day first."
+        : !name.trim()
+          ? "Give this upload a name."
+          : null;
 
   async function runImport(resume?: Extract<ImportState, { phase: "error" }>) {
     if (!parsed || !mapping.text) return;
@@ -454,6 +461,19 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                       </div>
                     )}
 
+                    {field.id === "text" && textProblem && (
+                      <p className="mt-2 text-sm font-semibold text-neg-ink" role="alert">
+                        {textProblem}
+                      </p>
+                    )}
+
+                    {field.id === "label" && !current && (
+                      <p className="mt-2 text-sm text-warn-ink">
+                        No label column is matched, so there will be no label check. If your file has your own labels, choose
+                        that column here.
+                      </p>
+                    )}
+
                     {field.id === "label" && current && (
                       <p className={`mt-2 text-sm ${labelColumnOk ? "text-ink-2" : "text-warn-ink"}`}>
                         {labelColumnOk
@@ -554,6 +574,19 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
           {preview.duplicates > 0 && (
             <Notice title={`${plural(preview.duplicates, "review")} repeat earlier text`}>
               {"They'll be kept and counted. Remove them from the file first if they're accidental copies."}
+            </Notice>
+          )}
+
+          {mapping.label ? (
+            <Notice tone="success" title={`Label check is on: ${plural(preview.labels, "review")} with your label in “${mapping.label}”`}>
+              The dashboard will compare ReviewLens&apos;s labels with yours. Your labels are never sent to the AI.
+            </Notice>
+          ) : (
+            <Notice title="Label check is off: no Your label column">
+              {mapping.rating
+                ? "The dashboard will compare labels with the star ratings instead, which are only a rough guide. "
+                : ""}
+              To compare with your own labels, go back to the columns and match Your label.
             </Notice>
           )}
 

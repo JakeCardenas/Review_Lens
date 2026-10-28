@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { CalendarX2, Filter, Inbox } from "lucide-react";
@@ -11,27 +10,29 @@ import { ImportUnfinished } from "@/components/import-unfinished";
 import { ReviewCard } from "@/components/review-card";
 import { SentimentIcon } from "@/components/sentiment";
 import { ButtonLink, Card, EmptyState, Notice } from "@/components/ui";
+import { getProviderInfo } from "@/lib/analysis/providers";
 import { formatNumber, formatPercent, plural } from "@/lib/format";
 import { getDashboard } from "@/lib/server/dashboard";
+import { requireOwnedUpload } from "@/lib/server/auth";
 import { getDb } from "@/lib/server/db";
 import { dashboardFilters, filtersToQuery, hasActiveFilters, parseFilters } from "@/lib/server/filters";
 import { getFilterOptions } from "@/lib/server/reviews";
-import { getProgress, getUpload } from "@/lib/server/uploads";
+import { getProgress } from "@/lib/server/uploads";
 import type { Sentiment } from "@/lib/types";
 
 export default async function OverviewPage({ params, searchParams }: PageProps<"/uploads/[id]">) {
   await connection();
   const { id } = await params;
   const db = getDb();
-  const upload = await getUpload(db, id);
-  if (!upload) notFound();
+  const { user, upload } = await requireOwnedUpload(id, `/uploads/${id}`);
+  const scope = { uploadId: upload.id, ownerId: user.id };
   if (upload.status === "importing") return <ImportUnfinished />;
 
   const filters = dashboardFilters(parseFilters(await searchParams));
   const [dashboard, options, progress] = await Promise.all([
     getDashboard(db, upload, filters),
-    getFilterOptions(db, id),
-    getProgress(db, id),
+    getFilterOptions(db, scope),
+    getProgress(db, user.id, id),
   ]);
 
   const base = `/uploads/${id}/reviews`;
@@ -41,6 +42,9 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
     return `${base}?${query}`;
   };
   const { totals, sentiment, check } = dashboard;
+  const providerInfo = getProviderInfo();
+  const aiAvailable = providerInfo.external && !providerInfo.problem;
+  const basicLeftReviews = upload.provider === "basic" && totals.notLabeled > 0;
   const filtered = hasActiveFilters(filters);
   const scale = upload.ratingScale ?? 5;
 
@@ -128,7 +132,30 @@ export default async function OverviewPage({ params, searchParams }: PageProps<"
             </div>
           </section>
 
-          {(totals.notLabeled > 0 || totals.failed > 0) && (
+          {basicLeftReviews ? (
+            <Notice
+              tone="warning"
+              title="This upload used Basic mode, which reads English only"
+              action={
+                aiAvailable ? (
+                  <ButtonLink href="/upload" size="sm">
+                    Upload again in AI mode
+                  </ButtonLink>
+                ) : undefined
+              }
+            >
+              {formatNumber(totals.labeled)} of {formatNumber(totals.all)} reviews were labeled.{" "}
+              {plural(totals.notLabeled, "review")} in Tagalog, Taglish or another language weren&apos;t
+              {totals.failed > 0 && `, and ${plural(totals.failed, "review")} couldn't be analyzed`}. This upload keeps Basic mode;
+              ReviewLens never reanalyzes it in another mode.{" "}
+              {aiAvailable
+                ? "To label Tagalog and Taglish reviews, upload the same file again: new uploads use AI mode (Gemini free tier)."
+                : "AI mode isn't set up on this server, so new uploads use Basic mode too."}{" "}
+              <a href={`/uploads/${id}/issues`} className="font-semibold text-brand-ink underline-offset-2 hover:underline">
+                See the issues
+              </a>
+            </Notice>
+          ) : (totals.notLabeled > 0 || totals.failed > 0) && (
             <Notice title={`${plural(totals.notLabeled + totals.failed, "review")} not counted in the charts`}>
               {totals.unsupportedLanguage > 0 && `${plural(totals.unsupportedLanguage, "review")} in other languages. `}
               {totals.notLabeled - totals.unsupportedLanguage > 0 &&

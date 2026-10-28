@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { getProvider } from "@/lib/analysis/providers";
 import { analyzeNextBatch } from "@/lib/server/analyze";
+import { requireApiUser } from "@/lib/server/auth";
 import { getDb } from "@/lib/server/db";
 import { errorResponse, json } from "@/lib/server/http";
 
@@ -8,10 +9,11 @@ import { errorResponse, json } from "@/lib/server/http";
 export const maxDuration = 120;
 
 /** Analyzes the next batch of pending reviews and returns progress. */
-export async function POST(_request: NextRequest, ctx: RouteContext<"/api/uploads/[id]/analyze">) {
+export async function POST(request: NextRequest, ctx: RouteContext<"/api/uploads/[id]/analyze">) {
   try {
+    const user = await requireApiUser(request);
     const { id } = await ctx.params;
-    return json(await analyzeNextBatch(getDb(), getProvider(), id));
+    return json(await analyzeNextBatch(getDb(), getProvider(), user.id, id));
   } catch (error) {
     return errorResponse(error);
   }

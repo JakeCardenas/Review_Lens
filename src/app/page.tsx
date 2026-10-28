@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { FileSpreadsheet, Plus } from "lucide-react";
+import { ModeBadge } from "@/components/mode-badge";
 import { ButtonLink, EmptyState, Notice, StatusPill } from "@/components/ui";
 import { getProviderInfo } from "@/lib/analysis/providers";
 import { formatDateTime, formatNumber, formatPercent } from "@/lib/format";
+import { requireUser } from "@/lib/server/auth";
 import { getDb } from "@/lib/server/db";
 import { AppError } from "@/lib/server/errors";
 import { listUploads, type UploadListItem } from "@/lib/server/uploads";
@@ -28,11 +30,12 @@ function SentimentStrip({ upload }: { upload: UploadListItem }) {
 
 export default async function HomePage() {
   await connection();
+  const user = await requireUser("/");
   const provider = getProviderInfo();
   let uploads: UploadListItem[] = [];
   let setupProblem: string | null = null;
   try {
-    uploads = await listUploads(getDb());
+    uploads = await listUploads(getDb(), user.id);
   } catch (error) {
     if (error instanceof AppError && error.code === "DATABASE_NOT_CONFIGURED") setupProblem = error.message;
     else throw error;
@@ -107,10 +110,21 @@ export default async function HomePage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="truncate font-semibold">{upload.name}</span>
                       <StatusPill status={upload.status} />
+                      <ModeBadge provider={upload.provider} />
                     </div>
                     <p className="mt-0.5 truncate text-sm text-ink-2">
                       {upload.fileName}, {formatNumber(upload.totalRows)} rows, {formatDateTime(upload.createdAt)}
                     </p>
+                    {(upload.notLabeled > 0 || upload.failed > 0) && (
+                      <p className="mt-0.5 text-sm text-warn-ink">
+                        {[
+                          upload.notLabeled > 0 && `${formatNumber(upload.notLabeled)} not labeled (language)`,
+                          upload.failed > 0 && `${formatNumber(upload.failed)} failed`,
+                        ]
+                          .filter(Boolean)
+                          .join(", ")}
+                      </p>
+                    )}
                   </div>
                   <SentimentStrip upload={upload} />
                 </Link>

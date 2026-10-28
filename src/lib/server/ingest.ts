@@ -4,7 +4,7 @@ import { prepareRow } from "@/lib/csv/prepare";
 import type { RawRow, ReviewStatus, RowIssue } from "@/lib/types";
 import type { Db } from "./db-types";
 import { AppError } from "./errors";
-import type { UploadRecord } from "./uploads";
+import type { OwnedUpload } from "./uploads";
 
 export type IngestResult = {
   accepted: number;
@@ -31,7 +31,7 @@ type NewReview = {
 };
 
 /** Cleans a chunk of mapped CSV rows and stores them as pending reviews. Safe to call twice with the same rows. */
-export async function ingestRows(db: Db, upload: UploadRecord, rows: RawRow[]): Promise<IngestResult> {
+export async function ingestRows(db: Db, upload: OwnedUpload, rows: RawRow[]): Promise<IngestResult> {
   if (upload.status !== "importing") {
     throw new AppError("UPLOAD_NOT_IMPORTING", "This upload has finished importing and can't take more rows.", 409);
   }

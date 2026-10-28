@@ -7,7 +7,9 @@ import type { Db } from "@/lib/server/db-types";
 import { ingestRows } from "@/lib/server/ingest";
 import { createUpload } from "@/lib/server/uploads";
 import { fakeGemini } from "../helpers/gemini";
-import { createTestDb } from "../helpers/pglite";
+import { createTestDb, newOwner } from "../helpers/pglite";
+
+const OWNER = newOwner();
 
 const LABELED = {
   name: "Private labels",
@@ -43,10 +45,10 @@ describe("your own labels stay out of the model", () => {
         return super.analyze(items);
       }
     })();
-    const upload = await createUpload(db, LABELED, spy);
+    const upload = await createUpload(db, LABELED, spy, OWNER);
     await ingestRows(db, upload, ROWS);
-    await startAnalysis(db, upload.id);
-    await analyzeNextBatch(db, spy, upload.id);
+    await startAnalysis(db, OWNER, upload.id);
+    await analyzeNextBatch(db, spy, OWNER, upload.id);
 
     expect(
       await db.query(`select reference_label from reviews where upload_id = $1::uuid order by row_number`, [upload.id]),
@@ -58,10 +60,10 @@ describe("your own labels stay out of the model", () => {
   it("are never sent to Gemini, in the prompt or with the reviews", async () => {
     const gemini = fakeGemini();
     const provider = new GeminiProvider({ apiKey: "test-key", model: "gemini-3.5-flash-lite", fetch: gemini.fetch });
-    const upload = await createUpload(db, LABELED, provider);
+    const upload = await createUpload(db, LABELED, provider, OWNER);
     await ingestRows(db, upload, ROWS);
-    await startAnalysis(db, upload.id);
-    await analyzeNextBatch(db, provider, upload.id);
+    await startAnalysis(db, OWNER, upload.id);
+    await analyzeNextBatch(db, provider, OWNER, upload.id);
 
     expect(gemini.calls).toHaveLength(1);
     const [call] = gemini.calls;

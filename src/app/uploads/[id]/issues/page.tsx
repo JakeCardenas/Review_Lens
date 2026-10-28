@@ -1,15 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
 import { Pagination } from "@/components/pagination";
 import { RetryFailedButton } from "@/components/retry-failed-button";
 import { EmptyState, Notice } from "@/components/ui";
 import { formatNumber } from "@/lib/format";
+import { requireOwnedUpload } from "@/lib/server/auth";
 import { getDb } from "@/lib/server/db";
 import { listIssues } from "@/lib/server/reviews";
-import { getProgress, getUpload } from "@/lib/server/uploads";
+import { getProgress } from "@/lib/server/uploads";
 import type { IssueSeverity } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Issues" };
@@ -21,12 +21,12 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
   const { id } = await params;
   const sp = await searchParams;
   const db = getDb();
-  const upload = await getUpload(db, id);
-  if (!upload) notFound();
+  const { user, upload } = await requireOwnedUpload(id, `/uploads/${id}/issues`);
+  const scope = { uploadId: upload.id, ownerId: user.id };
   const show = first(sp.show);
   const severity: IssueSeverity | null = show === "error" || show === "warning" ? show : null;
   const page = Number(first(sp.page)) || 1;
-  const [issues, progress] = await Promise.all([listIssues(db, id, page, severity), getProgress(db, id)]);
+  const [issues, progress] = await Promise.all([listIssues(db, scope, page, severity), getProgress(db, user.id, id)]);
 
   const base = `/uploads/${id}/issues`;
   const tabHref = (value: string | null) => (value ? `${base}?show=${value}` : base);

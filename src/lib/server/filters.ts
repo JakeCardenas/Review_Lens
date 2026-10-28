@@ -1,6 +1,7 @@
 import { isTopicId, type TopicId } from "@/lib/analysis/topics";
 import { CONFIDENCE_LEVELS, SENTIMENTS, type Confidence, type Sentiment } from "@/lib/types";
 import { CHECK_REFERENCE_SQL } from "./label-check-sql";
+import type { UploadScope } from "./uploads";
 
 export const LIST_STATUSES = ["labeled", "not_labeled", "failed", "pending"] as const;
 export type ListStatus = (typeof LIST_STATUSES)[number];
@@ -130,10 +131,13 @@ export function hasActiveFilters(filters: ReviewFilters): boolean {
   return Object.values(filters).some((v) => v !== null);
 }
 
-/** SQL conditions for reviews aliased as `r`. Parameter $1 is always the upload id. */
-export function buildWhere(uploadId: string, filters: ReviewFilters): { sql: string; params: unknown[] } {
-  const params: unknown[] = [uploadId];
-  const conditions = ["r.upload_id = $1::uuid"];
+/**
+ * SQL conditions for reviews aliased as `r`. Parameter $1 is always the upload id and $2 its owner:
+ * the upload is looked up once with both, so another account's upload id matches no reviews.
+ */
+export function buildWhere(scope: UploadScope, filters: ReviewFilters): { sql: string; params: unknown[] } {
+  const params: unknown[] = [scope.uploadId, scope.ownerId];
+  const conditions = ["r.upload_id = (select o.id from uploads o where o.id = $1::uuid and o.owner_id = $2::uuid)"];
   const add = (value: unknown) => {
     params.push(value);
     return `$${params.length}`;

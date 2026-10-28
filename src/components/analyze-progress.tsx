@@ -76,8 +76,8 @@ export function AnalyzeProgress({
         }
         setWaitingForLimit(false);
         setErrorTitle(
-          err instanceof ApiRequestError && err.code === "FREE_TIER_DAILY_LIMIT"
-            ? "Paused until the free daily limit resets"
+          err instanceof ApiRequestError && (err.code === "FREE_TIER_DAILY_LIMIT" || err.code === "AI_DAILY_LIMIT")
+            ? "Paused until the daily limit resets"
             : "Analysis stopped",
         );
         setError(err instanceof ApiRequestError ? err.message : "Analysis stopped unexpectedly.");

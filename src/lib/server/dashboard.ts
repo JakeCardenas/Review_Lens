@@ -6,7 +6,7 @@ import type { Db } from "./db-types";
 import { buildWhere, type ReviewFilters } from "./filters";
 import { RATING_LABEL_SQL } from "./label-check-sql";
 import { queryReviews, REVIEW_COLUMNS, type ReviewRow } from "./reviews";
-import type { UploadRecord } from "./uploads";
+import type { OwnedUpload } from "./uploads";
 
 export type TrendPoint = { period: string; positive: number; neutral: number; negative: number; total: number };
 export type Trend =
@@ -57,8 +57,8 @@ export type Dashboard = {
 /** Fewer dated reviews than this and the timeline would mislead more than it helps. */
 const MIN_DATED_REVIEWS = 10;
 
-export async function getDashboard(db: Db, upload: UploadRecord, filters: ReviewFilters): Promise<Dashboard> {
-  const { sql, params } = buildWhere(upload.id, filters);
+export async function getDashboard(db: Db, upload: OwnedUpload, filters: ReviewFilters): Promise<Dashboard> {
+  const { sql, params } = buildWhere({ uploadId: upload.id, ownerId: upload.ownerId }, filters);
 
   const [summary] = await db.query<{
     all: number;
@@ -157,7 +157,7 @@ export async function getDashboard(db: Db, upload: UploadRecord, filters: Review
 }
 
 /** Your own labels when the upload has a label column; otherwise its ratings, if it has any. */
-export function labelCheckSource(upload: UploadRecord): LabelCheckSource | null {
+export function labelCheckSource(upload: OwnedUpload): LabelCheckSource | null {
   if (upload.columnMap.label) return "label";
   return upload.hasRating ? "rating" : null;
 }
@@ -168,7 +168,7 @@ const UNREADABLE_CODES: Record<LabelCheckSource, string> = {
   rating: "'RATING_UNREADABLE', 'RATING_OUT_OF_RANGE'",
 };
 
-async function getLabelCheck(db: Db, upload: UploadRecord, sql: string, params: unknown[]): Promise<LabelCheck | null> {
+async function getLabelCheck(db: Db, upload: OwnedUpload, sql: string, params: unknown[]): Promise<LabelCheck | null> {
   const source = labelCheckSource(upload);
   if (!source) return null;
   // Ratings are compared at read time, so their label is never stored as if a person gave it.
@@ -234,7 +234,7 @@ async function getLabelCheck(db: Db, upload: UploadRecord, sql: string, params: 
   return check;
 }
 
-async function getTrend(db: Db, upload: UploadRecord, sql: string, params: unknown[]): Promise<Trend> {
+async function getTrend(db: Db, upload: OwnedUpload, sql: string, params: unknown[]): Promise<Trend> {
   if (!upload.hasDate) {
     return { status: "unavailable", reason: "No date column was mapped for this upload, so there is no timeline." };
   }

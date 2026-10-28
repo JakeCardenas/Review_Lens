@@ -6,7 +6,11 @@ import { connectPostgres } from "@/lib/server/db";
 import type { Db } from "@/lib/server/db-types";
 
 const MIGRATIONS = join(process.cwd(), "supabase", "migrations");
-const migrations = () => readdirSync(MIGRATIONS).sort().map((file) => readFileSync(join(MIGRATIONS, file), "utf8"));
+/** Every migration's SQL, in the order Supabase applies them. */
+export const migrations = () => readdirSync(MIGRATIONS).sort().map((file) => readFileSync(join(MIGRATIONS, file), "utf8"));
+
+/** A made-up account id. Tests never use real Supabase users. */
+export const newOwner = () => crypto.randomUUID();
 
 function wrap(pg: PGlite, q: PGlite | Transaction): Db {
   return {

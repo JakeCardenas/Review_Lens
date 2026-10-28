@@ -5,7 +5,9 @@ import type { Db } from "@/lib/server/db-types";
 import { ingestRows } from "@/lib/server/ingest";
 import { createUpload } from "@/lib/server/uploads";
 import { fakeGemini } from "../helpers/gemini";
-import { createTestDb } from "../helpers/pglite";
+import { createTestDb, newOwner } from "../helpers/pglite";
+
+const OWNER = newOwner();
 
 // Made-up Taglish reviews in the style of the pilot's misses; none are pilot reviews.
 const LUKEWARM = "Okay naman yung payong, medyo manipis lang yung tela pero gumagana naman";
@@ -32,10 +34,11 @@ async function analyzeWith(provider: GeminiProvider, texts: string[]) {
       totalRows: texts.length,
     },
     provider,
+    OWNER,
   );
   await ingestRows(db, upload, texts.map((text, i) => ({ rowNumber: i + 2, text })));
-  await startAnalysis(db, upload.id);
-  await analyzeNextBatch(db, provider, upload.id);
+  await startAnalysis(db, OWNER, upload.id);
+  await analyzeNextBatch(db, provider, OWNER, upload.id);
   return db.query<{ sentiment: string; confidence: string; confidence_reasons: string[] }>(
     `select sentiment, confidence, confidence_reasons from reviews where upload_id = $1::uuid order by row_number`,
     [upload.id],

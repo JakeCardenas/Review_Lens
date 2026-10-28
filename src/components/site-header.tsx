@@ -1,6 +1,17 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
-import { ButtonLink } from "./ui";
+import { LogOut, Plus } from "lucide-react";
+import { signOut } from "@/app/(auth)/actions";
+import { getCurrentUser, type SessionUser } from "@/lib/server/auth";
+import { Button, ButtonLink } from "./ui";
+
+/** The signed-in account, or null, including when sign-in isn't set up yet (the pages explain that). */
+async function signedInUser(): Promise<SessionUser | null> {
+  try {
+    return await getCurrentUser();
+  } catch {
+    return null;
+  }
+}
 
 export function LogoMark({ className = "size-8" }: { className?: string }) {
   return (
@@ -20,7 +31,8 @@ export function LogoMark({ className = "size-8" }: { className?: string }) {
 }
 
 /** Sticky translucent top bar. The page scrolls underneath it. */
-export function SiteHeader() {
+export async function SiteHeader() {
+  const user = await signedInUser();
   return (
     <header className="glass no-print sticky top-0 z-30 border-b" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
       <div className="gutter mx-auto flex h-14 max-w-6xl items-center justify-between gap-3">
@@ -28,10 +40,27 @@ export function SiteHeader() {
           <LogoMark />
           ReviewLens
         </Link>
-        <ButtonLink href="/upload" size="sm">
-          <Plus aria-hidden className="size-4" />
-          New upload
-        </ButtonLink>
+        {user ? (
+          <div className="flex min-w-0 items-center gap-1.5 sm:gap-2">
+            <span className="hidden max-w-64 truncate text-sm text-ink-2 md:inline" title={user.email}>
+              {user.email}
+            </span>
+            <ButtonLink href="/upload" size="sm">
+              <Plus aria-hidden className="size-4" />
+              New upload
+            </ButtonLink>
+            <form action={signOut}>
+              <Button type="submit" variant="ghost" size="sm" aria-label="Sign out" title="Sign out">
+                <LogOut aria-hidden className="size-4" />
+                <span className="hidden sm:inline">Sign out</span>
+              </Button>
+            </form>
+          </div>
+        ) : (
+          <ButtonLink href="/sign-in" variant="secondary" size="sm">
+            Sign in
+          </ButtonLink>
+        )}
       </div>
     </header>
   );

@@ -3,11 +3,13 @@ import { extractKeywords } from "@/lib/analysis/keywords";
 import { providerLanguages } from "@/lib/analysis/providers/languages";
 import { ProviderError, type SentimentProvider } from "@/lib/analysis/providers/types";
 import { detectTopics } from "@/lib/analysis/topics";
+import { formatNumber } from "@/lib/format";
 import { LIMITS } from "@/lib/limits";
 import type { LanguageStatus } from "@/lib/types";
 import type { Db } from "./db-types";
 import { AppError, notFound } from "./errors";
-import { getProgress, getUpload, type Progress } from "./uploads";
+import { limitsFromEnv, reserveAiReviews, type AiLimitHit, type Limits } from "./limits";
+import { getOwnedUpload, getProgress, type Progress } from "./uploads";
 
 export type BatchResult = {
   processed: number;
@@ -31,10 +33,31 @@ type ClaimedRow = {
 const ids = (rows: { id: number }[]) => JSON.stringify(rows.map((r) => r.id));
 const ID_LIST = `(select (jsonb_array_elements_text($2::text::jsonb))::int)`;
 
-async function progressOf(db: Db, uploadId: string): Promise<Progress> {
-  const progress = await getProgress(db, uploadId);
+async function progressOf(db: Db, ownerId: string, uploadId: string): Promise<Progress> {
+  const progress = await getProgress(db, ownerId, uploadId);
   if (!progress) throw notFound();
   return progress;
+}
+
+/** Returns claimed reviews to the queue without counting the attempt, because they were never analyzed. */
+async function putBackUnsent(db: Db, uploadId: string, rows: { id: number }[]): Promise<void> {
+  if (!rows.length) return;
+  await db.query(
+    `update reviews set status = 'pending', claimed_at = null, attempts = greatest(attempts - 1, 0)
+     where upload_id = $1::uuid and id in ${ID_LIST}`,
+    [uploadId, ids(rows)],
+  );
+}
+
+function aiLimitError(stoppedBy: AiLimitHit, limits: Limits): ProviderError {
+  const resume = "Analysis is paused. Choose Resume after midnight Pacific time (3 or 4 p.m. in the Philippines).";
+  return new ProviderError(
+    stoppedBy === "account"
+      ? `Your account has used today's AI analysis limit of ${formatNumber(limits.aiReviewsPerUserPerDay)} reviews. ${resume}`
+      : `ReviewLens has used today's shared AI analysis limit of ${formatNumber(limits.aiReviewsPerDay)} reviews for all accounts. ${resume}`,
+    false,
+    { code: "AI_DAILY_LIMIT" },
+  );
 }
 
 /** Marks the upload done once no review is waiting or being analyzed. */
@@ -53,15 +76,15 @@ async function finishIfComplete(db: Db, uploadId: string): Promise<void> {
 }
 
 /** Ends the import step and starts analysis. */
-export async function startAnalysis(db: Db, uploadId: string): Promise<Progress> {
-  const upload = await getUpload(db, uploadId);
+export async function startAnalysis(db: Db, ownerId: string, uploadId: string): Promise<Progress> {
+  const upload = await getOwnedUpload(db, ownerId, uploadId);
   if (!upload) throw notFound();
   await db.query(
     `update uploads set status = 'analyzing', last_activity_at = now() where id = $1::uuid and status = 'importing'`,
     [uploadId],
   );
   await finishIfComplete(db, uploadId);
-  return progressOf(db, uploadId);
+  return progressOf(db, ownerId, uploadId);
 }
 
 /** Puts a failed batch back in the queue, or marks reviews failed once they have used every attempt. */
@@ -101,16 +124,18 @@ async function releaseOrFail(db: Db, uploadId: string, rows: ClaimedRow[], reaso
 export async function analyzeNextBatch(
   db: Db,
   provider: SentimentProvider,
+  ownerId: string,
   uploadId: string,
   batchSize: number = LIMITS.batchSize,
+  limits: Limits = limitsFromEnv(),
 ): Promise<BatchResult> {
-  const upload = await getUpload(db, uploadId);
+  const upload = await getOwnedUpload(db, ownerId, uploadId);
   if (!upload) throw notFound();
   if (upload.status === "importing") {
     throw new AppError("STILL_IMPORTING", "Finish importing the file before analysis starts.", 409);
   }
   if (upload.status !== "analyzing") {
-    return { processed: 0, batchError: null, retryAfterMs: null, progress: await progressOf(db, uploadId) };
+    return { processed: 0, batchError: null, retryAfterMs: null, progress: await progressOf(db, ownerId, uploadId) };
   }
   if (upload.provider !== provider.id || upload.model !== provider.model) {
     throw new AppError(
@@ -141,7 +166,7 @@ export async function analyzeNextBatch(
   let retryAfterMs: number | null = null;
   let putBack = 0;
   const unsupportedMixed = claimed.filter((r) => r.language_status === "mixed" && !provider.supportsMixedLanguage);
-  const toAnalyze = claimed.filter((r) => !unsupportedMixed.includes(r));
+  let toAnalyze = claimed.filter((r) => !unsupportedMixed.includes(r));
 
   if (unsupportedMixed.length) {
     await db.query(
@@ -158,6 +183,18 @@ export async function analyzeNextBatch(
        on conflict do nothing`,
       [uploadId, JSON.stringify(unsupportedMixed.map((r) => ({ row_number: r.row_number })))],
     );
+  }
+
+  // Gemini's free tier is shared, so a batch first takes its share of the account's and the app's
+  // daily allowance. Reviews beyond it go back unsent.
+  if (provider.external && toAnalyze.length) {
+    const { granted, stoppedBy } = await reserveAiReviews(db, ownerId, toAnalyze.length, limits);
+    if (granted < toAnalyze.length) {
+      await putBackUnsent(db, uploadId, toAnalyze.slice(granted));
+      putBack += toAnalyze.length - granted;
+      toAnalyze = toAnalyze.slice(0, granted);
+    }
+    if (stoppedBy) throw aiLimitError(stoppedBy, limits);
   }
 
   if (toAnalyze.length) {
@@ -214,15 +251,11 @@ export async function analyzeNextBatch(
       // Stopping (a bad key, a used-up daily quota) or waiting (a per-minute limit) puts the reviews
       // back unchanged, so it doesn't count against their attempts.
       if (error instanceof ProviderError && (!error.retryable || error.retryAfterMs !== undefined)) {
-        await db.query(
-          `update reviews set status = 'pending', claimed_at = null, attempts = greatest(attempts - 1, 0)
-           where upload_id = $1::uuid and id in ${ID_LIST}`,
-          [uploadId, ids(toAnalyze)],
-        );
+        await putBackUnsent(db, uploadId, toAnalyze);
         if (!error.retryable) throw error;
         batchError = error.message;
         retryAfterMs = error.retryAfterMs ?? null;
-        putBack = toAnalyze.length;
+        putBack += toAnalyze.length;
       } else {
         if (!(error instanceof ProviderError)) {
           // Log the cause without any review text.
@@ -236,12 +269,12 @@ export async function analyzeNextBatch(
 
   await db.query(`update uploads set last_activity_at = now() where id = $1::uuid`, [uploadId]);
   await finishIfComplete(db, uploadId);
-  return { processed: claimed.length - putBack, batchError, retryAfterMs, progress: await progressOf(db, uploadId) };
+  return { processed: claimed.length - putBack, batchError, retryAfterMs, progress: await progressOf(db, ownerId, uploadId) };
 }
 
 /** Puts failed reviews back in the queue so they can be analyzed again. */
-export async function retryFailed(db: Db, uploadId: string): Promise<Progress> {
-  const upload = await getUpload(db, uploadId);
+export async function retryFailed(db: Db, ownerId: string, uploadId: string): Promise<Progress> {
+  const upload = await getOwnedUpload(db, ownerId, uploadId);
   if (!upload) throw notFound();
   await db.transaction(async (tx) => {
     const reset = await tx.query(
@@ -257,5 +290,5 @@ export async function retryFailed(db: Db, uploadId: string): Promise<Progress> {
       [uploadId],
     );
   });
-  return progressOf(db, uploadId);
+  return progressOf(db, ownerId, uploadId);
 }

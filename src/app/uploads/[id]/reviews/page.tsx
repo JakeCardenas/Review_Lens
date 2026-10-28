@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense, type ReactNode } from "react";
 import { SearchX } from "lucide-react";
@@ -15,10 +14,10 @@ import { describeLanguage } from "@/lib/analysis/language";
 import { TOPICS } from "@/lib/analysis/topics";
 import { formatDate, plural } from "@/lib/format";
 import { labelCheckSource } from "@/lib/server/dashboard";
+import { requireOwnedUpload } from "@/lib/server/auth";
 import { getDb } from "@/lib/server/db";
 import { filtersToQuery, hasActiveFilters, parseFilters } from "@/lib/server/filters";
 import { getFilterOptions, getReview, searchReviews, type ReviewRow } from "@/lib/server/reviews";
-import { getUpload } from "@/lib/server/uploads";
 import type { LabelCheckSource } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Reviews" };
@@ -123,16 +122,16 @@ export default async function ReviewsPage({ params, searchParams }: PageProps<"/
   const { id } = await params;
   const sp = await searchParams;
   const db = getDb();
-  const upload = await getUpload(db, id);
-  if (!upload) notFound();
+  const { user, upload } = await requireOwnedUpload(id, `/uploads/${id}/reviews`);
+  const scope = { uploadId: upload.id, ownerId: user.id };
 
   const filters = parseFilters(sp);
   const page = Number(first(sp.page)) || 1;
   const reviewId = Number(first(sp.review));
   const [result, options, selected] = await Promise.all([
-    searchReviews(db, id, filters, page),
-    getFilterOptions(db, id),
-    Number.isInteger(reviewId) && reviewId > 0 ? getReview(db, id, reviewId) : Promise.resolve(null),
+    searchReviews(db, scope, filters, page),
+    getFilterOptions(db, scope),
+    Number.isInteger(reviewId) && reviewId > 0 ? getReview(db, scope, reviewId) : Promise.resolve(null),
   ]);
 
   const checkSource = labelCheckSource(upload);

@@ -7,7 +7,7 @@ import type { Dashboard, LabelCheck } from "./dashboard";
 import type { Db } from "./db-types";
 import { buildWhere, type ReviewFilters } from "./filters";
 import { queryReviews, REVIEW_COLUMNS } from "./reviews";
-import type { UploadRecord } from "./uploads";
+import type { OwnedUpload } from "./uploads";
 
 /**
  * One CSV cell. Text that a spreadsheet would run as a formula (starting with = + - @ or a
@@ -43,10 +43,10 @@ const REVIEW_HEADER = [
 ];
 
 /** Yields the labeled dataset as CSV lines, reading 1,000 reviews at a time. */
-export async function* reviewCsvLines(db: Db, upload: UploadRecord, filters: ReviewFilters): AsyncGenerator<string> {
+export async function* reviewCsvLines(db: Db, upload: OwnedUpload, filters: ReviewFilters): AsyncGenerator<string> {
   yield csvLine(REVIEW_HEADER);
   const hasLabelColumn = Boolean(upload.columnMap.label);
-  const { sql, params } = buildWhere(upload.id, filters);
+  const { sql, params } = buildWhere({ uploadId: upload.id, ownerId: upload.ownerId }, filters);
   let after = 0;
   for (;;) {
     const rows = await queryReviews(
@@ -103,7 +103,7 @@ const CONFIDENCE_NAMES = { high: "High", medium: "Medium", low: "Low" } as const
 
 const score = (value: number | null) => (value === null ? "n/a" : value.toFixed(2));
 
-function labelCheckLines(upload: UploadRecord, check: LabelCheck): unknown[][] {
+function labelCheckLines(upload: OwnedUpload, check: LabelCheck): unknown[][] {
   const yours = check.source === "label";
   const thing = yours ? "label" : "rating";
   const lines: unknown[][] = [
@@ -152,7 +152,7 @@ function labelCheckLines(upload: UploadRecord, check: LabelCheck): unknown[][] {
 }
 
 /** A summary report as CSV: totals, sentiment shares, confidence, topics, keywords and trend. */
-export function summaryCsv(upload: UploadRecord, dashboard: Dashboard, filters: ReviewFilters): string {
+export function summaryCsv(upload: OwnedUpload, dashboard: Dashboard, filters: ReviewFilters): string {
   const lines: unknown[][] = [
     ["ReviewLens summary report"],
     ["Upload", upload.name],

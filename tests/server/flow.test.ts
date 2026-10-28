@@ -5,8 +5,10 @@ import { ProviderError, type SentimentProvider } from "@/lib/analysis/providers/
 import { analyzeNextBatch, retryFailed, startAnalysis } from "@/lib/server/analyze";
 import type { Db } from "@/lib/server/db-types";
 import { ingestRows } from "@/lib/server/ingest";
-import { createUpload, getProgress, getUpload } from "@/lib/server/uploads";
-import { createTestDb } from "../helpers/pglite";
+import { createUpload, getProgress, getOwnedUpload } from "@/lib/server/uploads";
+import { createTestDb, newOwner } from "../helpers/pglite";
+
+const OWNER = newOwner();
 
 let db: Db;
 let close: () => Promise<void>;
@@ -29,6 +31,7 @@ function newUpload(totalRows: number, provider: SentimentProvider = mock) {
       totalRows,
     },
     provider,
+    OWNER,
   );
 }
 
@@ -103,6 +106,7 @@ describe("ingestRows", () => {
         totalRows: 2,
       },
       mock,
+      OWNER,
     );
     await ingestRows(db, upload, [
       { rowNumber: 2, text: "Great kettle", label: "Positive" },
@@ -150,8 +154,8 @@ describe("ingestRows", () => {
   it("rejects rows once analysis has started", async () => {
     const upload = await newUpload(1);
     await ingestRows(db, upload, [{ rowNumber: 2, text: "Great kettle" }]);
-    await startAnalysis(db, upload.id);
-    const started = (await getUpload(db, upload.id))!;
+    await startAnalysis(db, OWNER, upload.id);
+    const started = (await getOwnedUpload(db, OWNER, upload.id))!;
     await expect(ingestRows(db, started, [{ rowNumber: 2, text: "Great kettle" }])).rejects.toMatchObject({
       code: "UPLOAD_NOT_IMPORTING",
       status: 409,
@@ -170,13 +174,13 @@ describe("analyzeNextBatch", () => {
         text: i % 2 ? "I love this kettle, great value" : "Terrible, it broke and delivery was late",
       })),
     );
-    await startAnalysis(db, upload.id);
+    await startAnalysis(db, OWNER, upload.id);
 
-    const first = await analyzeNextBatch(db, mock, upload.id);
+    const first = await analyzeNextBatch(db, mock, OWNER, upload.id);
     expect(first.processed).toBe(25);
     expect(first.progress.done).toBe(false);
 
-    const second = await analyzeNextBatch(db, mock, upload.id);
+    const second = await analyzeNextBatch(db, mock, OWNER, upload.id);
     expect(second.processed).toBe(5);
     expect(second.progress).toMatchObject({ done: true, status: "done", labeled: 30 });
 
@@ -194,15 +198,15 @@ describe("analyzeNextBatch", () => {
       { rowNumber: 2, text: "Great kettle" },
       { rowNumber: 3, text: "Late delivery" },
     ]);
-    await startAnalysis(db, upload.id);
+    await startAnalysis(db, OWNER, upload.id);
     for (let attempt = 0; attempt < 3; attempt++) {
-      const result = await analyzeNextBatch(db, flaky, upload.id);
+      const result = await analyzeNextBatch(db, flaky, OWNER, upload.id);
       expect(result.batchError).toMatch(/didn't respond/);
     }
-    expect(await getProgress(db, upload.id)).toMatchObject({ failed: 2, done: true, status: "done_with_issues" });
+    expect(await getProgress(db, OWNER, upload.id)).toMatchObject({ failed: 2, done: true, status: "done_with_issues" });
     expect(await count("upload_issues where code = 'ANALYSIS_FAILED'")).toBe(2);
 
-    const retried = await retryFailed(db, upload.id);
+    const retried = await retryFailed(db, OWNER, upload.id);
     expect(retried).toMatchObject({ failed: 0, pending: 2, status: "analyzing" });
     expect(await count("upload_issues where code = 'ANALYSIS_FAILED'")).toBe(0);
   });
@@ -215,8 +219,8 @@ describe("analyzeNextBatch", () => {
     })();
     const upload = await newUpload(1, broken);
     await ingestRows(db, upload, [{ rowNumber: 2, text: "Great kettle" }]);
-    await startAnalysis(db, upload.id);
-    await expect(analyzeNextBatch(db, broken, upload.id)).rejects.toMatchObject({ retryable: false });
+    await startAnalysis(db, OWNER, upload.id);
+    await expect(analyzeNextBatch(db, broken, OWNER, upload.id)).rejects.toMatchObject({ retryable: false });
     expect(await db.query("select status, attempts from reviews")).toEqual([{ status: "pending", attempts: 0 }]);
   });
 
@@ -224,8 +228,8 @@ describe("analyzeNextBatch", () => {
     const basic = new BasicProvider();
     const upload = await newUpload(1, basic);
     await ingestRows(db, upload, [{ rowNumber: 2, text: "Great product pero mabagal ang delivery at sira ang kahon pagdating." }]);
-    await startAnalysis(db, upload.id);
-    await analyzeNextBatch(db, basic, upload.id);
+    await startAnalysis(db, OWNER, upload.id);
+    await analyzeNextBatch(db, basic, OWNER, upload.id);
     const [row] = await db.query<{ status: string; status_note: string }>("select status, status_note from reviews");
     expect(row.status).toBe("not_labeled");
     expect(row.status_note).toMatch(/mixes languages/i);
@@ -243,8 +247,8 @@ describe("analyzeNextBatch", () => {
     })();
     const upload = await newUpload(1, limited);
     await ingestRows(db, upload, [{ rowNumber: 2, text: "Great kettle" }]);
-    await startAnalysis(db, upload.id);
-    const result = await analyzeNextBatch(db, limited, upload.id);
+    await startAnalysis(db, OWNER, upload.id);
+    const result = await analyzeNextBatch(db, limited, OWNER, upload.id);
     expect(result).toMatchObject({ processed: 0, retryAfterMs: 30_000 });
     expect(result.batchError).toMatch(/per minute/);
     expect(await db.query("select status, attempts from reviews")).toEqual([{ status: "pending", attempts: 0 }]);
@@ -260,13 +264,13 @@ describe("analyzeNextBatch", () => {
     })();
     const upload = await newUpload(1, exhausted);
     await ingestRows(db, upload, [{ rowNumber: 2, text: "Great kettle" }]);
-    await startAnalysis(db, upload.id);
-    await expect(analyzeNextBatch(db, exhausted, upload.id)).rejects.toMatchObject({
+    await startAnalysis(db, OWNER, upload.id);
+    await expect(analyzeNextBatch(db, exhausted, OWNER, upload.id)).rejects.toMatchObject({
       code: "FREE_TIER_DAILY_LIMIT",
       retryable: false,
     });
     expect(await db.query("select status, attempts from reviews")).toEqual([{ status: "pending", attempts: 0 }]);
-    expect(await getProgress(db, upload.id)).toMatchObject({ status: "analyzing", failed: 0 });
+    expect(await getProgress(db, OWNER, upload.id)).toMatchObject({ status: "analyzing", failed: 0 });
   });
 
   it("does not lower confidence for Taglish when the provider reads Tagalog", async () => {
@@ -274,8 +278,8 @@ describe("analyzeNextBatch", () => {
     await ingestRows(db, upload, [
       { rowNumber: 2, text: "Great quality, I love it. Sobrang ganda at mabilis dumating, salamat po!" },
     ]);
-    await startAnalysis(db, upload.id);
-    await analyzeNextBatch(db, mock, upload.id);
+    await startAnalysis(db, OWNER, upload.id);
+    await analyzeNextBatch(db, mock, OWNER, upload.id);
     const [row] = await db.query<{ status: string; confidence: string; confidence_reasons: string[] }>(
       "select status, confidence, confidence_reasons from reviews",
     );
@@ -288,8 +292,8 @@ describe("analyzeNextBatch", () => {
     await ingestRows(db, upload, [
       { rowNumber: 2, text: "Great product, I love it, pero el envío llegó tarde y la caja estaba rota." },
     ]);
-    await startAnalysis(db, upload.id);
-    await analyzeNextBatch(db, mock, upload.id);
+    await startAnalysis(db, OWNER, upload.id);
+    await analyzeNextBatch(db, mock, OWNER, upload.id);
     const [row] = await db.query<{ language_status: string; confidence: string; confidence_reasons: string[] }>(
       "select language_status, confidence, confidence_reasons from reviews",
     );
@@ -305,8 +309,8 @@ describe("analyzeNextBatch", () => {
     })();
     const upload = await newUpload(1, withTopics);
     await ingestRows(db, upload, [{ rowNumber: 2, text: "Terrible, it broke and delivery was late" }]);
-    await startAnalysis(db, upload.id);
-    await analyzeNextBatch(db, withTopics, upload.id);
+    await startAnalysis(db, OWNER, upload.id);
+    await analyzeNextBatch(db, withTopics, OWNER, upload.id);
     const [row] = await db.query<{ topics: string[] }>("select topics from reviews");
     expect(row.topics).toEqual(["service"]);
   });
@@ -320,8 +324,8 @@ describe("analyzeNextBatch", () => {
   it("refuses to mix results from a different provider", async () => {
     const upload = await newUpload(1);
     await ingestRows(db, upload, [{ rowNumber: 2, text: "Great kettle" }]);
-    await startAnalysis(db, upload.id);
-    await expect(analyzeNextBatch(db, new BasicProvider(), upload.id)).rejects.toMatchObject({
+    await startAnalysis(db, OWNER, upload.id);
+    await expect(analyzeNextBatch(db, new BasicProvider(), OWNER, upload.id)).rejects.toMatchObject({
       code: "PROVIDER_CHANGED",
       status: 409,
     });

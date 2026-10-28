@@ -1,11 +1,12 @@
 import type { NextRequest } from "next/server";
 import { getDashboard } from "@/lib/server/dashboard";
+import { requireApiUser } from "@/lib/server/auth";
 import { getDb } from "@/lib/server/db";
 import { notFound } from "@/lib/server/errors";
 import { reviewCsvLines, summaryCsv } from "@/lib/server/export";
 import { dashboardFilters, parseFilters } from "@/lib/server/filters";
 import { errorResponse, slugify } from "@/lib/server/http";
-import { getUpload } from "@/lib/server/uploads";
+import { getOwnedUpload } from "@/lib/server/uploads";
 
 const BOM = "﻿"; // lets Excel open UTF-8 files (accents, emoji) correctly
 
@@ -20,9 +21,10 @@ function csvHeaders(fileName: string) {
 /** ?type=reviews (default) streams the labeled dataset; ?type=summary returns the summary report. */
 export async function GET(request: NextRequest, ctx: RouteContext<"/api/uploads/[id]/export">) {
   try {
+    const user = await requireApiUser(request);
     const { id } = await ctx.params;
     const db = getDb();
-    const upload = await getUpload(db, id);
+    const upload = await getOwnedUpload(db, user.id, id);
     if (!upload) throw notFound();
     const params = request.nextUrl.searchParams;
     const filters = parseFilters(params);

@@ -1,4 +1,5 @@
 import type { ColumnField, ColumnMap } from "@/lib/types";
+import { labelColumnLooksValid } from "./parse-values";
 
 export function normalizeHeader(header: string): string {
   return header
@@ -28,6 +29,16 @@ export function csvColumnsProblem(headers: string[]): string | null {
   return headers.length
     ? null
     : "ReviewLens couldn't find any columns. Make sure the first line names the columns and the file is saved as CSV (comma-separated).";
+}
+
+/**
+ * Why a column can't be the review text, or null. A column of positive/neutral/negative labels is
+ * someone's own labels, not reviews: analyzing it would just echo the labels back.
+ */
+export function textColumnProblem(values: string[]): string | null {
+  return labelColumnLooksValid(values)
+    ? "This column holds labels like positive, neutral or negative, not review text. Choose the column with what customers wrote, and match the labels to Your label."
+    : null;
 }
 
 /** True for columns that look like they identify a person. These are never uploaded. */

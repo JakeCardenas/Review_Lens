@@ -1,6 +1,6 @@
 import Papa from "papaparse";
 import { describe, expect, it } from "vitest";
-import { csvColumnsProblem, guessColumnMapping, isPersonalColumn } from "@/lib/csv/columns";
+import { csvColumnsProblem, guessColumnMapping, isPersonalColumn, textColumnProblem } from "@/lib/csv/columns";
 
 describe("csvColumnsProblem", () => {
   const parse = (text: string) => Papa.parse<Record<string, string>>(text, { header: true, skipEmptyLines: "greedy" });
@@ -67,5 +67,16 @@ describe("guessColumnMapping", () => {
     expect(guessColumnMapping(["review_text", "my_label"]).label).toBe("my_label");
     expect(guessColumnMapping(["review", "sentiment"]).label).toBe("sentiment");
     expect(guessColumnMapping(["review", "stars"]).label).toBeNull();
+  });
+});
+
+describe("textColumnProblem", () => {
+  it("stops a label column from being used as the review text", () => {
+    expect(textColumnProblem(["positive", "Neutral", "negative", "neutral", ""])).toMatch(/holds labels/);
+  });
+
+  it("accepts real review text, even when a few reviews are one word", () => {
+    expect(textColumnProblem(["Love it", "positive", "The lid broke after a week", "Late delivery"])).toBeNull();
+    expect(textColumnProblem([])).toBeNull();
   });
 });

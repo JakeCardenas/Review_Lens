@@ -6,10 +6,12 @@ import type { Db } from "@/lib/server/db-types";
 import { EMPTY_FILTERS } from "@/lib/server/filters";
 import { ingestRows } from "@/lib/server/ingest";
 import { getFilterOptions, listIssues, searchReviews } from "@/lib/server/reviews";
-import { createUpload, type UploadRecord } from "@/lib/server/uploads";
+import { createUpload, type OwnedUpload } from "@/lib/server/uploads";
 import { sentimentFromRating } from "@/lib/analysis/confidence";
 import { CONFIDENCE_LEVELS, type RatingScale } from "@/lib/types";
-import { createTestDb } from "../helpers/pglite";
+import { createTestDb, newOwner } from "../helpers/pglite";
+
+const OWNER = newOwner();
 
 const mock = new MockProvider();
 const TEXT = {
@@ -20,13 +22,13 @@ const TEXT = {
 
 let db: Db;
 let close: () => Promise<void>;
-let upload: UploadRecord;
-let undated: UploadRecord;
+let upload: OwnedUpload;
+let undated: OwnedUpload;
 
 async function analyzeAll(id: string) {
-  await startAnalysis(db, id);
+  await startAnalysis(db, OWNER, id);
   for (let i = 0; i < 10; i++) {
-    const { progress } = await analyzeNextBatch(db, mock, id);
+    const { progress } = await analyzeNextBatch(db, mock, OWNER, id);
     if (progress.done) return;
   }
 }
@@ -44,6 +46,7 @@ beforeAll(async () => {
       totalRows: 40,
     },
     mock,
+    OWNER,
   );
   await ingestRows(
     db,
@@ -74,6 +77,7 @@ beforeAll(async () => {
       totalRows: 3,
     },
     mock,
+    OWNER,
   );
   await ingestRows(db, undated, [
     { rowNumber: 2, text: TEXT.positive },
@@ -136,16 +140,16 @@ describe("getDashboard", () => {
 
 describe("searchReviews", () => {
   it("pages through all reviews", async () => {
-    const page = await searchReviews(db, upload.id, EMPTY_FILTERS, 1);
+    const page = await searchReviews(db, { uploadId: upload.id, ownerId: OWNER }, EMPTY_FILTERS, 1);
     expect(page).toMatchObject({ total: 40, page: 1, pageCount: 2 });
     expect(page.rows).toHaveLength(25);
   });
 
   it("finds reviews by keyword and combines it with filters", async () => {
-    expect((await searchReviews(db, upload.id, { ...EMPTY_FILTERS, q: "late" }, 1)).total).toBe(14);
-    expect((await searchReviews(db, upload.id, { ...EMPTY_FILTERS, q: "kett" }, 1)).total).toBe(26);
-    expect((await searchReviews(db, upload.id, { ...EMPTY_FILTERS, q: "late", product: "Kettle" }, 1)).total).toBe(7);
-    expect((await searchReviews(db, upload.id, { ...EMPTY_FILTERS, sentiment: "positive" }, 1)).total).toBe(13);
+    expect((await searchReviews(db, { uploadId: upload.id, ownerId: OWNER }, { ...EMPTY_FILTERS, q: "late" }, 1)).total).toBe(14);
+    expect((await searchReviews(db, { uploadId: upload.id, ownerId: OWNER }, { ...EMPTY_FILTERS, q: "kett" }, 1)).total).toBe(26);
+    expect((await searchReviews(db, { uploadId: upload.id, ownerId: OWNER }, { ...EMPTY_FILTERS, q: "late", product: "Kettle" }, 1)).total).toBe(7);
+    expect((await searchReviews(db, { uploadId: upload.id, ownerId: OWNER }, { ...EMPTY_FILTERS, sentiment: "positive" }, 1)).total).toBe(13);
   });
 });
 
@@ -156,7 +160,7 @@ describe("mixed opinions", () => {
       return (await super.analyze(items)).map((r, i) => ({ ...r, mixedOpinion: /\bbut\b/i.test(items[i].text) }));
     }
   })();
-  let mixedUpload: UploadRecord;
+  let mixedUpload: OwnedUpload;
 
   beforeAll(async () => {
     mixedUpload = await createUpload(
@@ -170,6 +174,7 @@ describe("mixed opinions", () => {
         totalRows: 4,
       },
       mixedAware,
+      OWNER,
     );
     await ingestRows(db, mixedUpload, [
       { rowNumber: 2, text: "I love the design but the lid is terrible and leaks" },
@@ -177,8 +182,8 @@ describe("mixed opinions", () => {
       { rowNumber: 4, text: TEXT.positive },
       { rowNumber: 5, text: TEXT.negative },
     ]);
-    await startAnalysis(db, mixedUpload.id);
-    await analyzeNextBatch(db, mixedAware, mixedUpload.id);
+    await startAnalysis(db, OWNER, mixedUpload.id);
+    await analyzeNextBatch(db, mixedAware, OWNER, mixedUpload.id);
   });
 
   it("counts labeled reviews that mix praise and complaints", async () => {
@@ -187,7 +192,7 @@ describe("mixed opinions", () => {
   });
 
   it("filters the review list to mixed opinions", async () => {
-    const page = await searchReviews(db, mixedUpload.id, { ...EMPTY_FILTERS, opinion: "mixed" }, 1);
+    const page = await searchReviews(db, { uploadId: mixedUpload.id, ownerId: OWNER }, { ...EMPTY_FILTERS, opinion: "mixed" }, 1);
     expect(page.total).toBe(2);
     expect(page.rows.map((r) => r.rowNumber)).toEqual([2, 3]);
   });
@@ -195,7 +200,7 @@ describe("mixed opinions", () => {
 
 describe("label check", () => {
   const SPANISH = "El producto llegó tarde y la caja estaba rota, pero el vendedor fue muy amable.";
-  let handLabeled: UploadRecord;
+  let handLabeled: OwnedUpload;
 
   beforeAll(async () => {
     handLabeled = await createUpload(
@@ -209,6 +214,7 @@ describe("label check", () => {
         totalRows: 9,
       },
       mock,
+      OWNER,
     );
     await ingestRows(db, handLabeled, [
       { rowNumber: 2, text: TEXT.positive, rating: "5", label: "positive" },
@@ -256,7 +262,7 @@ describe("label check", () => {
 
   it("splits agreement by confidence level", async () => {
     const { check } = await getDashboard(db, handLabeled, EMPTY_FILTERS);
-    const { rows } = await searchReviews(db, handLabeled.id, EMPTY_FILTERS, 1);
+    const { rows } = await searchReviews(db, { uploadId: handLabeled.id, ownerId: OWNER }, EMPTY_FILTERS, 1);
     for (const level of CONFIDENCE_LEVELS) {
       const atLevel = rows.filter((r) => r.status === "labeled" && r.referenceLabel && r.confidence === level);
       expect(check?.byConfidence[level]).toEqual({
@@ -267,12 +273,12 @@ describe("label check", () => {
   });
 
   it("filters the review list to disagreements and matches", async () => {
-    const disagree = await searchReviews(db, handLabeled.id, { ...EMPTY_FILTERS, check: "disagree" }, 1);
+    const disagree = await searchReviews(db, { uploadId: handLabeled.id, ownerId: OWNER }, { ...EMPTY_FILTERS, check: "disagree" }, 1);
     expect(disagree.rows.map((r) => [r.rowNumber, r.referenceLabel, r.sentiment])).toEqual([
       [4, "positive", "neutral"],
       [5, "neutral", "negative"],
     ]);
-    const agree = await searchReviews(db, handLabeled.id, { ...EMPTY_FILTERS, check: "agree" }, 1);
+    const agree = await searchReviews(db, { uploadId: handLabeled.id, ownerId: OWNER }, { ...EMPTY_FILTERS, check: "agree" }, 1);
     expect(agree.rows.map((r) => r.rowNumber)).toEqual([2, 3]);
   });
 
@@ -298,6 +304,7 @@ describe("label check", () => {
         totalRows: 4,
       },
       mock,
+      OWNER,
     );
     await ingestRows(db, rated, [
       { rowNumber: 2, text: TEXT.positive, rating: "5" },
@@ -308,7 +315,7 @@ describe("label check", () => {
     await analyzeAll(rated.id);
     const { check } = await getDashboard(db, rated, EMPTY_FILTERS);
     expect(check).toMatchObject({ source: "rating", eligible: 2, agree: 1, excluded: { missing: 1, invalid: 1 } });
-    const disagree = await searchReviews(db, rated.id, { ...EMPTY_FILTERS, check: "disagree" }, 1);
+    const disagree = await searchReviews(db, { uploadId: rated.id, ownerId: OWNER }, { ...EMPTY_FILTERS, check: "disagree" }, 1);
     expect(disagree.rows.map((r) => [r.rowNumber, r.ratingLabel, r.sentiment])).toEqual([[3, "negative", "positive"]]);
     // A rating is never stored as the person's own label.
     expect(disagree.rows[0].referenceLabel).toBeNull();
@@ -333,13 +340,14 @@ describe("label check", () => {
           totalRows: ratings.length,
         },
         mock,
+        OWNER,
       );
       await ingestRows(
         db,
         grid,
         ratings.map((rating, i) => ({ rowNumber: i + 2, text: TEXT.neutral, rating: String(rating) })),
       );
-      const { rows } = await searchReviews(db, grid.id, EMPTY_FILTERS, 1, 100);
+      const { rows } = await searchReviews(db, { uploadId: grid.id, ownerId: OWNER }, EMPTY_FILTERS, 1, 100);
       expect(rows.map((r) => [r.rating, r.ratingLabel])).toEqual(
         ratings.map((rating) => [rating, sentimentFromRating(rating, ratingScale)]),
       );
@@ -354,7 +362,7 @@ describe("label check", () => {
 
 describe("getFilterOptions and listIssues", () => {
   it("returns products, date range and rating range", async () => {
-    expect(await getFilterOptions(db, upload.id)).toEqual({
+    expect(await getFilterOptions(db, { uploadId: upload.id, ownerId: OWNER })).toEqual({
       products: [
         { name: "Kettle", count: 20 },
         { name: "Toaster", count: 20 },
@@ -367,6 +375,6 @@ describe("getFilterOptions and listIssues", () => {
   });
 
   it("returns an empty issue list for a clean upload", async () => {
-    expect(await listIssues(db, upload.id, 1)).toMatchObject({ total: 0, rows: [] });
+    expect(await listIssues(db, { uploadId: upload.id, ownerId: OWNER }, 1)).toMatchObject({ total: 0, rows: [] });
   });
 });

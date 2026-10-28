@@ -6,8 +6,10 @@ import type { Db } from "@/lib/server/db-types";
 import { csvCell, describeFilters, reviewCsvLines, summaryCsv } from "@/lib/server/export";
 import { buildWhere, EMPTY_FILTERS, filtersToQuery, parseFilters } from "@/lib/server/filters";
 import { ingestRows } from "@/lib/server/ingest";
-import { createUpload, type UploadRecord } from "@/lib/server/uploads";
-import { createTestDb } from "../helpers/pglite";
+import { createUpload, type OwnedUpload } from "@/lib/server/uploads";
+import { createTestDb, newOwner } from "../helpers/pglite";
+
+const OWNER = newOwner();
 
 describe("csvCell", () => {
   it("neutralizes cells a spreadsheet would run as formulas", () => {
@@ -67,19 +69,20 @@ describe("parseFilters", () => {
 });
 
 describe("buildWhere", () => {
-  it("numbers parameters after the upload id and escapes LIKE wildcards", () => {
-    const where = buildWhere("u-1", { ...EMPTY_FILTERS, product: "Kettle", q: "100%_off" });
-    expect(where.params).toEqual(["u-1", "Kettle", "100%_off", "%100\\%\\_off%"]);
-    expect(where.sql).toContain("r.product = $2");
-    expect(where.sql).toContain("websearch_to_tsquery('english', $3)");
-    expect(where.sql).toContain("r.text ilike $4");
+  it("scopes to the upload and its owner, numbers the rest after them and escapes LIKE wildcards", () => {
+    const where = buildWhere({ uploadId: "u-1", ownerId: "o-1" }, { ...EMPTY_FILTERS, product: "Kettle", q: "100%_off" });
+    expect(where.params).toEqual(["u-1", "o-1", "Kettle", "100%_off", "%100\\%\\_off%"]);
+    expect(where.sql).toContain("o.id = $1::uuid and o.owner_id = $2::uuid");
+    expect(where.sql).toContain("r.product = $3");
+    expect(where.sql).toContain("websearch_to_tsquery('english', $4)");
+    expect(where.sql).toContain("r.text ilike $5");
   });
 });
 
 describe("exports", () => {
   let db: Db;
   let close: () => Promise<void>;
-  let upload: UploadRecord;
+  let upload: OwnedUpload;
   const mock = new MockProvider();
 
   beforeAll(async () => {
@@ -95,13 +98,14 @@ describe("exports", () => {
         totalRows: 2,
       },
       mock,
+      OWNER,
     );
     await ingestRows(db, upload, [
       { rowNumber: 2, text: "=HYPERLINK(\"x\") love it, write to me@example.com", rating: "5" },
       { rowNumber: 3, text: "Terrible, delivery was late", rating: "1" },
     ]);
-    await startAnalysis(db, upload.id);
-    await analyzeNextBatch(db, mock, upload.id);
+    await startAnalysis(db, OWNER, upload.id);
+    await analyzeNextBatch(db, mock, OWNER, upload.id);
   });
 
   afterAll(() => close());
@@ -145,6 +149,7 @@ describe("exports", () => {
         totalRows: 4,
       },
       mock,
+      OWNER,
     );
     await ingestRows(db, labeled, [
       { rowNumber: 2, text: "I love it", label: "positive" },
@@ -152,8 +157,8 @@ describe("exports", () => {
       { rowNumber: 4, text: "It is blue", label: "negative" },
       { rowNumber: 5, text: "Great value" },
     ]);
-    await startAnalysis(db, labeled.id);
-    await analyzeNextBatch(db, mock, labeled.id);
+    await startAnalysis(db, OWNER, labeled.id);
+    await analyzeNextBatch(db, mock, OWNER, labeled.id);
 
     const lines: string[] = [];
     for await (const line of reviewCsvLines(db, labeled, EMPTY_FILTERS)) lines.push(line);

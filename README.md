@@ -10,7 +10,7 @@ Upload a CSV to see how customers feel, what they mention most, and how opinions
 
 ## Run locally
 
-You’ll need Node.js 20.9 or newer and a Supabase database.
+You’ll need Node.js 20.9 or newer and a Supabase project.
 
 ```bash
 npm install
@@ -18,9 +18,42 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Add your database URL to `.env.local`. Then, in the Supabase SQL Editor, run each file in `supabase/migrations` in order. If your database is from an earlier version, run only the files it doesn’t have yet. For example, `20261028000000_label_check.sql` adds the label check.
+Put your database URL and Supabase URL and publishable key in `.env.local`. Then, in the Supabase SQL Editor, run each file in `supabase/migrations` in order. If your database is from an earlier version, run only the files it doesn’t have yet. For example, `20261029000000_accounts.sql` adds accounts and limits.
 
 ReviewLens uses a basic sentiment analyzer by default. Add a Gemini API key to use AI mode on Google’s free tier. No AI training is needed.
+
+## Accounts
+
+Anyone can create an account with an email address (Gmail is fine) and a password made just for ReviewLens. ReviewLens never asks for Gmail, school (SIAS) or other passwords, and there’s no Google sign-in. Every account is the same kind of account, and each one sees and manages only its own uploads. The server checks the signed-in account on every page and action.
+
+Uploads made before accounts existed have no owner, so nobody sees them until they are assigned. After your account is created and confirmed, open `supabase/manual/assign-existing-uploads.sql`, put your email address on the marked line, and run it in the Supabase SQL Editor. It moves only ownerless uploads, and only if exactly one confirmed account has that email. If you ever delete an account in Supabase, its uploads are deleted with it.
+
+### Supabase settings
+
+In the Supabase dashboard:
+
+1. **Authentication → Sign In / Providers → Email:**
+   - keep **Confirm email** turned on (ReviewLens refuses sign-ups that skip it)
+   - set the minimum password length to 8
+2. **Authentication → URL Configuration:**
+   - set **Site URL** to your Vercel address
+   - add `https://your-app.vercel.app/**` and `http://localhost:3000/**` to **Redirect URLs**
+3. **Authentication → Emails → SMTP Settings:** Supabase’s built-in email sender only delivers to members of your Supabase team, at about 2 emails an hour. For anyone else to get confirmation and password-reset emails, connect your own SMTP sender. Many email services have a free tier.
+4. **Authentication → Emails → Templates** (recommended): links then work on any device, not only in the browser that signed up.
+   - **Confirm signup:** point the link at `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/`
+   - **Reset password:** point the link at `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery`
+5. **Authentication → Rate Limits:** sign-ups and sign-ins are limited per IP address, 30 every 5 minutes by default. Every request comes from ReviewLens’s server, so the whole app shares that limit. Raise it before a class demo where many people sign up at once.
+
+In Vercel, add `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` under Settings → Environment Variables, then redeploy.
+
+### Limits
+
+These protect the shared Gemini free tier. Each one can be changed with an environment variable (see `.env.example`).
+
+- Each account can start 10 uploads a day and keep 25 at a time.
+- AI mode analyzes up to 2,500 reviews per account per day and 10,000 for the whole app.
+
+When a limit is reached, analysis pauses with a message and continues after midnight Pacific time. Basic mode never counts toward the AI limits.
 
 ## AI mode with the Gemini free tier
 
@@ -55,8 +88,10 @@ Below it, a list shows the reviews where the labels differ, with your label next
 
 Without a label column, the dashboard shows **Rating alignment** instead. It compares ReviewLens’s labels with what each star rating suggests: 4–5 stars count as positive, 3 as neutral, and 1–2 as negative. Ratings are only a rough proxy, not labels a person checked, so this doesn’t measure accuracy.
 
+To try it, upload `fixtures/label-check-sample.csv`: 20 made-up reviews, including one blank and one unreadable label, so you can see which reviews are left out and why.
+
 Either way, the check measures agreement, not accuracy, and a small sample can swing a lot. See [docs/accuracy-check.md](docs/accuracy-check.md) for the pilot results and how to run a fair check.
 
 ## Privacy
 
-There’s no sign-in yet, so anyone with access can view or delete uploads. Use sample or non-sensitive reviews for demos.
+Each upload belongs to the account that created it. Other accounts can’t see, export, analyze or delete it, and uploads are never made public. Use sample or non-sensitive reviews for demos. `fixtures/label-check-sample.csv` is a made-up file for trying the label check.

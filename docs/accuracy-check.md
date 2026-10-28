@@ -46,7 +46,7 @@ These changes came from studying the pilot, so the pilot can't show whether they
 
 ## A fair check
 
-1. **Label a fresh set.** `label-check-150.csv` has 150 Shopee reviews, 30 per star level, none from the pilot. Fill in the `my_label` column with the rules below. Don't look at ReviewLens's labels or the star ratings first. Label every review, even hard ones; skipping them makes agreement look better than it is.
+1. **Label a fresh set.** `label-check-150.csv` has 150 Shopee reviews, 30 per star level, none from the pilot. It isn't in this repository, because it holds review text from the Shopee dataset; it was given to Jake separately. Its `my_label` column is still empty, so no fresh evaluation exists yet. Fill in the `my_label` column with the rules below. Don't look at ReviewLens's labels or the star ratings first. Label every review, even hard ones; skipping them makes agreement look better than it is.
 2. **Add a second labeler if you can.** Have a teammate label the same file separately, then compare the two. How often two people agree shows how high agreement can realistically go.
 3. **Run it once.** Upload the labeled file in AI mode. That takes about 6 Gemini requests. Report the Label check numbers with the sample size.
 4. **Keep the check honest.** Don't change the instructions after seeing these results and then report the same 150 as improved. A further change needs another fresh set.
