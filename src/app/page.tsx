@@ -4,12 +4,13 @@ import { ChevronRight, Download, Info, Upload } from "lucide-react";
 import { BrandMark } from "@/components/brand";
 import { JourneyPath } from "@/components/journey-path";
 import { ModeBadge } from "@/components/mode-badge";
+import { PublicWelcome } from "@/components/public-welcome";
 import { SentimentStackedBar } from "@/components/sentiment";
 import { ButtonLink, Notice, StatusPill, linkClasses } from "@/components/ui";
 import { getProviderInfo } from "@/lib/analysis/providers";
 import { formatDateTime, formatNumber, formatPercent, plural } from "@/lib/format";
 import { JOURNEY_STEPS, uploadJourneyStep } from "@/lib/journey";
-import { requireUser } from "@/lib/server/auth";
+import { getCurrentUser, requireUser } from "@/lib/server/auth";
 import { getDb } from "@/lib/server/db";
 import { AppError } from "@/lib/server/errors";
 import { listUploads, type UploadListItem } from "@/lib/server/uploads";
@@ -136,6 +137,8 @@ function LatestUpload({ upload }: { upload: UploadListItem }) {
 
 export default async function HomePage() {
   await connection();
+  // Signed-out visitors get the public welcome page. Everything below needs an account.
+  if (!(await getCurrentUser())) return <PublicWelcome />;
   const user = await requireUser("/");
   const provider = getProviderInfo();
   let uploads: UploadListItem[] = [];

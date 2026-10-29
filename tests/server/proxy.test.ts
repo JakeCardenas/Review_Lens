@@ -51,6 +51,12 @@ describe("proxy", () => {
     expect((await visit("/sign-up")).headers.get("x-middleware-next")).toBe("1");
   });
 
+  it("shows signed-out visitors the welcome page at /, and still sends them to sign in everywhere else", async () => {
+    signedOut();
+    expect((await visit("/")).headers.get("x-middleware-next")).toBe("1");
+    expect((await visit("/upload")).headers.get("location")).toBe("https://review-lens.example/sign-in?next=%2Fupload");
+  });
+
   it("leaves the app icons and web app manifest alone, since browsers fetch them without a session", () => {
     const runsOn = (path: string) => new RegExp(`^${config.matcher[0]}$`).test(path);
     for (const path of ["/manifest.webmanifest", "/favicon.ico", "/icon.png", "/apple-icon.png", "/icons/icon-512.png", "/brand/spup-seal.png"]) {

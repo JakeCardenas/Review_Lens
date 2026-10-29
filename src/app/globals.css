@@ -374,6 +374,29 @@ dialog::backdrop {
   }
 }
 
+/*
+  The public welcome and account pages follow the DesignMD palette more closely: a sky-blue page and lime
+  primary buttons on a green lip. Focus rings and field borders get darker shades so they still reach 3:1
+  against the sky blue.
+*/
+[data-public-page] {
+  --brand: var(--fresh-leaf);
+  --brand-hover: #b5f38a;
+  --brand-edge: var(--eager-green);
+  --on-brand: var(--charcoal); /* 7.9:1 on lime */
+  --field: #858585; /* 3.2:1 on sky blue */
+}
+
+body:has([data-public-page]) {
+  --focus: var(--accent-ink); /* 4.6:1 on sky blue */
+  background: var(--sky);
+}
+
+body:has([data-public-page]) > header {
+  background: var(--sky);
+  border-color: transparent;
+}
+
 /* The home screen has its own big "Upload reviews" button, so the header's copy stays out of the way there. */
 body:has([data-home-upload]) [data-header-upload] {
   display: none;

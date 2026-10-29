@@ -43,7 +43,9 @@ export async function proxy(request: NextRequest) {
   if (signedIn && (pathname === "/sign-in" || pathname === "/sign-up")) {
     return keepSession(NextResponse.redirect(new URL("/", request.url)));
   }
-  if (signedIn || isPublicPath(pathname)) return response;
+  // The home page doubles as the public welcome page for signed-out visitors; it shows nothing private,
+  // and the page itself checks the account before showing any uploads.
+  if (signedIn || isPublicPath(pathname) || pathname === "/") return response;
   if (isApiPath(pathname)) {
     return keepSession(
       NextResponse.json({ error: { code: "SIGN_IN_REQUIRED", message: "Sign in to continue." } }, { status: 401 }),
