@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
-import { ChevronRight, Download, Info, Upload } from "lucide-react";
+import { ChevronRight, Download, Info } from "lucide-react";
+import { ActionArt } from "@/components/illustrations";
 import { Mascots } from "@/components/brand";
 import { JourneyPath } from "@/components/journey-path";
 import { ModeBadge } from "@/components/mode-badge";
@@ -29,7 +30,7 @@ function FirstUpload() {
       <h1 className="font-display text-[2rem] font-black leading-tight text-ink sm:text-[2.5rem]">Your reviews</h1>
       <section
         aria-labelledby="first-title"
-        className="grid items-center gap-8 rounded-card border border-line p-6 sm:p-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-12"
+        className="grid items-center gap-7.5 rounded-card border border-line p-5 sm:p-7.5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-12.5"
       >
         <div className="grid justify-items-start gap-5">
           <div>
@@ -41,7 +42,7 @@ function FirstUpload() {
             </p>
           </div>
           <ButtonLink href="/upload" data-home-upload>
-            <Upload aria-hidden className="size-5" strokeWidth={2.25} />
+            <ActionArt name="csv" />
             Upload reviews
           </ButtonLink>
           <p className="text-[15px] text-ink-2">
@@ -51,7 +52,7 @@ function FirstUpload() {
               Download a sample CSV
             </a>
           </p>
-          <ol className="mt-2 grid w-full gap-4 border-t border-line pt-6 sm:grid-cols-2">
+          <ol className="mt-2.5 grid w-full gap-5 border-t border-line pt-5 min-[550px]:grid-cols-2">
             {JOURNEY_STEPS.map((step, i) => (
               <li key={step} className="flex gap-3">
                 <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-soft text-[15px] font-extrabold text-brand-ink">
@@ -79,7 +80,7 @@ function LatestUpload({ upload }: { upload: UploadListItem }) {
       <h2 id="latest-title" className="text-subheading font-extrabold text-ink">
         Latest upload
       </h2>
-      <div className="min-w-0 rounded-card border border-line p-5 sm:p-7">
+      <div className="min-w-0 rounded-card border border-line p-5 sm:p-7.5">
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill status={upload.status} />
           <ModeBadge provider={upload.provider} />
@@ -92,7 +93,7 @@ function LatestUpload({ upload }: { upload: UploadListItem }) {
         </p>
 
         {step === 0 && (
-          <div className="mt-6 grid justify-items-start gap-4">
+          <div className="mt-5 grid justify-items-start gap-4">
             <p className="max-w-xl text-body text-ink">This upload stopped before every row was saved. Upload the file again to finish it.</p>
             <ButtonLink href="/upload" variant="secondary">
               Upload again
@@ -100,7 +101,7 @@ function LatestUpload({ upload }: { upload: UploadListItem }) {
           </div>
         )}
         {step === 2 && (
-          <div className="mt-6 grid gap-5">
+          <div className="mt-5 grid gap-5">
             <JourneyPath current={2} />
             <p className="text-body text-ink">
               {formatNumber(upload.labeled)} of {plural(upload.totalRows, "review")} labeled so far.
@@ -113,7 +114,7 @@ function LatestUpload({ upload }: { upload: UploadListItem }) {
           </div>
         )}
         {step === 3 && (
-          <div className="mt-6 grid gap-4">
+          <div className="mt-5 grid gap-4">
             {upload.labeled ? (
               <>
                 <p className="text-body text-ink">
@@ -128,7 +129,8 @@ function LatestUpload({ upload }: { upload: UploadListItem }) {
             )}
             <div className="mt-1">
               <ButtonLink href={`/uploads/${upload.id}`} variant="secondary">
-                See the results
+                <ActionArt name="explore" />
+                Explore feedback
               </ButtonLink>
             </div>
           </div>
@@ -174,10 +176,10 @@ export default async function HomePage() {
           <div className="flex flex-wrap items-end justify-between gap-5">
             <div className="max-w-2xl">
               <h1 className="font-display text-[2rem] font-black leading-tight text-ink sm:text-[2.5rem]">Your reviews</h1>
-              <p className="mt-2 text-body text-ink-2">Upload a new file, or pick up where you left off.</p>
+              <p className="mt-2 text-body text-ink-2">Pick up where you left off, or upload a new file.</p>
             </div>
             <ButtonLink href="/upload" data-home-upload>
-              <Upload aria-hidden className="size-5" strokeWidth={2.25} />
+              <ActionArt name="csv" />
               Upload reviews
             </ButtonLink>
           </div>

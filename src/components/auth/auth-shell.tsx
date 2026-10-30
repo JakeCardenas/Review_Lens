@@ -14,12 +14,12 @@ export function AuthShell({
   footer?: ReactNode;
 }) {
   return (
-    <div className="mx-auto grid w-full max-w-md gap-8 sm:pt-6">
+    <div className="mx-auto grid w-full max-w-md gap-7.5 sm:pt-6">
       <div className="grid gap-2 text-center">
         <h1 className="font-display text-[2rem] font-black leading-tight text-ink sm:text-[2.5rem]">{title}</h1>
         {intro && <div className="text-body text-ink-2">{intro}</div>}
       </div>
-      <section className="grid gap-6">{children}</section>
+      <section className="grid gap-5">{children}</section>
       {footer && <div className="grid gap-3 text-center text-[15px] text-ink-2">{footer}</div>}
     </div>
   );

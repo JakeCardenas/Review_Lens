@@ -67,7 +67,7 @@ export default async function AccuracyPage({ params }: PageProps<"/uploads/[id]/
           )}
         </>
       ) : (
-        <Card title="Compare with your own labels" className="rounded-card bg-accent-soft p-6 sm:p-8">
+        <Card title="Compare with your own labels" className="rounded-card bg-accent-soft p-5 sm:p-7.5">
           <p className="max-w-prose text-[15px] text-ink-2">
             Add a column to your CSV with your own label for each review: positive, neutral or negative. When you upload it, match that
             column to <span className="font-extrabold text-ink">Your label</span>, and this page shows how often ReviewLens agrees with you.
@@ -93,7 +93,7 @@ export default async function AccuracyPage({ params }: PageProps<"/uploads/[id]/
         <ConfidenceBreakdown confidence={confidence} />
         {upload.provider === "basic" && <p className="mt-5 text-[15px] text-ink-2">Basic mode never marks a label High confidence.</p>}
         {confidence.low > 0 && (
-          <Link href={reviews({ confidence: "low" })} className={`${linkClasses} mt-3 inline-block py-1 text-[15px]`}>
+          <Link href={reviews({ confidence: "low" })} className={`${linkClasses} mt-2.5 inline-flex min-h-11 items-center text-[15px]`}>
             Read the {plural(confidence.low, "low-confidence review")}
           </Link>
         )}

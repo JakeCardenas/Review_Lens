@@ -14,9 +14,9 @@ export default async function UploadPage() {
   await requireUser("/upload");
   const provider = getProviderInfo();
   return (
-    <div className="mx-auto grid max-w-3xl gap-8">
+    <div className="mx-auto grid max-w-3xl gap-7.5">
       <div className="grid gap-5">
-        <Link href="/" className="press inline-flex w-fit items-center gap-1.5 rounded-control py-1 pr-2 text-[15px] font-bold text-accent-ink">
+        <Link href="/" className="press inline-flex min-h-11 w-fit items-center gap-1.5 rounded-control pr-2 text-[15px] font-bold text-accent-ink">
           <ArrowLeft aria-hidden className="size-4" strokeWidth={3} />
           All uploads
         </Link>

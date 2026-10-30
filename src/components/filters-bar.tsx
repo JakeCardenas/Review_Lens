@@ -118,7 +118,7 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
         {summary.length > 0 && (
           <ul className="flex flex-wrap gap-1.5" aria-label="Active filters">
             {summary.map((item) => (
-              <li key={item} className="rounded-full bg-brand-soft px-2.5 py-0.5 text-[13px] font-bold text-brand-ink">
+              <li key={item} className="fade-in rounded-tag bg-brand-soft px-2.5 py-0.5 text-[13px] font-bold text-brand-ink">
                 {item}
               </li>
             ))}
@@ -134,7 +134,7 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
 
       <div
         id="filter-panel"
-        className={`${open ? "grid" : "hidden"} gap-3 rounded-card bg-surface-2 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-4 lg:items-end`}
+        className={`${open ? "fade-in grid" : "hidden"} gap-2.5 rounded-card bg-surface-2 p-5 min-[550px]:grid-cols-2 lg:grid-cols-4 lg:items-end`}
       >
         {options.hasDate && (
           <>

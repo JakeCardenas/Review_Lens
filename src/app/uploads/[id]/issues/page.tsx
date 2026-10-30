@@ -64,7 +64,7 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
             key={label}
             href={tabHref(value)}
             aria-current={severity === value ? "page" : undefined}
-            className={`press inline-flex min-h-11 items-center rounded-full border px-4 text-[15px] font-bold ${
+            className={`press inline-flex min-h-11 items-center rounded-control border px-4 text-[15px] font-bold ${
               severity === value ? "border-brand-soft bg-brand-soft text-brand-ink" : "border-line bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink"
             }`}
           >

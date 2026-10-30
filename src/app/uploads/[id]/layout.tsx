@@ -18,9 +18,9 @@ export default async function UploadLayout({ children, params }: LayoutProps<"/u
   const progress = await getProgress(db, user.id, id);
 
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)] gap-8">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-7.5">
       <header className="grid min-w-0 gap-5">
-        <Link href="/" className="no-print press inline-flex w-fit items-center gap-1.5 rounded-control py-1 pr-2 text-[15px] font-bold text-accent-ink">
+        <Link href="/" className="no-print press inline-flex min-h-11 w-fit items-center gap-1.5 rounded-control pr-2 text-[15px] font-bold text-accent-ink">
           <ArrowLeft aria-hidden className="size-4" strokeWidth={3} />
           All uploads
         </Link>

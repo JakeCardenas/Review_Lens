@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { CheckCircle2 } from "lucide-react";
+import { ActionArt } from "@/components/illustrations";
 import { Button, ButtonLink, Notice } from "@/components/ui";
 import { api, ApiRequestError, sleep } from "@/lib/client-api";
 import { formatNumber, plural } from "@/lib/format";
@@ -115,18 +115,18 @@ export function AnalyzeProgress({
   const hasIssues = progress.failed + progress.skipped + progress.warnings > 0;
 
   return (
-    <div className="grid gap-6">
-      <section className="grid gap-6" aria-labelledby="progress-title">
+    <div className="grid gap-5">
+      <section className="grid gap-5" aria-labelledby="progress-title">
         <div className="flex items-center gap-4">
           <div className="min-w-0">
             {!progress.done && <p className="text-[15px] font-bold text-ink-2">Step 3 of 4: Analyze</p>}
             <h2 id="progress-title" className="flex items-center gap-2 text-2xl font-extrabold text-ink">
-              {progress.done && <CheckCircle2 aria-hidden className="size-6 shrink-0 text-brand-ink" />}
+              {progress.done && <ActionArt name="ready" size={36} />}
               {progress.done ? "Your reviews are ready" : running ? "Reading your reviews" : "Analysis is paused"}
             </h2>
             <p className="mt-0.5 text-[15px] text-ink-2 tabular" aria-live="polite">
               {progress.done
-                ? "Open the results to see what stands out."
+                ? "Analysis is done. Let's see what stands out."
                 : `${formatNumber(processed)} of ${formatNumber(progress.imported)} reviews done`}
             </p>
           </div>
@@ -203,7 +203,10 @@ export function AnalyzeProgress({
 
       {progress.done && (
         <div className="flex flex-wrap gap-2">
-          <ButtonLink href={`/uploads/${uploadId}`}>See the results</ButtonLink>
+          <ButtonLink href={`/uploads/${uploadId}`}>
+            <ActionArt name="explore" />
+            Explore feedback
+          </ButtonLink>
           {hasIssues && (
             <ButtonLink href={`/uploads/${uploadId}/issues`} variant="secondary">
               See data issues

@@ -8,6 +8,7 @@ import { JourneyPath } from "@/components/journey-path";
 import { SentimentLegend, SentimentStackedBar } from "@/components/sentiment";
 import { DeleteUploadButton } from "@/components/upload-actions";
 import { ButtonLink, EmptyState, linkClasses } from "@/components/ui";
+import { ActionArt } from "@/components/illustrations";
 import { getProviderInfo } from "@/lib/analysis/providers";
 import { formatNumber, formatPercent, plural } from "@/lib/format";
 import { requireOwnedUpload } from "@/lib/server/auth";
@@ -62,7 +63,7 @@ function NextLink({ href, icon: Icon, children }: { href: string; icon: LucideIc
     <li>
       <Link
         href={href}
-        className="press inline-flex min-h-11 items-center gap-2 rounded-full border border-line-strong px-4 text-[15px] font-bold text-ink transition-colors duration-150 hover:border-line-strong hover:bg-surface-2"
+        className="press inline-flex min-h-11 items-center gap-2 rounded-control border border-line-strong px-4 text-[15px] font-bold text-ink transition-colors duration-150 hover:border-line-strong hover:bg-surface-2"
       >
         <Icon aria-hidden className="size-[18px] text-ink-2" strokeWidth={2.25} />
         {children}
@@ -78,7 +79,7 @@ export default async function OverviewPage({ params }: PageProps<"/uploads/[id]"
   const db = getDb();
   const { user, upload } = await requireOwnedUpload(id, `/uploads/${id}`);
   const deleteButton = (
-    <div className="no-print border-t border-line pt-6">
+    <div className="no-print border-t border-line pt-5">
       <DeleteUploadButton uploadId={upload.id} name={upload.name} />
     </div>
   );
@@ -106,7 +107,7 @@ export default async function OverviewPage({ params }: PageProps<"/uploads/[id]"
   return (
     <div className="grid gap-10">
       {progress && !progress.done && (
-        <section aria-labelledby="progress-title" className="rounded-card bg-surface-2 p-6 sm:p-8">
+        <section aria-labelledby="progress-title" className="rounded-card bg-surface-2 p-5 sm:p-7.5">
           <h2 id="progress-title" className="text-subheading font-extrabold text-ink">
             Still reading your reviews
           </h2>
@@ -117,7 +118,7 @@ export default async function OverviewPage({ params }: PageProps<"/uploads/[id]"
           <div className="mt-5">
             <JourneyPath current={2} />
           </div>
-          <ButtonLink href={`${base}/analyze`} className="mt-6">
+          <ButtonLink href={`${base}/analyze`} className="mt-5">
             Continue analysis
           </ButtonLink>
         </section>
@@ -143,14 +144,15 @@ export default async function OverviewPage({ params }: PageProps<"/uploads/[id]"
       ) : (
         <>
           {/* The finding first (on top on phones, on the left on wide screens), then how customers feel overall. */}
-          <div className="grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-12">
+          <div className="grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-12.5">
             {takeaway && (
-              <section aria-labelledby="takeaway-title" className="rounded-card bg-accent-soft p-6 sm:p-8">
+              <section aria-labelledby="takeaway-title" className="rounded-card bg-accent-soft p-5 sm:p-7.5">
                 <h2 id="takeaway-title" className="text-subheading font-extrabold text-ink">
                   Here&apos;s what stands out
                 </h2>
                 <p className="mt-2 text-xl font-bold leading-snug text-ink">{takeaway.text}</p>
-                <ButtonLink href={takeaway.href} className="mt-6">
+                <ButtonLink href={takeaway.href} className="mt-5">
+                  <ActionArt name="explore" />
                   {takeaway.action}
                 </ButtonLink>
               </section>
@@ -164,7 +166,7 @@ export default async function OverviewPage({ params }: PageProps<"/uploads/[id]"
                   <p className="mt-2 font-display text-[2rem] font-black leading-tight text-ink tabular sm:text-[2.5rem]">
                     {formatPercent(sentiment.positive, totals.labeled)} positive, {formatPercent(sentiment.negative, totals.labeled)} negative
                   </p>
-                  <SentimentStackedBar counts={sentiment} className="mt-6 h-5" />
+                  <SentimentStackedBar counts={sentiment} className="mt-5 h-5" />
                   <div className="mt-4">
                     <SentimentLegend counts={sentiment} />
                   </div>
@@ -205,7 +207,7 @@ export default async function OverviewPage({ params }: PageProps<"/uploads/[id]"
                 Accuracy check
               </NextLink>
               <NextLink href={`${base}/report`} icon={FileText}>
-                Report and downloads
+                Export report
               </NextLink>
               <NextLink href={`${base}/issues`} icon={TriangleAlert}>
                 Data issues

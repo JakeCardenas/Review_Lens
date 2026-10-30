@@ -1,13 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Nunito, Nunito_Sans } from "next/font/google";
+import { Nunito } from "next/font/google";
 import { Toaster } from "sonner";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
-// Rounded Nunito for headings, numbers and buttons; Nunito Sans for reading. Self-hosted at build time.
+// One rounded family for everything, as a variable font so every weight comes from one file. Self-hosted at build time.
 const nunito = Nunito({ subsets: ["latin"], variable: "--font-nunito", display: "swap" });
-const nunitoSans = Nunito_Sans({ subsets: ["latin"], variable: "--font-nunito-sans", display: "swap" });
 
 export const metadata: Metadata = {
   title: { default: "ReviewLens", template: "%s | ReviewLens" },
@@ -27,7 +26,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${nunito.variable} ${nunitoSans.variable}`}>
+    <html lang="en" className={nunito.variable}>
       <body className="flex min-h-dvh flex-col antialiased">
         <a href="#main" className="skip-link">
           Skip to content

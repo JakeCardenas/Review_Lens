@@ -33,6 +33,7 @@
   --brand: var(--lime); /* the primary action and selected marks */
   --brand-hover: #96e05c;
   --brand-press: #8ad44f;
+  --brand-edge: #7fc94a; /* the subtle lower edge under lime buttons */
   --brand-ink: #2f6b00; /* the dark ink of the green: text on white and on its tints, 6.5:1 */
   --brand-soft: #e6fad6; /* selected tabs, success tags, progress tracks */
   --brand-tint: #f3fdea; /* success notices */
@@ -40,7 +41,8 @@
   --accent: var(--blue); /* link underlines and small blue marks */
   --accent-ink: #1274a2; /* link text in the same blue, 5.2:1 */
   --accent-soft: var(--sky); /* small panels and illustrations */
-  --focus: #1274a2; /* focus ring, 5.2:1 on white */
+  --focus: #1899d6; /* 2px focus ring in the accent blue's darker step, 3.2:1 on white */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --pos: var(--green);
   --neu: var(--faded-gray);
   --neg: var(--night-ink);
@@ -108,8 +110,8 @@
   --color-conf-high: var(--conf-high);
   --color-conf-medium: var(--conf-medium);
   --color-conf-low: var(--conf-low);
-  --font-sans: var(--font-nunito-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: var(--font-nunito), ui-rounded, "SF Pro Rounded", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-nunito), ui-rounded, "SF Pro Rounded", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-sans);
 
   /* Refero type scale */
   --text-display: 64px;
@@ -123,7 +125,7 @@
   --text-subheading: 19px;
   --text-subheading--line-height: 1.4;
   --text-body: 17px;
-  --text-body--line-height: 1.41;
+  --text-body--line-height: 1.5;
   --text-nav: 15px;
   --text-nav--line-height: 1.33;
   --text-nav--letter-spacing: 0.053em;
@@ -131,7 +133,8 @@
   --text-caption--line-height: 1.35;
 
   --radius-control: 12px;
-  --radius-card: 16px;
+  --radius-card: 12px;
+  --radius-tag: 8px;
   --radius-sheet: 20px;
   --shadow-float: var(--shadow-float);
 }
@@ -147,8 +150,8 @@
     color: var(--ink-2);
     font-family: var(--font-sans);
     font-size: 17px;
-    font-weight: 500;
-    line-height: 1.41;
+    font-weight: 600;
+    line-height: 1.5;
   }
 
   h1,
@@ -195,21 +198,21 @@
   }
 
   :focus-visible {
-    outline: 3px solid var(--focus);
+    outline: 2px solid var(--focus);
     outline-offset: 2px;
   }
 }
 
 /* Side gutter that also clears a phone's rounded corners and side system bars. */
 .gutter {
-  padding-left: max(1rem, env(safe-area-inset-left, 0px));
-  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  padding-left: max(20px, env(safe-area-inset-left, 0px));
+  padding-right: max(20px, env(safe-area-inset-right, 0px));
 }
 
 @media (min-width: 640px) {
   .gutter {
-    padding-left: max(1.5rem, env(safe-area-inset-left, 0px));
-    padding-right: max(1.5rem, env(safe-area-inset-right, 0px));
+    padding-left: max(30px, env(safe-area-inset-left, 0px));
+    padding-right: max(30px, env(safe-area-inset-right, 0px));
   }
 }
 
@@ -221,17 +224,45 @@
     line-height: 1.33;
   }
 
-  /* Press feedback on touch-down, not on release. */
+  /*
+    Press feedback on touch-down, not on release. The movement is quick (150ms) so a tap feels
+    instant; colour changes ease over 300ms.
+  */
   .press {
     transition:
-      transform 100ms cubic-bezier(0.2, 0, 0, 1),
-      background-color 120ms ease-out,
-      border-color 120ms ease-out,
-      color 120ms ease-out;
+      transform 150ms var(--ease-out),
+      background-color 300ms ease,
+      border-color 300ms ease,
+      color 300ms ease;
   }
 
   .press:active {
     transform: scale(0.98);
+  }
+
+  /* Buttons with a little depth: a subtle darker edge underneath that the button presses into. */
+  .tactile {
+    box-shadow: 0 var(--edge-depth, 3px) 0 var(--edge, var(--line-strong)); /* taste-skill-ignore: the brief asks for a subtle lower edge on buttons */
+    transition:
+      transform 150ms var(--ease-out),
+      box-shadow 150ms var(--ease-out),
+      background-color 300ms ease,
+      border-color 300ms ease,
+      color 300ms ease;
+  }
+
+  .tactile:active:not(:disabled) {
+    transform: translateY(calc(var(--edge-depth, 3px) - 1px));
+    box-shadow: 0 1px 0 var(--edge, var(--line-strong)); /* taste-skill-ignore: the brief asks for a subtle lower edge on buttons */
+  }
+
+  .tactile:disabled {
+    box-shadow: none; /* taste-skill-ignore: the brief asks for a subtle lower edge on buttons */
+  }
+
+  /* A short fade and lift when something new appears: a filter panel, a folded section, a notice. */
+  .fade-in {
+    animation: fade-in 200ms var(--ease-out);
   }
 
 
@@ -287,6 +318,17 @@ dialog::backdrop {
   background: rgba(0, 4, 55, 0.4);
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* A quick fade and lift for menus and dialogs as they open. */
 @keyframes pop-in {
   from {
@@ -300,7 +342,7 @@ dialog::backdrop {
 }
 
 .pop-in {
-  animation: pop-in 150ms cubic-bezier(0.2, 0, 0, 1);
+  animation: pop-in 150ms var(--ease-out);
   transform-origin: top right;
 }
 
@@ -312,6 +354,12 @@ dialog::backdrop {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+@media (forced-colors: active) {
+  .tactile {
+    box-shadow: none; /* taste-skill-ignore: the brief asks for a subtle lower edge on buttons */
   }
 }
 

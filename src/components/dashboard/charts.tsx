@@ -172,7 +172,7 @@ export function KeywordColumns({
   searchHref: (term: string, sentiment: Sentiment) => string;
 }) {
   return (
-    <div className="grid gap-6 md:grid-cols-3 md:gap-5">
+    <div className="grid gap-5 md:grid-cols-3 md:gap-5">
       {SENTIMENTS.map((s) => {
         const meta = SENTIMENT_META[s];
         const list = keywords[s];

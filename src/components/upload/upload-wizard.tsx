@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import Papa from "papaparse";
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, ChevronDown, FileSpreadsheet, Lock, UploadCloud } from "lucide-react";
+import { CheckCircle2, ChevronDown, FileSpreadsheet, Lock } from "lucide-react";
+import { ActionArt } from "@/components/illustrations";
 import { JourneyPath } from "@/components/journey-path";
 import { SENTIMENT_META } from "@/components/sentiment";
-import { Button, Notice } from "@/components/ui";
+import { Button, Notice, linkClasses } from "@/components/ui";
 import { api, ApiRequestError, withRetry } from "@/lib/client-api";
 import { csvColumnsProblem, guessColumnMapping, isPersonalColumn, textColumnProblem } from "@/lib/csv/columns";
 import { cleanText, looksMisencoded, maskPersonalData } from "@/lib/csv/clean";
@@ -418,7 +419,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-5">
       <JourneyPath current={wizardJourneyStep(step)} />
 
       {provider.problem && (
@@ -445,14 +446,12 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
               dragging ? "border-brand bg-brand-soft" : "border-line-strong bg-surface hover:border-accent hover:bg-accent-soft"
             }`}
           >
-            <span className="grid size-16 place-items-center rounded-card bg-brand-soft text-brand-ink">
-              <UploadCloud aria-hidden className="size-8" />
-            </span>
+            <ActionArt name="csv" size={64} />
             <span className="mt-5 text-subheading font-extrabold text-ink">
               {reading ? "Reading your file…" : dragging ? "Drop the file to use it" : "Choose a CSV to get started"}
             </span>
             <span className="mt-1 text-[15px] text-ink-2">or drag it here. Up to 5 MB and 5,000 reviews.</span>
-            <span aria-hidden className="mt-6 inline-flex min-h-12 items-center rounded-full bg-brand px-6 text-[16px] font-bold text-on-brand group-hover:bg-brand-hover">
+            <span aria-hidden className="tactile mt-5 inline-flex min-h-12 items-center rounded-control bg-brand px-6 text-[16px] font-extrabold text-on-brand group-hover:bg-brand-hover [--edge:var(--brand-edge)]">
               Browse files
             </span>
             <input
@@ -475,7 +474,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
               <li>A column with the review text. Date, rating and product columns are optional.</li>
               <li>Columns with names, emails or customer IDs are left out automatically.</li>
             </ul>
-            <a href="/sample-reviews.csv" download className="mt-2 inline-flex py-1 font-extrabold text-accent-ink underline decoration-brand-ink/30 decoration-2 underline-offset-[3px] hover:decoration-brand-ink">
+            <a href="/sample-reviews.csv" download className={`${linkClasses} mt-1 inline-flex min-h-11 items-center`}>
               Download a sample CSV
             </a>
           </div>
@@ -518,7 +517,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
                 </span>
                 <ChevronDown aria-hidden className="size-5 shrink-0 text-ink-2 transition-transform duration-150 group-open:rotate-180" />
               </summary>
-              <div className="grid gap-5 border-t border-line px-4 py-5">{FIELDS.filter((field) => !field.required).map(renderField)}</div>
+              <div className="fade-in grid gap-5 border-t border-line p-5">{FIELDS.filter((field) => !field.required).map(renderField)}</div>
             </details>
 
             <div className="grid gap-1.5 sm:grid-cols-[180px_1fr] sm:items-center sm:gap-4">

@@ -53,7 +53,7 @@ export function AuthForm({
                   type="button"
                   aria-pressed={showPasswords}
                   onClick={() => setShowPasswords((value) => !value)}
-                  className="press -mr-1 inline-flex min-h-8 shrink-0 items-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-[15px] font-extrabold text-accent-ink hover:bg-accent-soft"
+                  className="press -mr-2 inline-flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap rounded-control px-2 text-[15px] font-extrabold text-accent-ink hover:bg-surface-2"
                 >
                   {showPasswords ? <EyeOff aria-hidden className="size-4" /> : <Eye aria-hidden className="size-4" />}
                   {showPasswords ? "Hide" : "Show"}

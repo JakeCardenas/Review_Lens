@@ -64,7 +64,7 @@ export function TopicChips({ topics }: { topics: string[] }) {
   return (
     <ul className="flex flex-wrap gap-1.5" aria-label="Topics">
       {topics.map((t) => (
-        <li key={t} className="rounded-full bg-surface-2 px-2.5 py-0.5 text-[13px] font-semibold text-ink-2">
+        <li key={t} className="rounded-tag bg-surface-2 px-2.5 py-0.5 text-[13px] font-bold text-ink-2">
           {topicLabel(t)}
         </li>
       ))}

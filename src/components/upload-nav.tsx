@@ -18,7 +18,7 @@ const MAIN: Section[] = [
 // Tools people reach for now and then, kept one tap away under More.
 const MORE: Section[] = [
   { href: "/accuracy", label: "Accuracy check", icon: BadgeCheck },
-  { href: "/report", label: "Report and downloads", icon: FileText },
+  { href: "/report", label: "Export report", icon: FileText },
   { href: "/issues", label: "Data issues", icon: TriangleAlert },
 ];
 
@@ -62,14 +62,14 @@ function MoreMenu({ base, isActive, placement }: { base: string; isActive: (href
         className={
           phone
             ? `press flex h-full min-h-14 w-full flex-col items-center justify-center gap-1 text-[12px] font-bold ${current ? "text-brand-ink" : "text-ink-2"}`
-            : `press nav-label flex min-h-11 items-center gap-2 rounded-full px-4 ${
+            : `press nav-label flex min-h-11 items-center gap-2 rounded-control px-4 ${
                 current ? "bg-brand-soft text-brand-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
               }`
         }
       >
         {phone ? (
           <>
-            <span className={`grid h-8 w-14 place-items-center rounded-full ${current ? "bg-brand-soft" : ""}`}>
+            <span className={`grid h-8 w-14 place-items-center rounded-tag ${current ? "bg-brand-soft" : ""}`}>
               <MoreHorizontal aria-hidden className="size-5" strokeWidth={2.25} />
             </span>
             More
@@ -134,7 +134,7 @@ export function UploadNav({ uploadId }: { uploadId: string }) {
                 <Link
                   href={base + tab.href}
                   aria-current={active ? "page" : undefined}
-                  className={`press nav-label flex min-h-11 items-center gap-2 rounded-full px-4 ${
+                  className={`press nav-label flex min-h-11 items-center gap-2 rounded-control px-4 ${
                     active ? "bg-brand-soft text-brand-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
                   }`}
                 >
@@ -168,7 +168,7 @@ export function UploadNav({ uploadId }: { uploadId: string }) {
                     active ? "text-brand-ink" : "text-ink-2"
                   }`}
                 >
-                  <span className={`grid h-8 w-14 place-items-center rounded-full ${active ? "bg-brand-soft" : ""}`}>
+                  <span className={`grid h-8 w-14 place-items-center rounded-tag ${active ? "bg-brand-soft" : ""}`}>
                     <tab.icon aria-hidden className="size-5" strokeWidth={2.25} />
                   </span>
                   {tab.label}

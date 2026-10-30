@@ -151,7 +151,7 @@ export function LabelCheckCard({ check, ratingScale }: { check: LabelCheck; rati
   const yours = check.source === "label";
   return (
     <Card title={CHECK_TITLES[check.source]} description={checkDescription(check, ratingScale)}>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
         <div className="grid content-start gap-5">
           <div>
             <p className="font-display text-[2.5rem] font-black leading-none tracking-[-0.02em] tabular">
@@ -177,12 +177,12 @@ export function LabelCheckCard({ check, ratingScale }: { check: LabelCheck; rati
             })}
           </dl>
         </div>
-        <div className="grid content-start gap-6">
+        <div className="grid content-start gap-5">
           <LabelCheckTable check={check} />
           {yours && check.eligible > 0 && <ClassScoresTable check={check} />}
         </div>
       </div>
-      <p className="mt-6 rounded-xl bg-surface-2 p-3.5 text-sm text-ink-2">{CHECK_NOTES[check.source]}</p>
+      <p className="mt-5 rounded-xl bg-surface-2 p-3.5 text-sm text-ink-2">{CHECK_NOTES[check.source]}</p>
     </Card>
   );
 }

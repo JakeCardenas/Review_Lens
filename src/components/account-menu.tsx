@@ -43,7 +43,7 @@ export function AccountMenu({ email, children }: { email: string; children: Reac
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((value) => !value)}
-        className={`press flex min-h-10 items-center gap-2 rounded-full border px-1.5 sm:pr-3 ${
+        className={`press flex min-h-11 items-center gap-2 rounded-control border px-2 sm:pr-3 ${
           open ? "border-brand-soft bg-brand-soft" : "border-line-strong bg-surface hover:bg-surface-2"
         }`}
       >
