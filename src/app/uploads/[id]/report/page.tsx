@@ -12,7 +12,7 @@ import {
   exclusionSentence,
   LabelCheckTable,
 } from "@/components/dashboard/label-check";
-import { ActionArt } from "@/components/illustrations";
+import { Sticker } from "@/components/illustrations";
 import { PrintButton } from "@/components/print-button";
 import { linkClasses } from "@/components/ui";
 import { ExportLinks } from "@/components/upload-actions";
@@ -32,7 +32,7 @@ const NAMES = { positive: "Positive", neutral: "Neutral", negative: "Negative" }
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <section className="break-inside-avoid border-t border-line pt-5">
+    <section className="break-inside-avoid border-t-2 border-line pt-5">
       <h2 className="text-subheading font-extrabold text-ink">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
@@ -50,29 +50,31 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
 
   return (
     <div className="grid gap-7.5">
-      <section aria-labelledby="exports-title" className="no-print rounded-card bg-accent-soft p-5 sm:p-7.5">
-        <h2 id="exports-title" className="flex items-center gap-2.5 text-subheading font-extrabold text-ink">
-          <ActionArt name="report" size={32} />
-          Export report
-        </h2>
-        <p className="mt-1 max-w-prose text-[15px] text-ink-2">
-          Download every review with its label, or this summary, as a CSV. You can also print the report below or save it as a PDF.
-          Downloads follow any filters you set.
-        </p>
-        <div className="mt-5 flex flex-wrap items-center gap-3">
-          <Suspense fallback={null}>
-            <ExportLinks uploadId={id} />
-          </Suspense>
-          <PrintButton />
+      <section aria-labelledby="exports-title" className="no-print flex max-w-4xl flex-col gap-5 sm:flex-row sm:items-start">
+        <Sticker name="report" size={64} />
+        <div className="min-w-0">
+          <h2 id="exports-title" className="text-2xl font-extrabold text-ink">
+            Export report
+          </h2>
+          <p className="mt-1 max-w-prose text-body text-ink-2">
+            Download every review with its label, or this summary, as a CSV. You can also print the report below or save it as a PDF.
+            Downloads follow any filters you set.
+          </p>
+          <div className="mt-5 flex flex-wrap items-center gap-2.5">
+            <Suspense fallback={null}>
+              <ExportLinks uploadId={id} primary />
+            </Suspense>
+            <PrintButton />
+          </div>
+          <p className="mt-5 text-[15px] text-ink-2">
+            Want to see which rows were skipped or changed during import?{" "}
+            <Link href={`/uploads/${id}/issues`} className={linkClasses}>
+              See data issues
+            </Link>
+          </p>
         </div>
-        <p className="mt-5 text-[15px] text-ink-2">
-          Want to know which rows were skipped or changed during import?{" "}
-          <Link href={`/uploads/${id}/issues`} className={linkClasses}>
-            See data issues
-          </Link>
-        </p>
       </section>
-      <article className="grid max-w-4xl grid-cols-[minmax(0,1fr)] gap-7 rounded-card border border-line bg-surface p-5 sm:p-10 print:border-0 print:p-0">
+      <article className="grid max-w-4xl grid-cols-[minmax(0,1fr)] gap-7 rounded-card border-2 border-line bg-surface p-5 sm:p-10 print:border-0 print:p-0">
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-heading-sm font-extrabold text-ink">Summary report</h2>
@@ -162,7 +164,7 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
                   `Row ${review.rowNumber}`,
                 ].filter(Boolean);
                 return (
-                  <li key={review.id} className="break-inside-avoid rounded-xl bg-surface-2 p-4">
+                  <li key={review.id} className="break-inside-avoid rounded-card bg-surface-2 p-4">
                     <p className="line-clamp-4 text-[15px] leading-relaxed text-ink [overflow-wrap:anywhere] print:line-clamp-none">{review.text}</p>
                     <p className="mt-1.5 text-[13px] text-ink-2">{meta.join(", ")}</p>
                   </li>

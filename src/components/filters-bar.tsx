@@ -118,7 +118,7 @@ export function FiltersBar({ options, mode }: { options: FilterOptionsProps; mod
         {summary.length > 0 && (
           <ul className="flex flex-wrap gap-1.5" aria-label="Active filters">
             {summary.map((item) => (
-              <li key={item} className="fade-in rounded-tag bg-brand-soft px-2.5 py-0.5 text-[13px] font-bold text-brand-ink">
+              <li key={item} className="fade-in rounded-tag bg-accent-soft px-2.5 py-0.5 text-[13px] font-bold text-accent-ink">
                 {item}
               </li>
             ))}

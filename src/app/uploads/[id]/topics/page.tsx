@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { CalendarX2, Filter, Inbox } from "lucide-react";
+import { CalendarX2 } from "lucide-react";
 import { KeywordColumns, TopicBars } from "@/components/dashboard/charts";
 import { TrendChart } from "@/components/dashboard/trend-chart";
 import { FiltersBar } from "@/components/filters-bar";
@@ -61,14 +61,14 @@ export default async function TopicsPage({ params, searchParams }: PageProps<"/u
       {dashboard.totals.all === 0 ? (
         filtered ? (
           <EmptyState
-            icon={<Filter aria-hidden className="size-6" />}
+            art="explore"
             title="No reviews match these filters"
             action={<ButtonLink href={`/uploads/${id}/topics`} variant="secondary">Clear filters</ButtonLink>}
           >
             Try a wider date range, another product or a different rating.
           </EmptyState>
         ) : (
-          <EmptyState icon={<Inbox aria-hidden className="size-6" />} title="No reviews were imported">
+          <EmptyState art="csv" title="No reviews were imported">
             Every row in the file was skipped, usually because the review text column was empty.
           </EmptyState>
         )
@@ -93,12 +93,12 @@ export default async function TopicsPage({ params, searchParams }: PageProps<"/u
             <Card
               title="Sentiment over time"
               description="How the mix of positive, neutral and negative changed, using the review dates in your file."
-              className="border-t border-line pt-10"
+              className="border-t-2 border-line pt-10"
             >
               <TrendChart points={dashboard.trend.points} grain={dashboard.trend.grain} />
             </Card>
           ) : (
-            <p className="flex items-start gap-2.5 border-t border-line pt-10 text-[15px] text-ink-2">
+            <p className="flex items-start gap-2.5 border-t-2 border-line pt-10 text-[15px] text-ink-2">
               <CalendarX2 aria-hidden className="mt-0.5 size-5 shrink-0" strokeWidth={2.5} />
               <span>
                 <span className="font-extrabold text-ink">No timeline for this upload.</span> {dashboard.trend.reason}
@@ -109,7 +109,7 @@ export default async function TopicsPage({ params, searchParams }: PageProps<"/u
           <Card
             title="Words that stand out"
             description="Words and phrases used in at least 2 reviews, and more often in one sentiment than the others. Select one to read those reviews."
-            className="border-t border-line pt-10"
+            className="border-t-2 border-line pt-10"
           >
             <KeywordColumns keywords={dashboard.keywords} totals={dashboard.sentiment} searchHref={(term, s) => linkTo({ q: term, sentiment: s })} />
           </Card>

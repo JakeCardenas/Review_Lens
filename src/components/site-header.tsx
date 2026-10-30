@@ -15,15 +15,15 @@ async function signedInUser(): Promise<SessionUser | null> {
   }
 }
 
-/** White top bar: the eagle mark and green wordmark, then an outlined Upload reviews (each page keeps its own main action) and the account pill. */
+/** White top bar: the green eagle mark and the charcoal wordmark, then an outlined Upload reviews (each page keeps its own main action) and the account pill. */
 export async function SiteHeader() {
   const user = await signedInUser();
   return (
-    <header className="no-print sticky top-0 z-30 border-b border-line bg-surface" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
+    <header className="no-print sticky top-0 z-30 border-b-2 border-line bg-surface" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
       <div className="gutter mx-auto flex h-[72px] max-w-[75rem] items-center justify-between gap-2">
         <Link
           href="/"
-          className="press -ml-1 flex min-w-0 items-center gap-2.5 rounded-control px-1 py-1 font-display text-[22px] font-black tracking-[-0.02em] text-brand sm:gap-3 sm:text-[28px]"
+          className="press -ml-1 flex min-w-0 items-center gap-2.5 rounded-control px-1 py-1 font-display text-[22px] font-black tracking-[-0.02em] text-ink sm:gap-3 sm:text-[28px]"
         >
           <BrandMark height={52} eager className="-my-1 -ml-3" />
           {/* The narrowest phones keep the mark; the name stays for screen readers. */}

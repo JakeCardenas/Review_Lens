@@ -26,7 +26,7 @@ export function ReviewDialog({ closeHref, title, children }: { closeHref: string
       onClick={(e) => {
         if (e.target === ref.current) ref.current?.close();
       }}
-      className="pop-in m-0 mt-auto max-h-[88dvh] w-full max-w-none overflow-hidden rounded-t-sheet border border-line bg-surface p-0 text-ink shadow-float sm:m-auto sm:max-h-[85dvh] sm:max-w-2xl sm:rounded-sheet"
+      className="pop-in m-0 mt-auto max-h-[88dvh] w-full max-w-none overflow-hidden rounded-t-sheet border-2 border-line bg-surface p-0 text-ink shadow-float sm:m-auto sm:max-h-[85dvh] sm:max-w-2xl sm:rounded-sheet"
     >
       <div className="sticky top-0 flex items-center justify-between gap-3 border-b border-line bg-surface px-5 py-3.5 sm:px-6">
         <h2 id="review-dialog-title" className="text-subheading font-extrabold text-ink">

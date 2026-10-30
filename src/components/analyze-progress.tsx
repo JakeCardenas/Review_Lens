@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { ActionArt } from "@/components/illustrations";
+import { Sticker } from "@/components/illustrations";
 import { Button, ButtonLink, Notice } from "@/components/ui";
 import { api, ApiRequestError, sleep } from "@/lib/client-api";
 import { formatNumber, plural } from "@/lib/format";
@@ -117,11 +117,11 @@ export function AnalyzeProgress({
   return (
     <div className="grid gap-5">
       <section className="grid gap-5" aria-labelledby="progress-title">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
+          {progress.done && <Sticker name="ready" size={72} className="sticker-in" />}
           <div className="min-w-0">
             {!progress.done && <p className="text-[15px] font-bold text-ink-2">Step 3 of 4: Analyze</p>}
-            <h2 id="progress-title" className="flex items-center gap-2 text-2xl font-extrabold text-ink">
-              {progress.done && <ActionArt name="ready" size={36} />}
+            <h2 id="progress-title" className="text-2xl font-extrabold text-ink">
               {progress.done ? "Your reviews are ready" : running ? "Reading your reviews" : "Analysis is paused"}
             </h2>
             <p className="mt-0.5 text-[15px] text-ink-2 tabular" aria-live="polite">
@@ -151,7 +151,7 @@ export function AnalyzeProgress({
           </div>
         )}
 
-        <dl className="grid grid-cols-3 gap-4 border-t border-line pt-5 sm:max-w-lg">
+        <dl className="grid grid-cols-3 gap-4 border-t-2 border-line pt-5 sm:max-w-lg">
           {[
             ["Labeled", progress.labeled],
             ["Not labeled", progress.notLabeled],
@@ -204,7 +204,7 @@ export function AnalyzeProgress({
       {progress.done && (
         <div className="flex flex-wrap gap-2">
           <ButtonLink href={`/uploads/${uploadId}`}>
-            <ActionArt name="explore" />
+            <Sticker name="explore" />
             Explore feedback
           </ButtonLink>
           {hasIssues && (

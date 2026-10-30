@@ -17,8 +17,8 @@ export default function SignUpPage() {
         </p>
       }
     >
-      <p className="flex gap-2.5 rounded-card bg-brand-tint p-4 text-[15px] text-ink">
-        <KeyRound aria-hidden className="mt-0.5 size-4 shrink-0 text-brand-ink" />
+      <p className="flex gap-2.5 rounded-card bg-accent-soft p-4 text-[15px] text-ink">
+        <KeyRound aria-hidden className="mt-0.5 size-4 shrink-0 text-accent-ink" />
         <span>Pick a new password just for ReviewLens, not your Gmail or school password.</span>
       </p>
       <AuthForm

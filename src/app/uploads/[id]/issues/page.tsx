@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
-import { AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { AlertTriangle, XCircle } from "lucide-react";
 import { Pagination } from "@/components/pagination";
 import { RetryFailedButton } from "@/components/retry-failed-button";
 import { EmptyState, Notice } from "@/components/ui";
@@ -64,8 +64,8 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
             key={label}
             href={tabHref(value)}
             aria-current={severity === value ? "page" : undefined}
-            className={`press inline-flex min-h-11 items-center rounded-control border px-4 text-[15px] font-bold ${
-              severity === value ? "border-brand-soft bg-brand-soft text-brand-ink" : "border-line bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink"
+            className={`press inline-flex min-h-11 items-center rounded-tag border-2 px-4 text-[15px] font-bold ${
+              severity === value ? "border-accent-soft bg-accent-soft text-accent-ink" : "border-line bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink"
             }`}
           >
             {label} ({formatNumber(count)})
@@ -74,11 +74,11 @@ export default async function IssuesPage({ params, searchParams }: PageProps<"/u
       </nav>
 
       {issues.rows.length === 0 ? (
-        <EmptyState icon={<CheckCircle2 aria-hidden className="size-6 text-brand-ink" />} title={severity ? `No ${severity}s` : "Nothing to fix here"}>
+        <EmptyState art="ready" title={severity ? `No ${severity}s` : "Nothing to fix here"}>
           Every row in the file was read without changes.
         </EmptyState>
       ) : (
-        <div className="min-w-0 overflow-hidden rounded-card border border-line bg-surface">
+        <div className="min-w-0 overflow-hidden rounded-card border-2 border-line bg-surface">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[560px] text-left text-sm">
               <thead className="border-b border-line bg-surface-2 text-ink-2">

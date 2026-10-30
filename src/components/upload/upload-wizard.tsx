@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Papa from "papaparse";
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, ChevronDown, FileSpreadsheet, Lock } from "lucide-react";
-import { ActionArt } from "@/components/illustrations";
+import { Sticker } from "@/components/illustrations";
 import { JourneyPath } from "@/components/journey-path";
 import { SENTIMENT_META } from "@/components/sentiment";
 import { Button, Notice, linkClasses } from "@/components/ui";
@@ -442,11 +442,11 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
               setDragging(false);
               void chooseFile(e.dataTransfer.files[0]);
             }}
-            className={`group flex cursor-pointer flex-col items-center rounded-card border-2 border-dashed px-6 py-14 text-center transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-brand-ink ${
-              dragging ? "border-brand bg-brand-soft" : "border-line-strong bg-surface hover:border-accent hover:bg-accent-soft"
+            className={`group flex cursor-pointer flex-col items-center rounded-card border-2 border-dashed px-6 py-14 text-center transition-colors focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent-edge ${
+              dragging ? "border-accent bg-accent-soft" : "border-gray bg-surface hover:border-accent hover:bg-accent-soft"
             }`}
           >
-            <ActionArt name="csv" size={64} />
+            <Sticker name="csv" size={64} />
             <span className="mt-5 text-subheading font-extrabold text-ink">
               {reading ? "Reading your file…" : dragging ? "Drop the file to use it" : "Choose a CSV to get started"}
             </span>
@@ -484,7 +484,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
       {step === "map" && parsed && (
         <section className="grid gap-4">
           <div className="flex items-center gap-3 rounded-card bg-surface-2 p-4">
-            <FileSpreadsheet aria-hidden className="size-6 shrink-0 text-brand-ink" />
+            <FileSpreadsheet aria-hidden className="size-6 shrink-0 text-ink" />
             <div className="min-w-0">
               <p className="truncate font-semibold">{parsed.fileName}</p>
               <p className="text-sm text-ink-2">
@@ -508,7 +508,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
             <details
               open={optionalOpen || optionalNeedsAttention}
               onToggle={(event) => setOptionalOpen(event.currentTarget.open)}
-              className="group rounded-card border border-line"
+              className="group rounded-card border-2 border-line"
             >
               <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 hover:bg-surface-2 [&::-webkit-details-marker]:hidden">
                 <span>
@@ -536,7 +536,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
 
           <div className="grid gap-3 rounded-card bg-surface-2 p-5 text-[15px]">
             <p className="flex items-center gap-2 font-semibold">
-              <Lock aria-hidden className="size-4 text-brand-ink" />
+              <Lock aria-hidden className="size-4 text-ink" />
               Stays on this device
             </p>
             {personal.length > 0 && (
@@ -609,7 +609,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
             </Notice>
           )}
 
-          <div className="min-w-0 rounded-card border border-line bg-surface">
+          <div className="min-w-0 rounded-card border-2 border-line bg-surface">
             <div className="flex flex-wrap items-baseline justify-between gap-2 px-5 pt-5">
               <h2 className="text-subheading font-extrabold text-ink">Preview of the first 10 rows</h2>
               <p className="text-sm text-ink-2">This is exactly what will be saved.</p>

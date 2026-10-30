@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense, type ReactNode } from "react";
 import { ConfidenceExplainer } from "@/components/confidence-explainer";
-import { ActionArt } from "@/components/illustrations";
 import { FiltersBar } from "@/components/filters-bar";
 import { Pagination } from "@/components/pagination";
 import { LabelCheckTag, MixedOpinionTag, ReviewCard, StatusBadge, TopicChips, reviewListClasses } from "@/components/review-card";
@@ -192,7 +191,7 @@ export default async function ReviewsPage({ params, searchParams }: PageProps<"/
         </ul>
       ) : (
         <EmptyState
-          icon={<ActionArt name="explore" size={40} />}
+          art="explore"
           title="No reviews match"
           action={hasActiveFilters(filters) ? <ButtonLink href={base} variant="secondary">Clear search and filters</ButtonLink> : undefined}
         >

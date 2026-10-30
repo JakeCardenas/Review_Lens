@@ -1,26 +1,39 @@
-import { Frown, Meh, Smile, type LucideIcon } from "lucide-react";
 import { tagClasses } from "@/components/ui";
 import { formatNumber, formatPercent } from "@/lib/format";
 import { SENTIMENTS, type Confidence, type Sentiment } from "@/lib/types";
 
-export const SENTIMENT_META: Record<Sentiment, { label: string; icon: LucideIcon; chip: string; swatch: string; ink: string }> = {
-  positive: { label: "Positive", icon: Smile, chip: "bg-pos-soft text-pos-ink", swatch: "bg-pos", ink: "text-pos-ink" },
-  neutral: { label: "Neutral", icon: Meh, chip: "bg-neu-soft text-neu-ink", swatch: "bg-neu", ink: "text-neu-ink" },
-  negative: { label: "Negative", icon: Frown, chip: "bg-neg-soft text-neg-ink", swatch: "bg-neg", ink: "text-neg-ink" },
+// Positive lime, neutral grey and negative charcoal: the same three colours on bars, lines and faces.
+export const SENTIMENT_META: Record<Sentiment, { label: string; swatch: string }> = {
+  positive: { label: "Positive", swatch: "bg-pos" },
+  neutral: { label: "Neutral", swatch: "bg-neu" },
+  negative: { label: "Negative", swatch: "bg-neg" },
 };
 
+const FACE: Record<Sentiment, { fill: string; feature: string; mouth: string }> = {
+  positive: { fill: "var(--pos)", feature: "var(--on-brand)", mouth: "M6.6 11.7c1.9 2.2 4.9 2.2 6.8 0" },
+  neutral: { fill: "var(--neu)", feature: "var(--ink)", mouth: "M7 12.6h6" },
+  negative: { fill: "var(--neg)", feature: "#fff", mouth: "M6.6 14c1.9-2.1 4.9-2.1 6.8 0" },
+};
+
+/** A small round face in the sentiment's colour: it is the colour key and the icon in one. Always next to the word. */
 export function SentimentIcon({ sentiment, className = "size-4" }: { sentiment: Sentiment; className?: string }) {
-  const Icon = SENTIMENT_META[sentiment].icon;
-  return <Icon aria-hidden className={className} strokeWidth={2.5} />;
+  const { fill, feature, mouth } = FACE[sentiment];
+  return (
+    <svg aria-hidden focusable="false" viewBox="0 0 20 20" className={`shrink-0 ${className}`}>
+      <circle cx="10" cy="10" r="9.5" fill={fill} />
+      <ellipse cx="7" cy="8" rx="1.3" ry="1.7" fill={feature} />
+      <ellipse cx="13" cy="8" rx="1.3" ry="1.7" fill={feature} />
+      <path d={mouth} fill="none" stroke={feature} strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
 }
 
-/** Sentiment as icon + word, never color alone. */
+/** Sentiment as face + word, never colour alone. */
 export function SentimentBadge({ sentiment }: { sentiment: Sentiment }) {
-  const meta = SENTIMENT_META[sentiment];
   return (
-    <span className={`${tagClasses} ${meta.chip}`}>
-      <SentimentIcon sentiment={sentiment} className="size-3.5" />
-      {meta.label}
+    <span className={`${tagClasses} bg-surface-2 pl-1 text-ink`}>
+      <SentimentIcon sentiment={sentiment} className="size-[18px]" />
+      {SENTIMENT_META[sentiment].label}
     </span>
   );
 }
@@ -58,8 +71,7 @@ export function SentimentLegend({ counts, compact = false }: { counts: Record<Se
     <ul className={`flex flex-wrap ${compact ? "gap-x-4 gap-y-1 text-[13px]" : "gap-x-6 gap-y-2 text-[15px]"}`}>
       {SENTIMENTS.map((s) => (
         <li key={s} className="flex items-center gap-1.5 tabular">
-          <span aria-hidden className={`size-3 rounded-full ${SENTIMENT_META[s].swatch}`} />
-          <SentimentIcon sentiment={s} className={`size-4 ${SENTIMENT_META[s].ink}`} />
+          <SentimentIcon sentiment={s} className={compact ? "size-4" : "size-5"} />
           <span className="font-extrabold text-ink">{formatPercent(counts[s], total)}</span>
           <span className="text-ink-2">
             {SENTIMENT_META[s].label.toLowerCase()}

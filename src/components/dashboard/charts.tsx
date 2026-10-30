@@ -17,7 +17,7 @@ export function SentimentBars({ sentiment, labeled }: { sentiment: Record<Sentim
             <li key={s} className="grid gap-1.5">
               <div className="flex items-baseline justify-between gap-3 text-sm">
                 <span className="flex items-center gap-1.5 font-bold">
-                  <SentimentIcon sentiment={s} className={`size-4 ${meta.ink}`} />
+                  <SentimentIcon sentiment={s} className="size-[18px]" />
                   {meta.label}
                 </span>
                 <span className="tabular text-ink-2">
@@ -37,14 +37,13 @@ export function SentimentBars({ sentiment, labeled }: { sentiment: Record<Sentim
   );
 }
 
-/** Small swatch-and-icon key for charts that split bars by sentiment. */
+/** The colour key for charts that split bars by sentiment: each face is the colour of its part. */
 export function SentimentKey() {
   return (
-    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-ink-2" aria-label="Colors">
+    <ul className="flex flex-wrap gap-x-5 gap-y-1 text-[13px] font-bold text-ink-2" aria-label="Colors">
       {SENTIMENTS.map((s) => (
         <li key={s} className="flex items-center gap-1.5">
-          <span aria-hidden className={`size-2.5 rounded-[3px] ${SENTIMENT_META[s].swatch}`} />
-          <SentimentIcon sentiment={s} className={`size-3.5 ${SENTIMENT_META[s].ink}`} />
+          <SentimentIcon sentiment={s} className="size-4" />
           {SENTIMENT_META[s].label}
         </li>
       ))}
@@ -66,7 +65,7 @@ export function TopicBars({ topics, reviewsHref }: { topics: TopicBreakdown[]; r
           <li key={t.id}>
             <Link
               href={reviewsHref(t.id)}
-              className="group -mx-2 grid gap-2 rounded-xl px-2 py-2.5 hover:bg-surface-2 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:items-center sm:gap-4"
+              className="group -mx-2 grid gap-2 rounded-control px-2 py-2.5 hover:bg-surface-2 sm:grid-cols-[9.5rem_minmax(0,1fr)] sm:items-center sm:gap-4"
             >
               <span className="flex items-baseline justify-between gap-2 sm:block">
                 <span className="block font-extrabold leading-tight text-ink group-hover:text-accent-ink">{t.label}</span>
@@ -85,7 +84,7 @@ export function TopicBars({ topics, reviewsHref }: { topics: TopicBreakdown[]; r
                 <span className="flex flex-wrap gap-x-3 text-[13px] text-ink-2 tabular">
                   <span>{formatPercent(t.positive, t.total)} positive</span>
                   <span>{formatPercent(t.neutral, t.total)} neutral</span>
-                  <span className={t.negative ? "font-bold text-neg-ink" : undefined}>{formatPercent(t.negative, t.total)} negative</span>
+                  <span className={t.negative ? "font-bold text-ink" : undefined}>{formatPercent(t.negative, t.total)} negative</span>
                 </span>
               </span>
             </Link>
@@ -93,7 +92,7 @@ export function TopicBars({ topics, reviewsHref }: { topics: TopicBreakdown[]; r
         ))}
       </ul>
       <details className="text-sm">
-        <summary className="w-fit cursor-pointer rounded-lg py-1 font-extrabold text-accent-ink">View as table</summary>
+        <summary className="w-fit cursor-pointer rounded-control py-3 font-extrabold text-accent-ink">View as table</summary>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full min-w-[420px] text-left">
             <caption className="sr-only">Reviews mentioning each topic, by sentiment</caption>
@@ -180,7 +179,7 @@ export function KeywordColumns({
         return (
           <div key={s} className="min-w-0">
             <h3 className="flex flex-wrap items-center gap-x-1.5 border-b border-line pb-2 text-[15px] font-extrabold">
-              <SentimentIcon sentiment={s} className={`size-4 ${meta.ink}`} />
+              <SentimentIcon sentiment={s} className="size-[18px]" />
               {meta.label}
               <span className="font-normal text-ink-2">in {formatNumber(totals[s])} reviews</span>
             </h3>
@@ -190,7 +189,7 @@ export function KeywordColumns({
                   <li key={k.term}>
                     <Link
                       href={searchHref(k.term, s)}
-                      className="grid grid-cols-[1fr_auto] items-center gap-x-2 rounded-lg px-2 py-1.5 text-sm hover:bg-surface-2"
+                      className="grid grid-cols-[1fr_auto] items-center gap-x-2 rounded-control px-2 py-1.5 text-sm hover:bg-surface-2"
                     >
                       <span title={k.term} className="truncate font-bold text-ink">{k.term}</span>
                       <span className="text-[13px] text-ink-2 tabular">{k.count}</span>

@@ -44,7 +44,7 @@ export default async function AccuracyPage({ params }: PageProps<"/uploads/[id]/
           <LabelCheckCard check={check} ratingScale={upload.ratingScale} />
           {check.disagreements.length > 0 && (
             <Card
-              className="border-t border-line pt-10"
+              className="border-t-2 border-line pt-10"
               title={check.source === "label" ? "Where ReviewLens and your labels differ" : "Where ReviewLens and the stars differ"}
               description={`${plural(check.eligible - check.agree, "review")} got a different label. The most confident ones are first.`}
               actions={
@@ -82,7 +82,7 @@ export default async function AccuracyPage({ params }: PageProps<"/uploads/[id]/
       )}
 
       <Card
-        className="border-t border-line pt-10"
+        className="border-t-2 border-line pt-10"
         title="How sure ReviewLens is"
         description={
           totals.labeled

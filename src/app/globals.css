@@ -1,69 +1,66 @@
 @import "tailwindcss";
 
 /*
-  ReviewLens design tokens. One brand green does the work in two strengths: the full lime on the one
-  primary action and on small marks, and its pale tints on selected tabs, success tags and progress
-  tracks. Pages are white everywhere; sky blue is kept for small panels and illustrations, and blue
-  for links. Text is dark charcoal, with one muted grey.
+  ReviewLens design tokens.
 
-  Where a palette colour would carry small text, a same-hue shade that meets WCAG AA is used instead
-  (ratios against white are noted). See docs/superpowers/specs/2026-10-28-redesign-design.md.
+  Five colours from the brief do all the work on a white page. Each brand colour has one deeper step for
+  the lower edge of buttons and stickers, and one pale step for tints:
+
+    lime  #a5ed6e  edge #6ac513 (the logo's own green)  pale #e6fad6   primary action, positive, ready
+    blue  #1cb0f6  edge #1899d6, text #1274a2            pale #ddf4ff   links, focus, selected, info
+
+  Text is charcoal #3c3c3c. Muted text is the brief's #777777 one step darker (#6b6b6b), so it passes
+  WCAG AA on white and on the light grey. Greys are only for lines, hover and inset panels. Red marks
+  errors and yellow marks warnings, and neither appears anywhere else.
+
+  Sentiment uses the same palette: positive lime, neutral grey, negative charcoal.
+  See docs/superpowers/specs/2026-10-28-redesign-design.md.
 */
 :root {
   /* Palette */
-  --lime: #a5ed6e; /* brand green */
-  --green: #58cc02; /* the deeper green, for data and progress */
-  --sky: #ddf4ff;
+  --lime: #a5ed6e;
+  --lime-edge: #6ac513;
+  --lime-pale: #e6fad6;
   --blue: #1cb0f6;
-  --night-ink: #000437;
+  --blue-edge: #1899d6;
+  --blue-ink: #1274a2; /* blue text on white, 5.2:1; on sky, 4.6:1 */
+  --sky: #ddf4ff;
   --charcoal: #3c3c3c;
-  --faded-gray: #afafaf;
+  --gray: #afafaf;
 
   /* Roles */
   --page: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f7f7f7;
-  --surface-3: #e5e5e5;
+  --surface-2: #f7f7f7; /* hover, and inset panels such as a quoted review */
+  --surface-3: #e5e5e5; /* empty tracks and disabled fills */
   --ink: var(--charcoal); /* headings and main text, 11:1 */
-  --ink-2: #6b6b6b; /* muted text: the palette's #777777 is 4.48:1 on white and 4.2:1 on grey panels; this holds 5.3:1 and 5:1 */
-  --ink-3: #6b6b6b; /* hints and placeholders */
-  --line: #e5e5e5; /* card, list and divider borders, 1px */
-  --line-strong: #cfcfcf; /* outlined buttons and controls */
+  --ink-2: #6b6b6b; /* muted text, 5.3:1 on white and 5:1 on the light grey */
+  --ink-3: var(--ink-2);
+  --line: #e5e5e5; /* 2px borders on cards, lists and outlined buttons */
   --field: #949494; /* input borders, 3:1 (WCAG 1.4.11) */
-  --brand: var(--lime); /* the primary action and selected marks */
-  --brand-hover: #96e05c;
-  --brand-press: #8ad44f;
-  --brand-edge: #7fc94a; /* the subtle lower edge under lime buttons */
-  --brand-ink: #2f6b00; /* the dark ink of the green: text on white and on its tints, 6.5:1 */
-  --brand-soft: #e6fad6; /* selected tabs, success tags, progress tracks */
-  --brand-tint: #f3fdea; /* success notices */
+  --brand: var(--lime); /* the one primary action per screen */
+  --brand-hover: color-mix(in oklab, var(--lime) 82%, white);
+  --brand-edge: var(--lime-edge);
+  --brand-soft: var(--lime-pale); /* ready and success tints */
   --on-brand: #111111; /* labels on lime, 13:1 */
   --accent: var(--blue); /* link underlines and small blue marks */
-  --accent-ink: #1274a2; /* link text in the same blue, 5.2:1 */
-  --accent-soft: var(--sky); /* small panels and illustrations */
-  --focus: #1899d6; /* 2px focus ring in the accent blue's darker step, 3.2:1 on white */
+  --accent-edge: var(--blue-edge);
+  --accent-ink: var(--blue-ink); /* links, and labels on selected tabs */
+  --accent-soft: var(--sky); /* selected tabs and chips, and a few supporting panels */
+  --focus: var(--blue-edge); /* 2px focus ring, 3.2:1 on white */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --pos: var(--green);
-  --neu: var(--faded-gray);
-  --neg: var(--night-ink);
-  --pos-ink: var(--brand-ink);
-  --neu-ink: var(--charcoal);
-  --neg-ink: var(--night-ink);
-  --pos-soft: var(--brand-soft);
-  --neu-soft: #f0f0f0;
-  --neg-soft: #e6e7f1;
-  --warn-ink: #916a00;
+  --pos: var(--lime);
+  --neu: var(--gray);
+  --neg: var(--charcoal);
+  --warn-ink: #916a00; /* warnings only */
   --warn-soft: #fff5d3;
-  --warn-line: #ffe08a;
-  --danger: #bb3737;
+  --danger: #bb3737; /* errors and delete only */
   --danger-soft: #ffdfe0;
-  --danger-line: #ffc1c4;
-  --star: #ffc800;
-  --conf-high: var(--charcoal); /* ordinal ramp, validated */
-  --conf-medium: #777777;
-  --conf-low: var(--faded-gray);
+  --conf-high: var(--ink); /* ordinal ramp: dark to light */
+  --conf-medium: var(--ink-2);
+  --conf-low: var(--gray);
   --shadow-float: 0 12px 32px -12px rgb(60 60 60 / 0.28), 0 2px 8px rgb(60 60 60 / 0.06);
-  accent-color: var(--green);
+  accent-color: var(--lime-edge);
   color-scheme: light;
 }
 
@@ -76,44 +73,33 @@
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
   --color-line: var(--line);
-  --color-line-strong: var(--line-strong);
   --color-field: var(--field);
+  --color-gray: var(--gray);
   --color-brand: var(--brand);
   --color-brand-hover: var(--brand-hover);
-  --color-brand-press: var(--brand-press);
-  --color-brand-ink: var(--brand-ink);
+  --color-brand-edge: var(--brand-edge);
   --color-brand-soft: var(--brand-soft);
-  --color-brand-tint: var(--brand-tint);
   --color-on-brand: var(--on-brand);
   --color-accent: var(--accent);
+  --color-accent-edge: var(--accent-edge);
   --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
   --color-lime: var(--lime);
-  --color-green: var(--green);
-  --color-night: var(--night-ink);
+  --color-lime-edge: var(--lime-edge);
   --color-pos: var(--pos);
   --color-neu: var(--neu);
   --color-neg: var(--neg);
-  --color-pos-ink: var(--pos-ink);
-  --color-neu-ink: var(--neu-ink);
-  --color-neg-ink: var(--neg-ink);
-  --color-pos-soft: var(--pos-soft);
-  --color-neu-soft: var(--neu-soft);
-  --color-neg-soft: var(--neg-soft);
   --color-warn-ink: var(--warn-ink);
   --color-warn-soft: var(--warn-soft);
-  --color-warn-line: var(--warn-line);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
-  --color-danger-line: var(--danger-line);
-  --color-star: var(--star);
   --color-conf-high: var(--conf-high);
   --color-conf-medium: var(--conf-medium);
   --color-conf-low: var(--conf-low);
   --font-sans: var(--font-nunito), ui-rounded, "SF Pro Rounded", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-display: var(--font-sans);
 
-  /* Refero type scale */
+  /* Type scale */
   --text-display: 64px;
   --text-display--line-height: 1.2;
   --text-display--letter-spacing: -0.02em;
@@ -132,9 +118,10 @@
   --text-caption: 13px;
   --text-caption--line-height: 1.35;
 
+  /* 12px corners on controls and cards; tags and chips are fully round. */
   --radius-control: 12px;
   --radius-card: 12px;
-  --radius-tag: 8px;
+  --radius-tag: 999px;
   --radius-sheet: 20px;
   --shadow-float: var(--shadow-float);
 }
@@ -167,13 +154,13 @@
   }
 
   ::selection {
-    background: var(--brand-soft);
-    color: var(--night-ink);
+    background: var(--sky);
+    color: var(--ink);
   }
 
   input,
   textarea {
-    caret-color: var(--brand-ink);
+    caret-color: var(--accent-ink);
   }
 
   input,
@@ -240,9 +227,13 @@
     transform: scale(0.98);
   }
 
-  /* Buttons with a little depth: a subtle darker edge underneath that the button presses into. */
+  /*
+    Buttons with a little depth: a darker lower edge that the button presses into, like a key. Primary
+    buttons sit on the lime's edge green; outlined buttons on their own grey line. 4px deep at rest, 1px
+    when pressed. The edge is a solid offset shadow, not a blur.
+  */
   .tactile {
-    box-shadow: 0 var(--edge-depth, 3px) 0 var(--edge, var(--line-strong)); /* taste-skill-ignore: the brief asks for a subtle lower edge on buttons */
+    box-shadow: 0 var(--edge-depth, 4px) 0 var(--edge, var(--line)); /* taste-skill-ignore: the brief asks for a lower edge on buttons */
     transition:
       transform 150ms var(--ease-out),
       box-shadow 150ms var(--ease-out),
@@ -252,12 +243,12 @@
   }
 
   .tactile:active:not(:disabled) {
-    transform: translateY(calc(var(--edge-depth, 3px) - 1px));
-    box-shadow: 0 1px 0 var(--edge, var(--line-strong)); /* taste-skill-ignore: the brief asks for a subtle lower edge on buttons */
+    transform: translateY(calc(var(--edge-depth, 4px) - 1px));
+    box-shadow: 0 1px 0 var(--edge, var(--line)); /* taste-skill-ignore: the brief asks for a lower edge on buttons */
   }
 
   .tactile:disabled {
-    box-shadow: none; /* taste-skill-ignore: the brief asks for a subtle lower edge on buttons */
+    box-shadow: none; /* taste-skill-ignore: the brief asks for a lower edge on buttons */
   }
 
   /* A short fade and lift when something new appears: a filter panel, a folded section, a notice. */
@@ -267,22 +258,31 @@
 
 
 
-  /* Rounded progress bar: a pale green track and a deeper green fill. */
+  /* Rounded progress bar: a grey track and the lime's edge green, with a soft highlight along the top. */
   .meter {
     position: relative;
-    height: 12px;
+    height: 16px;
     overflow: hidden;
     border-radius: 999px;
-    background: var(--brand-soft);
+    background: var(--surface-3);
   }
 
   .meter-fill {
     position: relative;
     height: 100%;
     border-radius: 999px;
-    background: var(--green);
+    background: var(--lime-edge);
     transform-origin: left;
     transition: transform 500ms cubic-bezier(0.2, 0, 0, 1);
+  }
+
+  .meter-fill::after {
+    content: "";
+    position: absolute;
+    inset: 4px 8px auto;
+    height: 4px;
+    border-radius: 999px;
+    background: rgb(255 255 255 / 0.35);
   }
 }
 
@@ -315,7 +315,7 @@
 }
 
 dialog::backdrop {
-  background: rgba(0, 4, 55, 0.4);
+  background: rgb(60 60 60 / 0.45);
 }
 
 @keyframes fade-in {
@@ -344,6 +344,22 @@ dialog::backdrop {
 .pop-in {
   animation: pop-in 150ms var(--ease-out);
   transform-origin: top right;
+}
+
+/* The ready sticker's one small entrance when an analysis finishes: a quick grow from 90%, from its middle. */
+@keyframes sticker-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.sticker-in {
+  animation: sticker-in 300ms var(--ease-out);
 }
 
 @media (prefers-reduced-motion: reduce) {

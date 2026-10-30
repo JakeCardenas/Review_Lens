@@ -9,8 +9,11 @@ import { api, ApiRequestError } from "@/lib/client-api";
 
 const EXPORT_FILTER_KEYS = ["from", "to", "product", "rating_min", "rating_max", "sentiment", "topic", "confidence", "status", "q"];
 
-/** Download links for the labeled dataset and the summary, carrying the filters shown on the page. */
-export function ExportLinks({ uploadId }: { uploadId: string }) {
+/**
+ * Download links for the labeled dataset and the summary, carrying the filters shown on the page. On the
+ * report page the dataset download is the main action, so it takes the primary style there.
+ */
+export function ExportLinks({ uploadId, primary = false }: { uploadId: string; primary?: boolean }) {
   const searchParams = useSearchParams();
   const filters = new URLSearchParams();
   for (const key of EXPORT_FILTER_KEYS) {
@@ -20,15 +23,15 @@ export function ExportLinks({ uploadId }: { uploadId: string }) {
   const query = filters.toString();
   const base = `/api/uploads/${uploadId}/export`;
   return (
-    <div className="flex flex-wrap gap-2" role="group" aria-label={query ? "Download CSV files of the filtered reviews" : "Download CSV files"}>
-      <a href={`${base}?type=reviews${query ? `&${query}` : ""}`} className={buttonClasses("secondary", "sm")}>
+    <div className="flex flex-wrap gap-2.5" role="group" aria-label={query ? "Download CSV files of the filtered reviews" : "Download CSV files"}>
+      <a href={`${base}?type=reviews${query ? `&${query}` : ""}`} className={buttonClasses(primary ? "primary" : "secondary", "sm", "max-[400px]:px-4")}>
         <Download aria-hidden className="size-4" />
         <span>
           <span className="sm:hidden">Reviews</span>
           <span className="hidden sm:inline">Labeled reviews</span> CSV
         </span>
       </a>
-      <a href={`${base}?type=summary${query ? `&${query}` : ""}`} className={buttonClasses("secondary", "sm")}>
+      <a href={`${base}?type=summary${query ? `&${query}` : ""}`} className={buttonClasses("secondary", "sm", "max-[400px]:px-4")}>
         <Download aria-hidden className="size-4" />
         Summary CSV
       </a>
@@ -37,7 +40,7 @@ export function ExportLinks({ uploadId }: { uploadId: string }) {
 }
 
 /** Two-step delete so a stray tap can't remove an upload. */
-export function DeleteUploadButton({ uploadId, name }: { uploadId: string; name: string }) {
+export function DeleteUploadButton({ uploadId, name, className = "" }: { uploadId: string; name: string; className?: string }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -57,7 +60,7 @@ export function DeleteUploadButton({ uploadId, name }: { uploadId: string; name:
 
   if (!confirming) {
     return (
-      <Button variant="ghost" size="sm" onClick={() => setConfirming(true)} className="text-ink-2! hover:bg-danger-soft! hover:text-danger!">
+      <Button variant="ghost" size="sm" onClick={() => setConfirming(true)} className={`text-ink-2! hover:bg-danger-soft! hover:text-danger! ${className}`}>
         <Trash2 aria-hidden className="size-4" />
         Delete upload
       </Button>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { ChevronRight, Download, Info } from "lucide-react";
-import { ActionArt } from "@/components/illustrations";
+import { Sticker } from "@/components/illustrations";
 import { Mascots } from "@/components/brand";
 import { JourneyPath } from "@/components/journey-path";
 import { ModeBadge } from "@/components/mode-badge";
@@ -30,7 +30,7 @@ function FirstUpload() {
       <h1 className="font-display text-[2rem] font-black leading-tight text-ink sm:text-[2.5rem]">Your reviews</h1>
       <section
         aria-labelledby="first-title"
-        className="grid items-center gap-7.5 rounded-card border border-line p-5 sm:p-7.5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-12.5"
+        className="grid items-center gap-7.5 rounded-card border-2 border-line p-5 sm:p-7.5 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-12.5"
       >
         <div className="grid justify-items-start gap-5">
           <div>
@@ -42,7 +42,7 @@ function FirstUpload() {
             </p>
           </div>
           <ButtonLink href="/upload" data-home-upload>
-            <ActionArt name="csv" />
+            <Sticker name="csv" />
             Upload reviews
           </ButtonLink>
           <p className="text-[15px] text-ink-2">
@@ -52,10 +52,10 @@ function FirstUpload() {
               Download a sample CSV
             </a>
           </p>
-          <ol className="mt-2.5 grid w-full gap-5 border-t border-line pt-5 min-[550px]:grid-cols-2">
+          <ol className="mt-2.5 grid w-full gap-5 border-t-2 border-line pt-5 min-[550px]:grid-cols-2">
             {JOURNEY_STEPS.map((step, i) => (
               <li key={step} className="flex gap-3">
-                <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-soft text-[15px] font-extrabold text-brand-ink">
+                <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-soft text-[15px] font-extrabold text-ink">
                   {i + 1}
                 </span>
                 <span>
@@ -80,7 +80,7 @@ function LatestUpload({ upload }: { upload: UploadListItem }) {
       <h2 id="latest-title" className="text-subheading font-extrabold text-ink">
         Latest upload
       </h2>
-      <div className="min-w-0 rounded-card border border-line p-5 sm:p-7.5">
+      <div className="min-w-0 rounded-card border-2 border-line p-5 sm:p-7.5">
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill status={upload.status} />
           <ModeBadge provider={upload.provider} />
@@ -129,7 +129,7 @@ function LatestUpload({ upload }: { upload: UploadListItem }) {
             )}
             <div className="mt-1">
               <ButtonLink href={`/uploads/${upload.id}`} variant="secondary">
-                <ActionArt name="explore" />
+                <Sticker name="explore" />
                 Explore feedback
               </ButtonLink>
             </div>
@@ -179,7 +179,7 @@ export default async function HomePage() {
               <p className="mt-2 text-body text-ink-2">Pick up where you left off, or upload a new file.</p>
             </div>
             <ButtonLink href="/upload" data-home-upload>
-              <ActionArt name="csv" />
+              <Sticker name="csv" />
               Upload reviews
             </ButtonLink>
           </div>
@@ -191,7 +191,7 @@ export default async function HomePage() {
               <h2 id="earlier-title" className="text-subheading font-extrabold text-ink">
                 Earlier uploads
               </h2>
-              <ul className="grid grid-cols-[minmax(0,1fr)] divide-y divide-line overflow-hidden rounded-card border border-line">
+              <ul className="grid grid-cols-[minmax(0,1fr)] divide-y-2 divide-line overflow-hidden rounded-card border-2 border-line">
                 {earlier.map((upload) => {
                   const step = uploadJourneyStep(upload.status);
                   const href = step === 2 ? `/uploads/${upload.id}/analyze` : `/uploads/${upload.id}`;
@@ -214,7 +214,7 @@ export default async function HomePage() {
                           </span>
                           <StatusPill status={upload.status} />
                         </span>
-                        <ChevronRight aria-hidden className="size-5 shrink-0 text-line-strong group-hover:text-ink-2" strokeWidth={3} />
+                        <ChevronRight aria-hidden className="size-5 shrink-0 text-gray group-hover:text-ink-2" strokeWidth={3} />
                       </Link>
                     </li>
                   );

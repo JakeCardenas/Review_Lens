@@ -67,8 +67,8 @@ export function LabelCheckTable({ check }: { check: LabelCheck }) {
                   return (
                     <td key={col} className="p-1 text-center">
                       <span
-                        className={`block rounded-lg py-2.5 tabular ${
-                          row === col ? "bg-brand-soft font-bold text-brand-ink" : n ? "bg-warn-soft text-warn-ink" : "text-ink-3"
+                        className={`block rounded-control py-2.5 tabular ${
+                          row === col ? "bg-brand-soft font-bold text-ink" : n ? "bg-surface-2 font-bold text-ink" : "text-ink-3"
                         }`}
                       >
                         {row === col && n > 0 && <Check aria-hidden className="mr-0.5 inline size-3.5 align-[-2px]" strokeWidth={3} />}
@@ -182,7 +182,7 @@ export function LabelCheckCard({ check, ratingScale }: { check: LabelCheck; rati
           {yours && check.eligible > 0 && <ClassScoresTable check={check} />}
         </div>
       </div>
-      <p className="mt-5 rounded-xl bg-surface-2 p-3.5 text-sm text-ink-2">{CHECK_NOTES[check.source]}</p>
+      <p className="mt-5 rounded-card bg-surface-2 p-3.5 text-sm text-ink-2">{CHECK_NOTES[check.source]}</p>
     </Card>
   );
 }

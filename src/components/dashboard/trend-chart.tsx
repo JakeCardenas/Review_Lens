@@ -6,9 +6,11 @@ import { periodLabel } from "@/lib/format";
 import type { TrendPoint } from "@/lib/server/dashboard";
 import type { Sentiment } from "@/lib/types";
 
+// Lines use each sentiment's deeper step so they show on white: the logo's green, dark grey and charcoal.
+// Dashes tell them apart without colour.
 const LINES: { key: Sentiment; label: string; color: string; dash?: string }[] = [
-  { key: "positive", label: "Positive", color: "var(--pos)" },
-  { key: "neutral", label: "Neutral", color: "var(--neu-ink)", dash: "2 4" },
+  { key: "positive", label: "Positive", color: "var(--lime-edge)" },
+  { key: "neutral", label: "Neutral", color: "var(--ink-2)", dash: "2 4" },
   { key: "negative", label: "Negative", color: "var(--neg)", dash: "8 4" },
 ];
 
@@ -22,7 +24,7 @@ function TrendTooltip({ active, payload }: { active?: boolean; payload?: Readonl
   if (!active || !payload?.length) return null;
   const row = payload[0].payload as Row;
   return (
-    <div className="rounded-xl border border-line bg-surface px-3 py-2 text-sm shadow-float">
+    <div className="rounded-control border-2 border-line bg-surface px-3 py-2 text-sm shadow-float">
       <p className="font-bold">{row.label}</p>
       <ul className="mt-1 grid gap-0.5">
         {LINES.map((line) => (
@@ -60,7 +62,7 @@ export function TrendChart({ points, grain }: { points: TrendPoint[]; grain: "da
               dataKey="label"
               tick={{ fill: "var(--ink-2)", fontSize: 12 }}
               tickLine={false}
-              axisLine={{ stroke: "var(--line-strong)" }}
+              axisLine={{ stroke: "var(--gray)" }}
               minTickGap={24}
             />
             <YAxis
@@ -74,7 +76,7 @@ export function TrendChart({ points, grain }: { points: TrendPoint[]; grain: "da
             />
             <Tooltip
               content={(props) => <TrendTooltip active={props.active} payload={props.payload} />}
-              cursor={{ stroke: "var(--line-strong)" }}
+              cursor={{ stroke: "var(--gray)" }}
             />
             {LINES.map((line) => (
               <Line
@@ -105,7 +107,7 @@ export function TrendChart({ points, grain }: { points: TrendPoint[]; grain: "da
         ))}
       </ul>
       <details className="mt-3 text-sm">
-        <summary className="w-fit cursor-pointer rounded-lg py-1 font-extrabold text-accent-ink">View as table</summary>
+        <summary className="w-fit cursor-pointer rounded-control py-3 font-extrabold text-accent-ink">View as table</summary>
         <div className="mt-2 overflow-x-auto">
           <table className="w-full min-w-[420px] text-left">
             <thead className="text-ink-2">

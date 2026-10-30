@@ -61,15 +61,15 @@ function MoreMenu({ base, isActive, placement }: { base: string; isActive: (href
         onClick={() => setOpen((value) => !value)}
         className={
           phone
-            ? `press flex h-full min-h-14 w-full flex-col items-center justify-center gap-1 text-[12px] font-bold ${current ? "text-brand-ink" : "text-ink-2"}`
+            ? `press flex h-full min-h-14 w-full flex-col items-center justify-center gap-1 text-[12px] font-bold ${current ? "text-accent-ink" : "text-ink-2"}`
             : `press nav-label flex min-h-11 items-center gap-2 rounded-control px-4 ${
-                current ? "bg-brand-soft text-brand-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
+                current ? "bg-accent-soft text-accent-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
               }`
         }
       >
         {phone ? (
           <>
-            <span className={`grid h-8 w-14 place-items-center rounded-tag ${current ? "bg-brand-soft" : ""}`}>
+            <span className={`grid h-8 w-14 place-items-center rounded-tag ${current ? "bg-accent-soft" : ""}`}>
               <MoreHorizontal aria-hidden className="size-5" strokeWidth={2.25} />
             </span>
             More
@@ -85,7 +85,7 @@ function MoreMenu({ base, isActive, placement }: { base: string; isActive: (href
       {open && (
         <ul
           id={menuId}
-          className={`pop-in absolute z-40 grid w-64 gap-1 rounded-card border border-line bg-surface p-2 shadow-float ${
+          className={`pop-in absolute z-40 grid w-64 gap-1 rounded-card border-2 border-line bg-surface p-2 shadow-float ${
             phone ? "bottom-full right-2 mb-2 origin-bottom-right" : "left-0 top-full mt-2 origin-top-left"
           }`}
         >
@@ -98,7 +98,7 @@ function MoreMenu({ base, isActive, placement }: { base: string; isActive: (href
                   aria-current={active ? "page" : undefined}
                   onClick={() => setOpen(false)}
                   className={`flex min-h-12 items-center gap-3 rounded-control px-3 text-[15px] font-bold ${
-                    active ? "bg-brand-soft text-brand-ink" : "text-ink hover:bg-surface-2"
+                    active ? "bg-accent-soft text-accent-ink" : "text-ink hover:bg-surface-2"
                   }`}
                 >
                   <item.icon aria-hidden className="size-5 shrink-0" strokeWidth={2.25} />
@@ -116,7 +116,7 @@ function MoreMenu({ base, isActive, placement }: { base: string; isActive: (href
 /**
  * Upload sections: Overview, Reviews and Topics always in view, with Accuracy, the report and data issues
  * under More. Tabs sit under the title on wider screens; on phones they become a four-item bar at the bottom.
- * The selected section takes the pale green fill with dark green text.
+ * The selected section takes the pale sky fill with blue text, like every other selected state.
  */
 export function UploadNav({ uploadId }: { uploadId: string }) {
   const pathname = usePathname();
@@ -135,7 +135,7 @@ export function UploadNav({ uploadId }: { uploadId: string }) {
                   href={base + tab.href}
                   aria-current={active ? "page" : undefined}
                   className={`press nav-label flex min-h-11 items-center gap-2 rounded-control px-4 ${
-                    active ? "bg-brand-soft text-brand-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
+                    active ? "bg-accent-soft text-accent-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
                   }`}
                 >
                   <tab.icon aria-hidden className="size-5" strokeWidth={2.25} />
@@ -153,7 +153,7 @@ export function UploadNav({ uploadId }: { uploadId: string }) {
       <nav
         aria-label="Upload sections"
         data-bottom-tabs
-        className="no-print fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface sm:hidden"
+        className="no-print fixed inset-x-0 bottom-0 z-30 border-t-2 border-line bg-surface sm:hidden"
         style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
         <ul className="grid grid-cols-4 px-1 py-1.5">
@@ -165,10 +165,10 @@ export function UploadNav({ uploadId }: { uploadId: string }) {
                   href={base + tab.href}
                   aria-current={active ? "page" : undefined}
                   className={`press flex min-h-14 flex-col items-center justify-center gap-1 text-[12px] font-bold ${
-                    active ? "text-brand-ink" : "text-ink-2"
+                    active ? "text-accent-ink" : "text-ink-2"
                   }`}
                 >
-                  <span className={`grid h-8 w-14 place-items-center rounded-tag ${active ? "bg-brand-soft" : ""}`}>
+                  <span className={`grid h-8 w-14 place-items-center rounded-tag ${active ? "bg-accent-soft" : ""}`}>
                     <tab.icon aria-hidden className="size-5" strokeWidth={2.25} />
                   </span>
                   {tab.label}

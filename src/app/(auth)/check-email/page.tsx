@@ -18,7 +18,7 @@ export default function CheckEmailPage() {
       }
     >
       <div className="flex items-start gap-3 text-[15px] text-ink-2">
-        <MailCheck aria-hidden className="mt-0.5 size-5 shrink-0 text-brand-ink" />
+        <MailCheck aria-hidden className="mt-0.5 size-5 shrink-0 text-accent-ink" />
         <p>
           The link works on any device. If it doesn&apos;t arrive in a few minutes, check your spam folder, or enter your
           email below for a new one.

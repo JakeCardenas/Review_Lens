@@ -14,8 +14,8 @@ export function StatusBadge({ review }: { review: ReviewRow }) {
     review.status === "failed"
       ? { label: "Failed", icon: XCircle, tone: "bg-danger-soft text-danger" }
       : review.status === "not_labeled"
-        ? { label: "Not labeled", icon: Ban, tone: "bg-warn-soft text-warn-ink" }
-        : { label: "Waiting", icon: Clock3, tone: "bg-neu-soft text-neu-ink" };
+        ? { label: "Not labeled", icon: Ban, tone: "bg-surface-2 text-ink" }
+        : { label: "Waiting", icon: Clock3, tone: "bg-accent-soft text-accent-ink" };
   return (
     <span className={`${tagClasses} ${meta.tone}`}>
       <meta.icon aria-hidden className="size-3.5" />
@@ -50,7 +50,7 @@ export function LabelCheckTag({ review, source }: { review: ReviewRow; source: L
   const Icon = source === "label" ? Tag : Star;
   return (
     <span
-      className={`${tagClasses} ${agrees ? "bg-surface-2 text-ink-2" : "bg-warn-soft text-warn-ink"}`}
+      className={`${tagClasses} ${agrees ? "bg-surface-2 text-ink-2" : "border-2 border-line bg-surface py-0 text-ink"}`}
     >
       <Icon aria-hidden className="size-3.5" />
       {source === "label" ? "Your label" : "Stars suggest"}: {SENTIMENT_META[reference].label}
@@ -74,7 +74,7 @@ export function TopicChips({ topics }: { topics: string[] }) {
 
 
 /** The outline and dividers for a list of ReviewCard rows. */
-export const reviewListClasses = "grid grid-cols-[minmax(0,1fr)] divide-y divide-line overflow-hidden rounded-card border border-line";
+export const reviewListClasses = "grid grid-cols-[minmax(0,1fr)] divide-y-2 divide-line overflow-hidden rounded-card border-2 border-line";
 
 /** One review as a row in a list (the list draws the outline and dividers). Links to the detail sheet on the Reviews page. */
 export function ReviewCard({
