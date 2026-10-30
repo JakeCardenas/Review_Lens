@@ -13,7 +13,7 @@ The direction follows the taste skill's app-screen rules with its "accent ladder
 | Pale green | `#e6fad6` | selected tabs and menu items, success tags, progress tracks |
 | Green ink | `#2f6b00` | text on white or on pale green (6.5:1) |
 | Deeper green | `#58cc02` | progress fills and positive sentiment in charts |
-| Sky blue | `#ddf4ff` | small panels: the overview's finding, the mascots' panel, the AI-mode tag |
+| Sky blue | `#ddf4ff` | small panels: the overview's finding and the AI-mode tag |
 | Blue | `#1cb0f6` | link underlines; link text uses `#1274a2` (5.2:1) |
 | Text | `#3c3c3c` | headings and main text (11:1) |
 | Muted text | `#6b6b6b` | supporting text; `#777777` is 4.48:1 on white and 4.2:1 on grey panels, so the nearest grey that passes on both is used |
@@ -40,7 +40,7 @@ Nunito Black for page titles and big numbers, Nunito Sans for everything else. A
 
 ## Screens
 
-- **Public welcome** (signed out, `/`): the mascots on their sky-blue panel, "See what your reviews are really saying.", one short line, Get started (to `/sign-up`) and I already have an account (to `/sign-in`).
+- **Public welcome** (signed out, `/`): the mascots on the white page, "See what your reviews are really saying.", one short line, Get started (to `/sign-up`) and I already have an account (to `/sign-in`).
 - **Account pages:** one centered column on white with a title, a short line, the form and its links. Email, Password and Confirm password labels, with short guidance outside the labels.
 - **First upload:** the "Your reviews" title stays; the first action sits where uploads will appear: "Choose a CSV to get started", Upload reviews, a sample CSV and the four steps, with the mascots beside it.
 - **Your reviews:** Upload reviews as the main action, the latest upload with its status and one next step (See the results, Continue analysis or Upload again), earlier uploads as compact rows.
@@ -53,6 +53,6 @@ Nunito Black for page titles and big numbers, Nunito Sans for everything else. A
 ## Brand assets
 
 - Square logo ("Magnifying Bird Mascot Icon"), for the browser and home screen only, resized and never cropped or recolored: `src/app/favicon.ico` (16, 32 and 48px), `src/app/icon.png` (192px), `src/app/apple-icon.png` (180px), and `public/icons/icon-192.png` and `icon-512.png` for `src/app/manifest.ts`. The manifest lists plain icons only; a maskable icon would let Android crop the logo.
-- Mascots artwork, `public/brand/reviewlens-mascots.webp`: provided by Jake, byte-for-byte, drawn by `Mascots` in `src/components/brand.tsx` on a sky-blue panel whose padding keeps the picture whole. Empty alt text, because the words beside it carry the message.
+- Mascots artwork, `public/brand/reviewlens-mascots.webp`: provided by Jake, byte-for-byte, on a white background so it sits straight on the white pages (an earlier copy had a sky-blue background). Drawn by `Mascots` in `src/components/brand.tsx` with empty alt text, because the words beside it carry the message.
 - Eagle silhouette, `public/brand/reviewlens-mark.png`: the provided transparent PNG, byte-for-byte, drawn by `BrandMark` as the header logo. It is never used as a browser icon, and the square logo never appears in the header.
 - Images load with `preload` or `loading="eager"`; Next.js 16 deprecates `priority`.

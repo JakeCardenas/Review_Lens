@@ -1,10 +1,10 @@
 import Image from "next/image";
+// Imported rather than linked by path, so the file's content hash is part of its URL and a replaced
+// picture is never served from an old cache (browser, image optimizer or CDN).
+import mascotsImage from "../../public/brand/reviewlens-mascots.webp";
 
 // The eagle silhouette, exactly as provided (1402 x 1122, transparent background).
 const MARK = { src: "/brand/reviewlens-mark.png", width: 1402, height: 1122 };
-
-// The ReviewLens mascots, exactly as provided (1254 x 1254, on a sky blue that matches --sky).
-const MASCOTS = { src: "/brand/reviewlens-mascots.webp", width: 1254, height: 1254 };
 
 /** The ReviewLens eagle mark: the logo in the header. The square logo is only for browser and home-screen icons. */
 export function BrandMark({
@@ -34,9 +34,10 @@ export function BrandMark({
 }
 
 /**
- * The mascots illustration on its own sky-blue panel, for the few moments that welcome someone: the
- * public welcome page, the first upload and the page-not-found screen. Decorative: the words beside it
- * carry the message. The panel's padding keeps the picture whole; nothing is cropped.
+ * The mascots illustration (1254 x 1254, exactly as provided, on a white background that matches the
+ * page), for the few moments that welcome someone: the public welcome page, the first
+ * upload, and the not-found and error screens. It sits straight on the white page. Decorative: the words
+ * beside it carry the message.
  */
 export function Mascots({
   sizes,
@@ -49,8 +50,6 @@ export function Mascots({
   className?: string;
 }) {
   return (
-    <div className={`rounded-[28px] bg-accent-soft p-2.5 ${className}`}>
-      <Image src={MASCOTS.src} alt="" width={MASCOTS.width} height={MASCOTS.height} preload={preload} sizes={sizes} className="h-auto w-full" />
-    </div>
+    <Image src={mascotsImage} alt="" preload={preload} sizes={sizes} className={`h-auto ${className}`} />
   );
 }
