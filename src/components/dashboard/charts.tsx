@@ -179,7 +179,7 @@ export function KeywordColumns({
         const max = Math.max(1, ...list.map((k) => k.count));
         return (
           <div key={s} className="min-w-0">
-            <h3 className="flex flex-wrap items-center gap-x-1.5 border-b-2 border-line pb-2 text-[15px] font-extrabold">
+            <h3 className="flex flex-wrap items-center gap-x-1.5 border-b border-line pb-2 text-[15px] font-extrabold">
               <SentimentIcon sentiment={s} className={`size-4 ${meta.ink}`} />
               {meta.label}
               <span className="font-normal text-ink-2">in {formatNumber(totals[s])} reviews</span>

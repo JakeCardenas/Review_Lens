@@ -50,7 +50,7 @@ export function DeleteUploadButton({ uploadId, name }: { uploadId: string; name:
       router.push("/");
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof ApiRequestError ? error.message : "The upload couldn't be deleted.");
+      toast.error(error instanceof ApiRequestError ? error.message : "We couldn't delete this upload. Try again in a moment.");
       setBusy(false);
     }
   }

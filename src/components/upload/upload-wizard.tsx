@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import Papa from "papaparse";
 import { useEffect, useMemo, useState } from "react";
-import { CheckCircle2, FileSpreadsheet, Lock, UploadCloud } from "lucide-react";
+import { CheckCircle2, ChevronDown, FileSpreadsheet, Lock, UploadCloud } from "lucide-react";
 import { JourneyPath } from "@/components/journey-path";
 import { SENTIMENT_META } from "@/components/sentiment";
 import { Button, Notice } from "@/components/ui";
@@ -27,6 +27,11 @@ type ParsedFile = {
 };
 
 type Step = "choose" | "map" | "preview" | "import";
+
+/** "date", "date and rating", "date, rating and product". */
+function listWords(words: string[]): string {
+  return words.length < 2 ? words.join("") : `${words.slice(0, -1).join(", ")} and ${words[words.length - 1]}`;
+}
 
 const FIELDS: { id: ColumnField; label: string; help: string; required?: boolean }[] = [
   { id: "text", label: "Review text", help: "What the customer wrote. Required.", required: true },
@@ -138,6 +143,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
   const [name, setName] = useState("");
   const [importState, setImportState] = useState<ImportState>({ phase: "idle" });
   const [noticeAccepted, setNoticeAccepted] = useState(false);
+  const [optionalOpen, setOptionalOpen] = useState(false);
 
   const headers = parsed?.headers ?? [];
   const personal = headers.filter(isPersonalColumn);
@@ -299,6 +305,118 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
     }
   }
 
+  // The optional columns fold away unless one needs an answer (a date order) or a fix (a label column).
+  const optionalMatched = FIELDS.filter((field) => !field.required && mapping[field.id]).map((field) => field.label.toLowerCase());
+  const optionalSummary = optionalMatched.length
+    ? `Matched: ${listWords(optionalMatched)}.`
+    : "Dates, ratings, products or your own labels, if your file has them.";
+  const optionalNeedsAttention =
+    (Boolean(mapping.date) && (detectedDate === "ambiguous" || detectedDate === "none")) || (Boolean(mapping.label) && !labelColumnOk);
+
+  /** One column choice with its help, examples and any follow-up question (date order, rating scale). */
+  function renderField(field: (typeof FIELDS)[number]) {
+    const id = `map-${field.id}`;
+    const current = mapping[field.id];
+    return (
+      <div key={field.id} className="grid gap-1.5 sm:grid-cols-[180px_1fr] sm:items-start sm:gap-4">
+        <label htmlFor={id} className="pt-3 font-bold">
+          {field.label}
+          {!field.required && <span className="font-normal text-ink-2"> (optional)</span>}
+        </label>
+        <div className="min-w-0">
+          <select
+            id={id}
+            value={current ?? ""}
+            onChange={(e) => updateField(field.id, e.target.value)}
+            className="min-h-12 w-full rounded-control border-2 border-field bg-surface px-3.5 font-semibold text-ink hover:border-ink-3 focus-visible:border-accent"
+            aria-describedby={`${id}-help`}
+          >
+            <option value="">{field.required ? "Choose a column" : "Not in this file"}</option>
+            {selectable.map((header) => (
+              <option key={header} value={header} disabled={usedHeaders.has(header) && header !== current}>
+                {header}
+              </option>
+            ))}
+          </select>
+          <p id={`${id}-help`} className="mt-1 text-sm text-ink-2">
+            {current ? `Examples: ${sampleValues(parsed?.rows ?? [], current).join(", ") || "all empty"}` : field.help}
+          </p>
+
+          {field.id === "date" && current && (
+            <div className="mt-2 text-sm">
+              {detectedDate === "ymd" && <p className="text-ink-2">Dates look like 2026-03-04 (year first).</p>}
+              {detectedDate === "mdy" && <p className="text-ink-2">Dates are month first, like 03/25/2026.</p>}
+              {detectedDate === "dmy" && <p className="text-ink-2">Dates are day first, like 25/03/2026.</p>}
+              {detectedDate === "none" && (
+                <p className="text-warn-ink">No readable dates in this column. Reviews will be kept without a date.</p>
+              )}
+              {detectedDate === "ambiguous" && (
+                <fieldset className="mt-1 grid gap-2 rounded-control bg-warn-soft p-3">
+                  <legend className="sr-only">Date order</legend>
+                  <p className="font-semibold text-ink">Is 03/04/2026 March 4 or 3 April?</p>
+                  {(
+                    [
+                      ["mdy", "Month first: 03/04/2026 is March 4"],
+                      ["dmy", "Day first: 03/04/2026 is 3 April"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <label key={value} className="flex min-h-10 items-center gap-2">
+                      <input
+                        type="radio"
+                        name="date-order"
+                        value={value}
+                        checked={dateChoice === value}
+                        onChange={() => setDateChoice(value)}
+                        className="size-4 accent-[var(--brand)]"
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </fieldset>
+              )}
+            </div>
+          )}
+
+          {field.id === "text" && textProblem && (
+            <p className="mt-2 text-sm font-bold text-danger" role="alert">
+              {textProblem}
+            </p>
+          )}
+
+          {field.id === "label" && !current && (
+            <p className="mt-2 text-sm text-warn-ink">
+              No label column is matched, so there will be no label check. If your file has your own labels, choose
+              that column here.
+            </p>
+          )}
+
+          {field.id === "label" && current && (
+            <p className={`mt-2 text-sm ${labelColumnOk ? "text-ink-2" : "text-warn-ink"}`}>
+              {labelColumnOk
+                ? "ReviewLens will compare its labels with these. They are never sent to the AI."
+                : "Most values here aren't positive, neutral or negative. Reviews with other values are left out of the label check."}
+            </p>
+          )}
+
+          {field.id === "rating" && current && (
+            <label className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-ink-2">Ratings are out of</span>
+              <select
+                value={ratingScale}
+                onChange={(e) => setRatingScale(Number(e.target.value) as RatingScale)}
+                className="min-h-11 rounded-control border-2 border-field bg-surface px-2.5 font-semibold text-ink hover:border-ink-3 focus-visible:border-accent"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={100}>100</option>
+              </select>
+            </label>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="grid gap-6">
       <JourneyPath current={wizardJourneyStep(step)} />
@@ -331,10 +449,10 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
               <UploadCloud aria-hidden className="size-8" />
             </span>
             <span className="mt-5 text-subheading font-extrabold text-ink">
-              {reading ? "Reading your file…" : dragging ? "Drop the file to use it" : "Choose a CSV file"}
+              {reading ? "Reading your file…" : dragging ? "Drop the file to use it" : "Choose a CSV to get started"}
             </span>
             <span className="mt-1 text-[15px] text-ink-2">or drag it here. Up to 5 MB and 5,000 reviews.</span>
-            <span aria-hidden className="lip nav-label mt-6 inline-flex min-h-12 items-center rounded-control border-2 border-transparent bg-brand px-6 text-on-brand [--edge:var(--brand-edge)] group-hover:bg-brand-hover">
+            <span aria-hidden className="mt-6 inline-flex min-h-12 items-center rounded-full bg-brand px-6 text-[16px] font-bold text-on-brand group-hover:bg-brand-hover">
               Browse files
             </span>
             <input
@@ -383,111 +501,25 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
 
           <div className="grid gap-5">
             <div>
-              <h2 className="text-subheading font-extrabold text-ink">Match your columns</h2>
-              <p className="mt-1 text-[15px] text-ink-2">ReviewLens filled in its best guesses. Only the columns you match are sent to the server.</p>
+              <h2 className="text-subheading font-extrabold text-ink">Which column has the reviews?</h2>
+              <p className="mt-1 text-[15px] text-ink-2">ReviewLens picked the likely one. Only the columns you match are sent to ReviewLens.</p>
             </div>
-            {FIELDS.map((field) => {
-              const id = `map-${field.id}`;
-              const current = mapping[field.id];
-              return (
-                <div key={field.id} className="grid gap-1.5 sm:grid-cols-[180px_1fr] sm:items-start sm:gap-4">
-                  <label htmlFor={id} className="pt-3 font-bold">
-                    {field.label}
-                    {!field.required && <span className="font-normal text-ink-2"> (optional)</span>}
-                  </label>
-                  <div className="min-w-0">
-                    <select
-                      id={id}
-                      value={current ?? ""}
-                      onChange={(e) => updateField(field.id, e.target.value)}
-                      className="min-h-12 w-full rounded-control border-2 border-field bg-surface px-3.5 font-semibold text-ink hover:border-ink-3 focus-visible:border-accent"
-                      aria-describedby={`${id}-help`}
-                    >
-                      <option value="">{field.required ? "Choose a column" : "Not in this file"}</option>
-                      {selectable.map((header) => (
-                        <option key={header} value={header} disabled={usedHeaders.has(header) && header !== current}>
-                          {header}
-                        </option>
-                      ))}
-                    </select>
-                    <p id={`${id}-help`} className="mt-1 text-sm text-ink-2">
-                      {current ? `Examples: ${sampleValues(parsed.rows, current).join(", ") || "all empty"}` : field.help}
-                    </p>
+            {FIELDS.filter((field) => field.required).map(renderField)}
 
-                    {field.id === "date" && current && (
-                      <div className="mt-2 text-sm">
-                        {detectedDate === "ymd" && <p className="text-ink-2">Dates look like 2026-03-04 (year first).</p>}
-                        {detectedDate === "mdy" && <p className="text-ink-2">Dates are month first, like 03/25/2026.</p>}
-                        {detectedDate === "dmy" && <p className="text-ink-2">Dates are day first, like 25/03/2026.</p>}
-                        {detectedDate === "none" && (
-                          <p className="text-warn-ink">No readable dates in this column. Reviews will be kept without a date.</p>
-                        )}
-                        {detectedDate === "ambiguous" && (
-                          <fieldset className="mt-1 grid gap-2 rounded-control bg-warn-soft p-3">
-                            <legend className="sr-only">Date order</legend>
-                            <p className="font-semibold text-ink">Is 03/04/2026 March 4 or 3 April?</p>
-                            {(
-                              [
-                                ["mdy", "Month first: 03/04/2026 is March 4"],
-                                ["dmy", "Day first: 03/04/2026 is 3 April"],
-                              ] as const
-                            ).map(([value, label]) => (
-                              <label key={value} className="flex min-h-10 items-center gap-2">
-                                <input
-                                  type="radio"
-                                  name="date-order"
-                                  value={value}
-                                  checked={dateChoice === value}
-                                  onChange={() => setDateChoice(value)}
-                                  className="size-4 accent-[var(--brand)]"
-                                />
-                                {label}
-                              </label>
-                            ))}
-                          </fieldset>
-                        )}
-                      </div>
-                    )}
-
-                    {field.id === "text" && textProblem && (
-                      <p className="mt-2 text-sm font-bold text-danger" role="alert">
-                        {textProblem}
-                      </p>
-                    )}
-
-                    {field.id === "label" && !current && (
-                      <p className="mt-2 text-sm text-warn-ink">
-                        No label column is matched, so there will be no label check. If your file has your own labels, choose
-                        that column here.
-                      </p>
-                    )}
-
-                    {field.id === "label" && current && (
-                      <p className={`mt-2 text-sm ${labelColumnOk ? "text-ink-2" : "text-warn-ink"}`}>
-                        {labelColumnOk
-                          ? "ReviewLens will compare its labels with these. They are never sent to the AI."
-                          : "Most values here aren't positive, neutral or negative. Reviews with other values are left out of the label check."}
-                      </p>
-                    )}
-
-                    {field.id === "rating" && current && (
-                      <label className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-                        <span className="text-ink-2">Ratings are out of</span>
-                        <select
-                          value={ratingScale}
-                          onChange={(e) => setRatingScale(Number(e.target.value) as RatingScale)}
-                          className="min-h-11 rounded-control border-2 border-field bg-surface px-2.5 font-semibold text-ink hover:border-ink-3 focus-visible:border-accent"
-                        >
-                          <option value={5}>5</option>
-                          <option value={10}>10</option>
-                          <option value={100}>100</option>
-                        </select>
-                      </label>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+            <details
+              open={optionalOpen || optionalNeedsAttention}
+              onToggle={(event) => setOptionalOpen(event.currentTarget.open)}
+              className="group rounded-card border border-line"
+            >
+              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-3 rounded-card px-4 py-3 hover:bg-surface-2 [&::-webkit-details-marker]:hidden">
+                <span>
+                  <span className="block font-bold text-ink">More details (optional)</span>
+                  <span className="block text-[15px] text-ink-2">{optionalSummary}</span>
+                </span>
+                <ChevronDown aria-hidden className="size-5 shrink-0 text-ink-2 transition-transform duration-150 group-open:rotate-180" />
+              </summary>
+              <div className="grid gap-5 border-t border-line px-4 py-5">{FIELDS.filter((field) => !field.required).map(renderField)}</div>
+            </details>
 
             <div className="grid gap-1.5 sm:grid-cols-[180px_1fr] sm:items-center sm:gap-4">
               <label htmlFor="upload-name" className="font-bold">
@@ -578,7 +610,7 @@ export function UploadWizard({ provider }: { provider: WizardProviderInfo }) {
             </Notice>
           )}
 
-          <div className="min-w-0 rounded-card border-2 border-line bg-surface">
+          <div className="min-w-0 rounded-card border border-line bg-surface">
             <div className="flex flex-wrap items-baseline justify-between gap-2 px-5 pt-5">
               <h2 className="text-subheading font-extrabold text-ink">Preview of the first 10 rows</h2>
               <p className="text-sm text-ink-2">This is exactly what will be saved.</p>

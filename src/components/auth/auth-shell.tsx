@@ -14,7 +14,7 @@ export function AuthShell({
   footer?: ReactNode;
 }) {
   return (
-    <div data-public-page className="mx-auto grid w-full max-w-md gap-8 sm:pt-6">
+    <div className="mx-auto grid w-full max-w-md gap-8 sm:pt-6">
       <div className="grid gap-2 text-center">
         <h1 className="font-display text-[2rem] font-black leading-tight text-ink sm:text-[2.5rem]">{title}</h1>
         {intro && <div className="text-body text-ink-2">{intro}</div>}

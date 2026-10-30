@@ -70,7 +70,7 @@ export default async function ReportPage({ params, searchParams }: PageProps<"/u
           </Link>
         </p>
       </section>
-      <article className="grid max-w-4xl grid-cols-[minmax(0,1fr)] gap-7 rounded-card border-2 border-line bg-surface p-5 sm:p-9 print:border-0 print:p-0">
+      <article className="grid max-w-4xl grid-cols-[minmax(0,1fr)] gap-7 rounded-card border border-line bg-surface p-5 sm:p-9 print:border-0 print:p-0">
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h2 className="text-heading-sm font-extrabold text-ink">Summary report</h2>

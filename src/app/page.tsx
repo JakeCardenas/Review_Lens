@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { ChevronRight, Download, Info, Upload } from "lucide-react";
-import { BrandMark } from "@/components/brand";
+import { Mascots } from "@/components/brand";
 import { JourneyPath } from "@/components/journey-path";
 import { ModeBadge } from "@/components/mode-badge";
 import { PublicWelcome } from "@/components/public-welcome";
@@ -22,49 +22,52 @@ const STEP_HELP = [
   "See how customers feel and what they mention most.",
 ];
 
-/** No uploads yet: a short welcome, one clear action and the four steps in plain words. */
-function Welcome() {
+/** First run: the page keeps its title, and the first action sits where the uploads will appear. */
+function FirstUpload() {
   return (
-    <section aria-labelledby="welcome-title" className="mx-auto grid w-full max-w-3xl justify-items-center gap-6 text-center">
-      <BrandMark height={120} priority />
-      <div className="grid gap-3">
-        <h1 id="welcome-title" className="font-display text-[2rem] font-black leading-tight text-ink sm:text-[2.75rem]">
-          Let&apos;s see what your customers are saying
-        </h1>
-        <p className="mx-auto max-w-xl text-body text-ink-2">
-          Upload a CSV of customer reviews. ReviewLens sorts them into positive, neutral and negative, and shows what people mention
-          most.
-        </p>
-      </div>
-      <ButtonLink href="/upload" data-home-upload>
-        <Upload aria-hidden className="size-5" strokeWidth={2.75} />
-        Upload reviews
-      </ButtonLink>
-      <p className="text-[15px] text-ink-2">
-        No file yet?{" "}
-        <a href="/sample-reviews.csv" download className={`${linkClasses} inline-flex items-center gap-1`}>
-          <Download aria-hidden className="size-4" />
-          Download a sample CSV
-        </a>
-      </p>
-
-      <div className="mt-6 w-full rounded-card bg-accent-soft p-6 text-left sm:p-8">
-        <h2 className="text-subheading font-extrabold text-ink">How it works</h2>
-        <ol className="mt-5 grid gap-5 sm:grid-cols-2">
-          {JOURNEY_STEPS.map((step, i) => (
-            <li key={step} className="flex gap-3">
-              <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-brand font-display font-black text-on-brand">
-                {i + 1}
-              </span>
-              <span>
-                <span className="block font-extrabold text-ink">{step}</span>
-                <span className="block text-[15px] text-ink-2">{STEP_HELP[i]}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
+    <>
+      <h1 className="font-display text-[2rem] font-black leading-tight text-ink sm:text-[2.5rem]">Your reviews</h1>
+      <section
+        aria-labelledby="first-title"
+        className="grid items-center gap-8 rounded-card border border-line p-6 sm:p-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-12"
+      >
+        <div className="grid justify-items-start gap-5">
+          <div>
+            <h2 id="first-title" className="text-2xl font-extrabold text-ink">
+              Choose a CSV to get started
+            </h2>
+            <p className="mt-2 max-w-xl text-body text-ink">
+              ReviewLens labels each review positive, neutral or negative and shows what people mention most.
+            </p>
+          </div>
+          <ButtonLink href="/upload" data-home-upload>
+            <Upload aria-hidden className="size-5" strokeWidth={2.25} />
+            Upload reviews
+          </ButtonLink>
+          <p className="text-[15px] text-ink-2">
+            No file yet?{" "}
+            <a href="/sample-reviews.csv" download className={`${linkClasses} inline-flex items-center gap-1`}>
+              <Download aria-hidden className="size-4" />
+              Download a sample CSV
+            </a>
+          </p>
+          <ol className="mt-2 grid w-full gap-4 border-t border-line pt-6 sm:grid-cols-2">
+            {JOURNEY_STEPS.map((step, i) => (
+              <li key={step} className="flex gap-3">
+                <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full bg-brand-soft text-[15px] font-extrabold text-brand-ink">
+                  {i + 1}
+                </span>
+                <span>
+                  <span className="block font-bold text-ink">{step}</span>
+                  <span className="block text-[15px] text-ink-2">{STEP_HELP[i]}</span>
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+        <Mascots sizes="(min-width: 1024px) 360px, 240px" className="mx-auto w-full max-w-[240px] lg:max-w-[360px]" />
+      </section>
+    </>
   );
 }
 
@@ -76,7 +79,7 @@ function LatestUpload({ upload }: { upload: UploadListItem }) {
       <h2 id="latest-title" className="text-subheading font-extrabold text-ink">
         Latest upload
       </h2>
-      <div className="min-w-0 rounded-card border-2 border-line p-5 sm:p-7">
+      <div className="min-w-0 rounded-card border border-line p-5 sm:p-7">
         <div className="flex flex-wrap items-center gap-2">
           <StatusPill status={upload.status} />
           <ModeBadge provider={upload.provider} />
@@ -125,7 +128,7 @@ function LatestUpload({ upload }: { upload: UploadListItem }) {
             )}
             <div className="mt-1">
               <ButtonLink href={`/uploads/${upload.id}`} variant="secondary">
-                See insights
+                See the results
               </ButtonLink>
             </div>
           </div>
@@ -164,7 +167,7 @@ export default async function HomePage() {
         </Notice>
       )}
 
-      {!setupProblem && !latest && <Welcome />}
+      {!setupProblem && !latest && <FirstUpload />}
 
       {latest && (
         <>
@@ -174,7 +177,7 @@ export default async function HomePage() {
               <p className="mt-2 text-body text-ink-2">Upload a new file, or pick up where you left off.</p>
             </div>
             <ButtonLink href="/upload" data-home-upload>
-              <Upload aria-hidden className="size-5" strokeWidth={2.75} />
+              <Upload aria-hidden className="size-5" strokeWidth={2.25} />
               Upload reviews
             </ButtonLink>
           </div>
@@ -186,7 +189,7 @@ export default async function HomePage() {
               <h2 id="earlier-title" className="text-subheading font-extrabold text-ink">
                 Earlier uploads
               </h2>
-              <ul className="grid grid-cols-[minmax(0,1fr)] divide-y-2 divide-line overflow-hidden rounded-card border-2 border-line">
+              <ul className="grid grid-cols-[minmax(0,1fr)] divide-y divide-line overflow-hidden rounded-card border border-line">
                 {earlier.map((upload) => {
                   const step = uploadJourneyStep(upload.status);
                   const href = step === 2 ? `/uploads/${upload.id}/analyze` : `/uploads/${upload.id}`;

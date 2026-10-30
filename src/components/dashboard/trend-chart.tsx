@@ -22,7 +22,7 @@ function TrendTooltip({ active, payload }: { active?: boolean; payload?: Readonl
   if (!active || !payload?.length) return null;
   const row = payload[0].payload as Row;
   return (
-    <div className="rounded-xl border-2 border-line bg-surface px-3 py-2 text-sm shadow-float">
+    <div className="rounded-xl border border-line bg-surface px-3 py-2 text-sm shadow-float">
       <p className="font-bold">{row.label}</p>
       <ul className="mt-1 grid gap-0.5">
         {LINES.map((line) => (

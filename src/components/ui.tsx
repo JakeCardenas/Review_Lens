@@ -1,28 +1,29 @@
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
-import { BrandMark } from "@/components/brand";
+import { Mascots } from "@/components/brand";
 import type { UploadStatus } from "@/lib/types";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 type Size = "sm" | "md";
 
-// Primary: Eager Green with a darker lip. Secondary: white with a 2px Faded Gray outline and blue text.
+// Flat, fully round buttons in sentence case. Primary: the brand lime with near-black text, one per screen.
+// Secondary: white with a grey outline. Ghost: a blue text action.
 const VARIANTS: Record<Variant, string> = {
-  primary: "lip border-transparent bg-brand text-on-brand hover:bg-brand-hover [--edge:var(--brand-edge)]",
-  secondary: "lip border-line-strong bg-surface text-accent-ink hover:bg-surface-2 [--edge:var(--line-strong)] [--lip:3px]",
-  ghost: "press border-transparent bg-transparent text-accent-ink hover:bg-accent-soft",
-  danger: "lip border-line-strong bg-surface text-danger hover:border-danger-line hover:bg-danger-soft [--edge:var(--line-strong)] [--lip:3px]",
+  primary: "bg-brand text-on-brand hover:bg-brand-hover active:bg-brand-press",
+  secondary: "border border-line-strong bg-surface text-ink hover:bg-surface-2",
+  ghost: "bg-transparent text-accent-ink hover:bg-surface-2",
+  danger: "border border-line-strong bg-surface text-danger hover:border-danger-line hover:bg-danger-soft",
 };
 
 const SIZES: Record<Size, string> = {
-  sm: "min-h-10 px-4 text-[13px] gap-1.5",
-  md: "min-h-12 px-6 text-[15px] gap-2",
+  sm: "min-h-10 px-4 text-[15px] gap-1.5",
+  md: "min-h-12 px-6 text-[16px] gap-2",
 };
 
 export function buttonClasses(variant: Variant = "primary", size: Size = "md", extra = ""): string {
   return [
-    "inline-flex items-center justify-center rounded-control border-2 font-extrabold uppercase tracking-[0.053em] whitespace-nowrap",
+    "press inline-flex items-center justify-center rounded-full font-bold whitespace-nowrap",
     "disabled:pointer-events-none disabled:opacity-50",
     VARIANTS[variant],
     SIZES[size],
@@ -42,25 +43,14 @@ export function ButtonLink({ variant, size, className = "", ...props }: ButtonLi
   return <Link className={buttonClasses(variant, size, className)} {...props} />;
 }
 
-/** Inline text link in Spark Blue (darkened for readability). */
-export const linkClasses = "font-bold text-accent-ink underline decoration-accent/50 decoration-2 underline-offset-[3px] hover:decoration-accent-ink";
+/** Inline text link: blue text dark enough to read, with a brand-blue underline. */
+export const linkClasses = "font-bold text-accent-ink underline decoration-accent decoration-2 underline-offset-[3px] hover:decoration-accent-ink";
 
-/** Page title with a line of context, actions, and optionally the eagle beside it. */
-export function PageHeader({
-  title,
-  description,
-  actions,
-  art,
-}: {
-  title: ReactNode;
-  description?: ReactNode;
-  actions?: ReactNode;
-  art?: boolean;
-}) {
+/** Page title with a line of context and any actions. */
+export function PageHeader({ title, description, actions }: { title: ReactNode; description?: ReactNode; actions?: ReactNode }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-5">
       <div className="flex min-w-0 items-center gap-6">
-        {art && <BrandMark height={112} className="hidden md:block" />}
         <div className="min-w-0 max-w-2xl">
           <h1 className="font-display text-[1.75rem] font-black leading-tight text-ink sm:text-heading-sm">{title}</h1>
           {description && <p className="mt-2 text-body text-ink-2">{description}</p>}
@@ -175,7 +165,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center px-6 py-12 text-center sm:py-16">
       {mascot ? (
-        <BrandMark height={120} className="mb-5" />
+        <Mascots sizes="200px" className="mb-6 w-[200px]" />
       ) : (
         icon && <div className="mb-5 grid size-14 place-items-center rounded-full bg-surface-2 text-ink-2">{icon}</div>
       )}
@@ -187,5 +177,5 @@ export function EmptyState({
 }
 
 export function Skeleton({ className = "" }: { className?: string }) {
-  return <div aria-hidden className={`animate-pulse rounded-control bg-surface-3 ${className}`} />;
+  return <div aria-hidden className={`rounded-control bg-surface-2 ${className}`} />;
 }

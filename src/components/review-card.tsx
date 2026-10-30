@@ -74,7 +74,7 @@ export function TopicChips({ topics }: { topics: string[] }) {
 
 
 /** The outline and dividers for a list of ReviewCard rows. */
-export const reviewListClasses = "grid grid-cols-[minmax(0,1fr)] divide-y-2 divide-line overflow-hidden rounded-card border-2 border-line";
+export const reviewListClasses = "grid grid-cols-[minmax(0,1fr)] divide-y divide-line overflow-hidden rounded-card border border-line";
 
 /** One review as a row in a list (the list draws the outline and dividers). Links to the detail sheet on the Reviews page. */
 export function ReviewCard({

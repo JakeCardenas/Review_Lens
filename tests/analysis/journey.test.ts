@@ -3,7 +3,7 @@ import { JOURNEY_STEPS, uploadJourneyStep, wizardJourneyStep } from "@/lib/journ
 
 describe("the upload journey", () => {
   it("has four steps in order", () => {
-    expect(JOURNEY_STEPS).toEqual(["Upload", "Match columns", "Analyze", "Insights"]);
+    expect(JOURNEY_STEPS).toEqual(["Upload", "Match columns", "Analyze", "Results"]);
   });
 
   it("places an upload on the path by its status", () => {

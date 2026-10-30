@@ -43,10 +43,8 @@ export function AccountMenu({ email, children }: { email: string; children: Reac
         aria-expanded={open}
         aria-controls={panelId}
         onClick={() => setOpen((value) => !value)}
-        className={`lip flex min-h-10 items-center gap-2 rounded-control border-2 px-2 [--lip:3px] ${
-          open
-            ? "border-fresh-leaf bg-brand-tint [--edge:var(--fresh-leaf)]"
-            : "border-line-strong bg-surface hover:bg-surface-2 [--edge:var(--line-strong)]"
+        className={`press flex min-h-10 items-center gap-2 rounded-full border px-1.5 sm:pr-3 ${
+          open ? "border-brand-soft bg-brand-soft" : "border-line-strong bg-surface hover:bg-surface-2"
         }`}
       >
         <span aria-hidden className="grid size-7 place-items-center rounded-full bg-brand-soft font-display text-sm font-black text-night">
@@ -61,7 +59,7 @@ export function AccountMenu({ email, children }: { email: string; children: Reac
       {open && (
         <div
           id={panelId}
-          className="pop-in absolute right-0 top-full z-40 mt-3 w-72 max-w-[calc(100vw-2rem)] rounded-card border-2 border-line bg-surface p-2 shadow-float"
+          className="pop-in absolute right-0 top-full z-40 mt-3 w-72 max-w-[calc(100vw-2rem)] rounded-card border border-line bg-surface p-2 shadow-float"
         >
           <p className="px-3 pb-3 pt-2 text-[15px] text-ink-2">
             Signed in as
@@ -69,7 +67,7 @@ export function AccountMenu({ email, children }: { email: string; children: Reac
               {email}
             </span>
           </p>
-          <div className="grid gap-1 border-t-2 border-line pt-2">
+          <div className="grid gap-1 border-t border-line pt-2">
             <Link href="/" onClick={() => setOpen(false)} className={menuItemClasses}>
               <LayoutList aria-hidden className="size-5" strokeWidth={2.5} />
               Your uploads

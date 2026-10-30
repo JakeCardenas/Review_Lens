@@ -93,12 +93,12 @@ export default async function TopicsPage({ params, searchParams }: PageProps<"/u
             <Card
               title="Sentiment over time"
               description="How the mix of positive, neutral and negative changed, using the review dates in your file."
-              className="border-t-2 border-line pt-10"
+              className="border-t border-line pt-10"
             >
               <TrendChart points={dashboard.trend.points} grain={dashboard.trend.grain} />
             </Card>
           ) : (
-            <p className="flex items-start gap-2.5 border-t-2 border-line pt-10 text-[15px] text-ink-2">
+            <p className="flex items-start gap-2.5 border-t border-line pt-10 text-[15px] text-ink-2">
               <CalendarX2 aria-hidden className="mt-0.5 size-5 shrink-0" strokeWidth={2.5} />
               <span>
                 <span className="font-extrabold text-ink">No timeline for this upload.</span> {dashboard.trend.reason}
@@ -109,7 +109,7 @@ export default async function TopicsPage({ params, searchParams }: PageProps<"/u
           <Card
             title="Words that stand out"
             description="Words and phrases used in at least 2 reviews, and more often in one sentiment than the others. Select one to read those reviews."
-            className="border-t-2 border-line pt-10"
+            className="border-t border-line pt-10"
           >
             <KeywordColumns keywords={dashboard.keywords} totals={dashboard.sentiment} searchHref={(term, s) => linkTo({ q: term, sentiment: s })} />
           </Card>

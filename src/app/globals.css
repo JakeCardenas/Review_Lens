@@ -1,25 +1,22 @@
 @import "tailwindcss";
 
 /*
-  ReviewLens design tokens: a friendly, Duolingo-inspired look on a white page.
-  Bright green marks primary actions, selected states and progress. Lime and soft green are for
-  highlights and success. Sky blue is an occasional soft surface, and blue is for links and
-  secondary accents. Text is dark charcoal, so it stays easy to read.
+  ReviewLens design tokens. One brand green does the work in two strengths: the full lime on the one
+  primary action and on small marks, and its pale tints on selected tabs, success tags and progress
+  tracks. Pages are white everywhere; sky blue is kept for small panels and illustrations, and blue
+  for links. Text is dark charcoal, with one muted grey.
 
-  Fills, bars and washes use the exact palette values. Where a palette color would carry small
-  text, a same-hue shade that meets WCAG AA is used instead (ratios vs white are noted).
-  See docs/superpowers/specs/2026-10-28-redesign-design.md.
+  Where a palette colour would carry small text, a same-hue shade that meets WCAG AA is used instead
+  (ratios against white are noted). See docs/superpowers/specs/2026-10-28-redesign-design.md.
 */
 :root {
   /* Palette */
-  --eager-green: #58cc02;
-  --storybook-green: #d7ffb8;
-  --spark-blue: #1cb0f6;
-  --fresh-leaf: #a5ed6e;
+  --lime: #a5ed6e; /* brand green */
+  --green: #58cc02; /* the deeper green, for data and progress */
   --sky: #ddf4ff;
+  --blue: #1cb0f6;
   --night-ink: #000437;
   --charcoal: #3c3c3c;
-  --pencil-gray: #777777;
   --faded-gray: #afafaf;
 
   /* Roles */
@@ -28,31 +25,29 @@
   --surface-2: #f7f7f7;
   --surface-3: #e5e5e5;
   --ink: var(--charcoal); /* headings and main text, 11:1 */
-  --ink-2: #5f5f5f; /* supporting text, 6.4:1 */
-  --ink-3: #6b6b6b; /* hints and placeholders, 5.3:1 */
-  --line: #e5e5e5; /* card and divider borders */
-  --line-strong: var(--faded-gray); /* outlined buttons and pills */
+  --ink-2: #6b6b6b; /* muted text: the palette's #777777 is 4.48:1 on white and 4.2:1 on grey panels; this holds 5.3:1 and 5:1 */
+  --ink-3: #6b6b6b; /* hints and placeholders */
+  --line: #e5e5e5; /* card, list and divider borders, 1px */
+  --line-strong: #cfcfcf; /* outlined buttons and controls */
   --field: #949494; /* input borders, 3:1 (WCAG 1.4.11) */
-  --brand: var(--eager-green); /* primary fills, progress, positive */
-  --brand-hover: #61e002;
-  --brand-edge: #58a700; /* the lip under green buttons */
-  --brand-ink: #377e01; /* green text, 4.5:1 on white and Storybook Green */
-  --brand-display: #49a902; /* green headings 24px and up, 3:1 */
-  --brand-soft: var(--storybook-green);
-  --brand-tint: #f1ffe7;
-  --on-brand: var(--night-ink); /* labels on Eager Green, 9.4:1 (white would be 2.1:1) */
-  --accent: var(--spark-blue); /* selected outlines, icons */
-  --accent-edge: #1899d6;
-  --accent-ink: #1274a2; /* links and secondary button text, 4.5:1 */
-  --accent-soft: var(--sky); /* occasional soft surfaces */
-  --focus: #199edd; /* focus ring, 3:1 */
-  --pos: var(--eager-green);
+  --brand: var(--lime); /* the primary action and selected marks */
+  --brand-hover: #96e05c;
+  --brand-press: #8ad44f;
+  --brand-ink: #2f6b00; /* the dark ink of the green: text on white and on its tints, 6.5:1 */
+  --brand-soft: #e6fad6; /* selected tabs, success tags, progress tracks */
+  --brand-tint: #f3fdea; /* success notices */
+  --on-brand: #111111; /* labels on lime, 13:1 */
+  --accent: var(--blue); /* link underlines and small blue marks */
+  --accent-ink: #1274a2; /* link text in the same blue, 5.2:1 */
+  --accent-soft: var(--sky); /* small panels and illustrations */
+  --focus: #1274a2; /* focus ring, 5.2:1 on white */
+  --pos: var(--green);
   --neu: var(--faded-gray);
   --neg: var(--night-ink);
   --pos-ink: var(--brand-ink);
   --neu-ink: var(--charcoal);
   --neg-ink: var(--night-ink);
-  --pos-soft: var(--storybook-green);
+  --pos-soft: var(--brand-soft);
   --neu-soft: #f0f0f0;
   --neg-soft: #e6e7f1;
   --warn-ink: #916a00;
@@ -63,10 +58,10 @@
   --danger-line: #ffc1c4;
   --star: #ffc800;
   --conf-high: var(--charcoal); /* ordinal ramp, validated */
-  --conf-medium: var(--pencil-gray);
+  --conf-medium: #777777;
   --conf-low: var(--faded-gray);
   --shadow-float: 0 12px 32px -12px rgb(60 60 60 / 0.28), 0 2px 8px rgb(60 60 60 / 0.06);
-  accent-color: var(--brand);
+  accent-color: var(--green);
   color-scheme: light;
 }
 
@@ -83,17 +78,16 @@
   --color-field: var(--field);
   --color-brand: var(--brand);
   --color-brand-hover: var(--brand-hover);
-  --color-brand-edge: var(--brand-edge);
+  --color-brand-press: var(--brand-press);
   --color-brand-ink: var(--brand-ink);
-  --color-brand-display: var(--brand-display);
   --color-brand-soft: var(--brand-soft);
   --color-brand-tint: var(--brand-tint);
   --color-on-brand: var(--on-brand);
   --color-accent: var(--accent);
-  --color-accent-edge: var(--accent-edge);
   --color-accent-ink: var(--accent-ink);
   --color-accent-soft: var(--accent-soft);
-  --color-fresh-leaf: var(--fresh-leaf);
+  --color-lime: var(--lime);
+  --color-green: var(--green);
   --color-night: var(--night-ink);
   --color-pos: var(--pos);
   --color-neu: var(--neu);
@@ -170,13 +164,13 @@
   }
 
   ::selection {
-    background: var(--storybook-green);
+    background: var(--brand-soft);
     color: var(--night-ink);
   }
 
   input,
   textarea {
-    caret-color: var(--brand-edge);
+    caret-color: var(--brand-ink);
   }
 
   input,
@@ -220,13 +214,11 @@
 }
 
 @layer components {
-  /* Uppercase, tracked labels for navigation, buttons and tags (Refero nav-label). */
+  /* Labels on navigation and menu items: sentence case, bold, no tracking. */
   .nav-label {
     font-size: 15px;
-    font-weight: 800;
-    letter-spacing: 0.053em;
+    font-weight: 700;
     line-height: 1.33;
-    text-transform: uppercase;
   }
 
   /* Press feedback on touch-down, not on release. */
@@ -242,53 +234,24 @@
     transform: scale(0.98);
   }
 
-  /*
-    Sticker controls: a solid lip under the control (color in --edge, depth in --lip) that
-    disappears as the control is pressed down onto the page.
-  */
-  .lip {
-    box-shadow: 0 var(--lip, 4px) 0 var(--edge, var(--line-strong));
-    transition:
-      transform 90ms cubic-bezier(0.2, 0, 0, 1),
-      box-shadow 90ms cubic-bezier(0.2, 0, 0, 1),
-      background-color 120ms ease-out,
-      border-color 120ms ease-out,
-      color 120ms ease-out;
-  }
-
-  .lip:active {
-    transform: translateY(var(--lip, 4px));
-    box-shadow: 0 0 0 var(--edge, var(--line-strong));
-  }
 
 
-  /* Thick rounded progress bar with a highlight strip, the Duolingo-style meter. */
+  /* Rounded progress bar: a pale green track and a deeper green fill. */
   .meter {
     position: relative;
-    height: 16px;
+    height: 12px;
     overflow: hidden;
     border-radius: 999px;
-    background: var(--surface-3);
+    background: var(--brand-soft);
   }
 
   .meter-fill {
     position: relative;
     height: 100%;
     border-radius: 999px;
-    background: var(--eager-green);
+    background: var(--green);
     transform-origin: left;
     transition: transform 500ms cubic-bezier(0.2, 0, 0, 1);
-  }
-
-  .meter-fill::after {
-    content: "";
-    position: absolute;
-    top: 3px;
-    left: 8px;
-    right: 8px;
-    height: 4px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.35);
   }
 }
 
@@ -352,12 +315,6 @@ dialog::backdrop {
   }
 }
 
-@media (forced-colors: active) {
-  .lip {
-    box-shadow: none;
-  }
-}
-
 @media print {
   .no-print {
     display: none !important;
@@ -374,28 +331,6 @@ dialog::backdrop {
   }
 }
 
-/*
-  The public welcome and account pages follow the DesignMD palette more closely: a sky-blue page and lime
-  primary buttons on a green lip. Focus rings and field borders get darker shades so they still reach 3:1
-  against the sky blue.
-*/
-[data-public-page] {
-  --brand: var(--fresh-leaf);
-  --brand-hover: #b5f38a;
-  --brand-edge: var(--eager-green);
-  --on-brand: var(--charcoal); /* 7.9:1 on lime */
-  --field: #858585; /* 3.2:1 on sky blue */
-}
-
-body:has([data-public-page]) {
-  --focus: var(--accent-ink); /* 4.6:1 on sky blue */
-  background: var(--sky);
-}
-
-body:has([data-public-page]) > header {
-  background: var(--sky);
-  border-color: transparent;
-}
 
 /* The home screen has its own big "Upload reviews" button, so the header's copy stays out of the way there. */
 body:has([data-home-upload]) [data-header-upload] {

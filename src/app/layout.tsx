@@ -42,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           theme="light"
           closeButton
           offset={{ top: "calc(env(safe-area-inset-top, 0px) + 72px)" }}
-          toastOptions={{ classNames: { toast: "rounded-card! border-2! border-line! font-sans! font-bold! text-ink! shadow-float!" } }}
+          toastOptions={{ classNames: { toast: "rounded-card! border! border-line! font-sans! font-bold! text-ink! shadow-float!" } }}
         />
       </body>
     </html>

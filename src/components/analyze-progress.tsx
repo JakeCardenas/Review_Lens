@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { CheckCircle2 } from "lucide-react";
-import { BrandMark } from "@/components/brand";
 import { Button, ButtonLink, Notice } from "@/components/ui";
 import { api, ApiRequestError, sleep } from "@/lib/client-api";
 import { formatNumber, plural } from "@/lib/format";
@@ -63,7 +62,7 @@ export function AnalyzeProgress({
         setWaitingForLimit(false);
         setNote(result.batchError);
         if (result.progress.done) {
-          toast.success("Analysis complete");
+          toast.success("Your reviews are ready");
           router.refresh();
           break;
         }
@@ -119,7 +118,6 @@ export function AnalyzeProgress({
     <div className="grid gap-6">
       <section className="grid gap-6" aria-labelledby="progress-title">
         <div className="flex items-center gap-4">
-          <BrandMark height={64} />
           <div className="min-w-0">
             {!progress.done && <p className="text-[15px] font-bold text-ink-2">Step 3 of 4: Analyze</p>}
             <h2 id="progress-title" className="flex items-center gap-2 text-2xl font-extrabold text-ink">
@@ -128,7 +126,7 @@ export function AnalyzeProgress({
             </h2>
             <p className="mt-0.5 text-[15px] text-ink-2 tabular" aria-live="polite">
               {progress.done
-                ? "Let's see what customers are saying."
+                ? "Open the results to see what stands out."
                 : `${formatNumber(processed)} of ${formatNumber(progress.imported)} reviews done`}
             </p>
           </div>
@@ -153,7 +151,7 @@ export function AnalyzeProgress({
           </div>
         )}
 
-        <dl className="grid grid-cols-3 gap-4 border-t-2 border-line pt-5 sm:max-w-lg">
+        <dl className="grid grid-cols-3 gap-4 border-t border-line pt-5 sm:max-w-lg">
           {[
             ["Labeled", progress.labeled],
             ["Not labeled", progress.notLabeled],
@@ -205,7 +203,7 @@ export function AnalyzeProgress({
 
       {progress.done && (
         <div className="flex flex-wrap gap-2">
-          <ButtonLink href={`/uploads/${uploadId}`}>See insights</ButtonLink>
+          <ButtonLink href={`/uploads/${uploadId}`}>See the results</ButtonLink>
           {hasIssues && (
             <ButtonLink href={`/uploads/${uploadId}/issues`} variant="secondary">
               See data issues

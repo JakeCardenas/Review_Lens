@@ -1,7 +1,7 @@
 import type { UploadStatus } from "@/lib/types";
 
 /** The path every upload follows, shown as a progress cue on the home screen, wizard and analysis screens. */
-export const JOURNEY_STEPS = ["Upload", "Match columns", "Analyze", "Insights"] as const;
+export const JOURNEY_STEPS = ["Upload", "Match columns", "Analyze", "Results"] as const;
 
 /** Where a saved upload is on the path. Importing hasn't finished the upload step; a finished upload has insights. */
 export function uploadJourneyStep(status: UploadStatus): number {

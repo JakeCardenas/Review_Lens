@@ -2,7 +2,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { BadgeCheck, FileText, Inbox, MessageSquareText, Tags } from "lucide-react";
+import { BadgeCheck, FileText, Inbox, TriangleAlert } from "lucide-react";
 import { ImportUnfinished } from "@/components/import-unfinished";
 import { JourneyPath } from "@/components/journey-path";
 import { SentimentLegend, SentimentStackedBar } from "@/components/sentiment";
@@ -17,6 +17,8 @@ import { dashboardFilters, parseFilters } from "@/lib/server/filters";
 import { getProgress } from "@/lib/server/uploads";
 
 type Takeaway = { text: string; action: string; href: string };
+
+const readAction = (count: number) => (count === 1 ? "Read this review" : `Read these ${formatNumber(count)} reviews`);
 
 /**
  * One thing worth reading next, worked out from the upload's own counts: the topic that shows up in
@@ -33,7 +35,7 @@ function pickTakeaway(topics: TopicBreakdown[], negative: number, labeled: numbe
         : `${formatNumber(complaint.negative)} of the ${formatNumber(negative)} negative reviews mention it.`;
     return {
       text: `${complaint.label} comes up most in complaints. ${share}`,
-      action: "Read these reviews",
+      action: readAction(complaint.negative),
       href: reviewsHref({ topic: complaint.id, sentiment: "negative" }),
     };
   }
@@ -41,14 +43,14 @@ function pickTakeaway(topics: TopicBreakdown[], negative: number, labeled: numbe
   if (top) {
     return {
       text: `${top.label} comes up most. ${formatNumber(top.total)} of the ${formatNumber(labeled)} analyzed reviews mention it.`,
-      action: "Read these reviews",
+      action: readAction(top.total),
       href: reviewsHref({ topic: top.id }),
     };
   }
   if (negative > 0) {
     return {
       text: negative === 1 ? "1 review is negative." : `${formatNumber(negative)} reviews are negative.`,
-      action: negative === 1 ? "Read it" : "Read them",
+      action: readAction(negative),
       href: reviewsHref({ sentiment: "negative" }),
     };
   }
@@ -60,23 +62,23 @@ function NextLink({ href, icon: Icon, children }: { href: string; icon: LucideIc
     <li>
       <Link
         href={href}
-        className="press inline-flex min-h-11 items-center gap-2 rounded-full border-2 border-line px-4 text-[15px] font-bold text-ink transition-colors duration-150 hover:border-line-strong hover:bg-surface-2"
+        className="press inline-flex min-h-11 items-center gap-2 rounded-full border border-line-strong px-4 text-[15px] font-bold text-ink transition-colors duration-150 hover:border-line-strong hover:bg-surface-2"
       >
-        <Icon aria-hidden className="size-[18px] text-accent-ink" strokeWidth={2.5} />
+        <Icon aria-hidden className="size-[18px] text-ink-2" strokeWidth={2.25} />
         {children}
       </Link>
     </li>
   );
 }
 
-/** A finished upload at a glance: how customers feel, one thing worth a closer look, and where to go next. */
+/** A finished upload at a glance: what stands out first, then how customers feel, then the other tools. */
 export default async function OverviewPage({ params }: PageProps<"/uploads/[id]">) {
   await connection();
   const { id } = await params;
   const db = getDb();
   const { user, upload } = await requireOwnedUpload(id, `/uploads/${id}`);
   const deleteButton = (
-    <div className="no-print border-t-2 border-line pt-6">
+    <div className="no-print border-t border-line pt-6">
       <DeleteUploadButton uploadId={upload.id} name={upload.name} />
     </div>
   );
@@ -106,7 +108,7 @@ export default async function OverviewPage({ params }: PageProps<"/uploads/[id]"
       {progress && !progress.done && (
         <section aria-labelledby="progress-title" className="rounded-card bg-surface-2 p-6 sm:p-8">
           <h2 id="progress-title" className="text-subheading font-extrabold text-ink">
-            Still analyzing your reviews
+            Still reading your reviews
           </h2>
           <p className="mt-1 text-[15px] text-ink-2">
             {formatNumber(progress.labeled + progress.notLabeled + progress.failed)} of {plural(progress.imported, "review")} done. The numbers
@@ -140,9 +142,20 @@ export default async function OverviewPage({ params }: PageProps<"/uploads/[id]"
         </EmptyState>
       ) : (
         <>
-          {/* Side by side on wide screens: how customers feel, then the one thing worth a closer look. */}
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-start lg:gap-12">
-            <section aria-labelledby="feel-title" className="min-w-0">
+          {/* The finding first (on top on phones, on the left on wide screens), then how customers feel overall. */}
+          <div className="grid gap-10 lg:grid-cols-2 lg:items-start lg:gap-12">
+            {takeaway && (
+              <section aria-labelledby="takeaway-title" className="rounded-card bg-accent-soft p-6 sm:p-8">
+                <h2 id="takeaway-title" className="text-subheading font-extrabold text-ink">
+                  Here&apos;s what stands out
+                </h2>
+                <p className="mt-2 text-xl font-bold leading-snug text-ink">{takeaway.text}</p>
+                <ButtonLink href={takeaway.href} className="mt-6">
+                  {takeaway.action}
+                </ButtonLink>
+              </section>
+            )}
+            <section aria-labelledby="feel-title" className={`min-w-0 ${takeaway ? "" : "lg:col-span-2"}`}>
               <h2 id="feel-title" className="text-subheading font-extrabold text-ink">
                 How customers feel
               </h2>
@@ -160,7 +173,7 @@ export default async function OverviewPage({ params }: PageProps<"/uploads/[id]"
                     {notCounted > 0 && (
                       <>
                         {" "}
-                        {plural(notCounted, "review")} couldn&apos;t be labeled.{" "}
+                        We couldn&apos;t label {plural(notCounted, "review")}.{" "}
                         <Link href={`${base}/issues`} className={linkClasses}>
                           See why
                         </Link>
@@ -181,36 +194,21 @@ export default async function OverviewPage({ params }: PageProps<"/uploads/[id]"
                 <p className="mt-2 text-body text-ink-2">No reviews are labeled yet.</p>
               )}
             </section>
-
-            {takeaway && (
-              <section aria-labelledby="takeaway-title" className="rounded-card bg-accent-soft p-6 sm:p-8">
-                <h2 id="takeaway-title" className="text-subheading font-extrabold text-ink">
-                  Worth a closer look
-                </h2>
-                <p className="mt-2 text-xl font-bold leading-snug text-ink">{takeaway.text}</p>
-                <ButtonLink href={takeaway.href} variant="secondary" size="sm" className="mt-5">
-                  {takeaway.action}
-                </ButtonLink>
-              </section>
-            )}
           </div>
 
-          <nav aria-labelledby="next-title" className="no-print">
-            <h2 id="next-title" className="text-subheading font-extrabold text-ink">
-              Keep exploring
+          <nav aria-labelledby="tools-title" className="no-print">
+            <h2 id="tools-title" className="text-subheading font-extrabold text-ink">
+              Other tools
             </h2>
             <ul className="mt-4 flex flex-wrap gap-2.5">
-              <NextLink href={`${base}/reviews`} icon={MessageSquareText}>
-                All {plural(totals.all, "review")}
-              </NextLink>
-              <NextLink href={`${base}/topics`} icon={Tags}>
-                {topics.length ? `All ${plural(topics.length, "topic")}` : "Topics"}
-              </NextLink>
               <NextLink href={`${base}/accuracy`} icon={BadgeCheck}>
                 Accuracy check
               </NextLink>
               <NextLink href={`${base}/report`} icon={FileText}>
                 Report and downloads
+              </NextLink>
+              <NextLink href={`${base}/issues`} icon={TriangleAlert}>
+                Data issues
               </NextLink>
             </ul>
           </nav>

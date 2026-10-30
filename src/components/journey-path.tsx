@@ -21,7 +21,7 @@ export function JourneyPath({ current, label = "Upload progress" }: { current: n
           const now = i === current;
           return (
             <li key={step} aria-current={now ? "step" : undefined} className="min-w-0">
-              <span aria-hidden className={`block h-2.5 rounded-full ${done ? "bg-brand" : now ? "bg-fresh-leaf" : "bg-surface-3"}`} />
+              <span aria-hidden className={`block h-2.5 rounded-full ${done ? "bg-green" : now ? "bg-lime" : "bg-surface-3"}`} />
               <span
                 aria-hidden
                 className={`mt-2 hidden items-center gap-1 truncate text-[13px] font-bold sm:flex ${now ? "text-ink" : "text-ink-2"}`}
